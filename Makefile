@@ -84,7 +84,7 @@ build-ci:
 	@cp -r libs/LibStub libs/CallbackHandler-1.0 libs/LibDataBroker-1.1 libs/LibDBIcon-1.0 dist/Deathpool/libs/
 
 minify-ci:
-	@scripts/minify.sh
+	@bash scripts/minify.sh
 
 clean:
 	@powershell -NoProfile -Command "if (Test-Path dist) { Remove-Item -Recurse -Force dist }"
