@@ -1,0 +1,38 @@
+## Interface: 11508
+## Title: Hardcore Deathpool
+## Notes: Hardcore death prediction game.
+## Author: shiftclack
+## Version: 0.6.0
+## SavedVariablesPerCharacter: DeathpoolCharacterState
+
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+DeathpoolConstants.lua
+DeathpoolDebug.lua
+DeathpoolDatabase.lua
+DeathpoolParser.lua
+DeathpoolLogic.lua
+DeathpoolLogicPrediction.lua
+DeathpoolLogicScoring.lua
+DeathpoolLogicDeaths.lua
+DeathpoolLogicState.lua
+DeathpoolMigration.lua
+DeathpoolSettings.lua
+DeathpoolUI.lua
+DeathpoolUITooltip.lua
+DeathpoolUIDeathLogList.lua
+DeathpoolUIMinimap.lua
+DeathpoolUIAutocomplete.lua
+DeathpoolUIHelp.lua
+DeathpoolUIRefresh.lua
+DeathpoolUILog.lua
+DeathpoolUISettings.lua
+DeathpoolUIDemo.lua
+DeathpoolDemo.lua
+DeathpoolUIDebug.lua
+DeathpoolUIMain.lua
+DeathpoolCommands.lua
+Deathpool.lua

@@ -1,0 +1,40 @@
+---
+name: Package
+
+on:
+  push:
+    branches:
+      - main
+      - initial
+  pull_request:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/shiftclack/lua-wow:1.0.0"
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+
+      - name: check
+        run: |
+          make check-ci
+
+      - name: build and upload release assets
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          make dist-ci
+          gh release upload "${{ github.event.release.tag_name }}" dist/Deathpool.zip --clobber

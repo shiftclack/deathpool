@@ -1,0 +1,115 @@
+-- These are actual death message strings collected in-game used to validate the parser
+local TestData = {
+    parser_messages = {
+        {
+            id = "observed_creature_1",
+            category = "observed_creature",
+            rawMessage = "[Testname] has been slain by a Wild Grell in Bashal'Aran! They were level 11",
+            expected = {
+                name = "Testname",
+                level = 11,
+                sourceName = "Wild Grell",
+                zone = "Bashal'Aran",
+                causeType = "HARDCORE_CAUSEOFDEATH_CREATURE",
+                isBlizzardVerified = true,
+            },
+        },
+        {
+            id = "observed_creature_2",
+            category = "observed_creature",
+            rawMessage = "[Anothername] has been slain by a Tunnel Rat Forager in Loch Modan! They were level 15",
+            expected = {
+                name = "Anothername",
+                level = 15,
+                sourceName = "Tunnel Rat Forager",
+                zone = "Loch Modan",
+                causeType = "HARDCORE_CAUSEOFDEATH_CREATURE",
+                isBlizzardVerified = true,
+            },
+        },
+        {
+            id = "observed_creature_3",
+            category = "observed_creature",
+            rawMessage = "[Wacked] has been slain by a The Threshwackonator 4100 in Mist's Edge! They were level 24",
+            expected = {
+                name = "Wacked",
+                level = 24,
+                sourceName = "The Threshwackonator 4100",
+                zone = "Mist's Edge",
+                causeType = "HARDCORE_CAUSEOFDEATH_CREATURE",
+                isBlizzardVerified = true,
+            },
+        },
+        {
+            id = "observed_pvp_1",
+            category = "observed_pvp",
+            rawMessage = "[Anonname] has been slain by Pvpplayer in Silverwing Outpost! They were level 21",
+            expected = {
+                name = "Anonname",
+                level = 21,
+                sourceName = "Pvpplayer",
+                zone = "Silverwing Outpost",
+                causeType = "HARDCORE_CAUSEOFDEATH_PLAYER",
+                isBlizzardVerified = true,
+            },
+            tags = { "named_source", "pvp_question" },
+            notes = "Can parse PvP death notifications.",
+        },
+        {
+            id = "observed_pvp_2",
+            category = "observed_pvp",
+            rawMessage = "[Anonnametwo] has been slain by Pvpplayertwo in Astranaar! They were level 25",
+            expected = {
+                name = "Anonnametwo",
+                level = 25,
+                sourceName = "Pvpplayertwo",
+                zone = "Astranaar",
+                causeType = "HARDCORE_CAUSEOFDEATH_PLAYER",
+                isBlizzardVerified = true,
+            },
+            tags = { "named_source", "pvp_question" },
+            notes = "Can parse PvP death notifications.",
+        },
+        {
+            id = "observed_drowning_1",
+            category = "observed_environmental",
+            rawMessage = "[Drownerone] drowned to death in Mystral Lake! They were level 22",
+            expected = {
+                name = "Drownerone",
+                level = 22,
+                sourceName = "Drowning",
+                zone = "Mystral Lake",
+                causeType = "HARDCORE_CAUSEOFDEATH_DROWNING",
+                isBlizzardVerified = true,
+            },
+        },
+        {
+            id = "observed_fall_1",
+            category = "observed_environmental",
+            rawMessage = "[Ming] fell to their death in Cliffspring Falls! They were level 16",
+            expected = {
+                name = "Ming",
+                level = 16,
+                sourceName = "Falling",
+                zone = "Cliffspring Falls",
+                causeType = "HARDCORE_CAUSEOFDEATH_FALL",
+                isBlizzardVerified = true,
+            },
+        },
+        {
+            id = "observed_burning_1",
+            category = "observed_environmental",
+            rawMessage = "[Roberto] was burnt to a crisp by lava in Ironforge! They were level 12",
+            expected = {
+                name = "Roberto",
+                level = 12,
+                sourceName = "Burning",
+                zone = "Ironforge",
+                causeType = "HARDCORE_CAUSEOFDEATH_BURNING",
+                isBlizzardVerified = true,
+            },
+        },
+    },
+}
+
+return TestData

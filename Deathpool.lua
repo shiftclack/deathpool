@@ -1,0 +1,271 @@
+local ADDON_NAME = ...
+local DeathpoolConstants = _G.DeathpoolConstants
+local DeathpoolDatabase = _G.DeathpoolDatabase
+local DeathpoolDebug = _G.DeathpoolDebug
+local DeathpoolParser = _G.DeathpoolParser
+local DeathpoolLogic = _G.DeathpoolLogic
+local DeathpoolCommands = _G.DeathpoolCommands
+local DeathpoolSettings = _G.DeathpoolSettings
+local DeathpoolUI = _G.DeathpoolUI
+local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
+local DeathpoolUISettings = _G.DeathpoolUISettings
+local DeathpoolDemo = _G.DeathpoolDemo
+
+local STORAGE_RULES = DeathpoolConstants.STORAGE
+local STARTUP_EVENTS = {
+    "PLAYER_LOGIN",
+    "PLAYER_LOGOUT",
+    "PLAYER_DEAD",
+    "PLAYER_REGEN_DISABLED",
+}
+
+local Deathpool = CreateFrame("Frame", "DeathpoolAddonFrame")
+
+---@param message string|number
+local function Print(message)
+    DEFAULT_CHAT_FRAME:AddMessage("|cffcc3333Deathpool|r: " .. tostring(message))
+end
+
+---@return DeathpoolCharacterState
+local function GetState()
+    return Deathpool.state
+end
+
+local function RegisterStartupEvents(frame)
+    for _, eventName in ipairs(STARTUP_EVENTS) do
+        frame:RegisterEvent(eventName)
+    end
+
+    pcall(frame.RegisterEvent, frame, "HARDCORE_DEATHS")
+end
+
+local function AttachMainFrameScripts(frame, addonFrame)
+    local existingOnHide = frame:GetScript("OnHide")
+
+    frame:SetScript("OnShow", function(self)
+        local state = addonFrame.state
+
+        DeathpoolDatabase.SetHidden(state, false)
+        DeathpoolUI.ApplyDesiredLogWindowState(self, state)
+        if not DeathpoolDatabase.GetHasSeenIntroDemo(state) and self.introDemoController then
+            self.introDemoController:Show()
+        end
+    end)
+
+    frame:SetScript("OnHide", function(self)
+        if existingOnHide then
+            existingOnHide(self)
+        end
+
+        if not addonFrame.isShuttingDown then
+            DeathpoolDatabase.SetHidden(addonFrame.state, true)
+        end
+
+        if self.introDemoController and self.introDemoController:IsActive() then
+            addonFrame:DismissIntroDemo()
+        end
+
+        if self.logFrame then
+            self.logFrame:Hide()
+        end
+
+        if self.helpFrame then
+            self.helpFrame:Hide()
+        end
+    end)
+end
+
+function Deathpool:RefreshMainFrame()
+    if not self.mainFrame then
+        return
+    end
+
+    self.mainFrame:RefreshDeaths()
+    self.mainFrame:RefreshLockedPrediction()
+    self.mainFrame:RefreshCollapsedSummary()
+end
+
+function Deathpool:DismissIntroDemo()
+    if self.demoController then
+        self.demoController:Dismiss()
+    end
+end
+
+function Deathpool:ADDON_LOADED(addonName)
+    if addonName ~= ADDON_NAME then
+        return
+    end
+
+    DeathpoolCharacterState = DeathpoolDatabase.Init(DeathpoolCharacterState)
+    self.state = DeathpoolCharacterState
+    self.isShuttingDown = false
+    self.recentDeathKeys = {}
+
+    self.mainFrame, self.debugFrame, self.logFrame = DeathpoolUI.Initialize(
+        self.state,
+        DeathpoolLogic,
+        STORAGE_RULES.maxRecentDeaths
+    )
+
+    DeathpoolSettings.Initialize(
+        self.state,
+        DeathpoolDatabase
+    )
+
+    DeathpoolUISettings.Initialize(
+        DeathpoolSettings
+    )
+
+    self.demoController = DeathpoolDemo.Initialize(
+        self.state,
+        function() self:RefreshMainFrame() end
+    )
+    self.demoController:AttachFrame(self.mainFrame)
+
+    DeathpoolUIMinimap.Initialize(
+        self.mainFrame,
+        self.state
+    )
+
+    DeathpoolCommands.Initialize(
+        self,
+        Print
+    )
+
+    DeathpoolDebug.Initialize(
+        self,
+        self.state,
+        DeathpoolDatabase,
+        self.debugFrame,
+        Print
+    )
+    DeathpoolDebug.OnAddonLoaded()
+
+    AttachMainFrameScripts(self.mainFrame, self)
+    RegisterStartupEvents(self)
+    DeathpoolUI.SetWindowCollapsed(self.mainFrame, self.state, DeathpoolDatabase.GetCollapsed(self.state))
+    self:RefreshMainFrame()
+    self.logFrame:RefreshHistory()
+end
+
+Deathpool:SetScript("OnEvent", function(self, event, ...)
+    if self[event] then
+        self[event](self, ...)
+    end
+end)
+
+Deathpool:RegisterEvent("ADDON_LOADED")
+
+---@param death DeathpoolDeathEvent
+function Deathpool:AddDeath(death)
+    local mainFrame = self.mainFrame
+    local state = GetState()
+
+    local addDeathOptions = {
+        dedupeWindowSeconds = STORAGE_RULES.dedupeWindowSeconds,
+        maxRecentDeaths = STORAGE_RULES.maxRecentDeaths,
+        maxDeathHistory = STORAGE_RULES.maxDeathHistory,
+        maxSuccessfullyPredictedDeaths = STORAGE_RULES.maxSuccessfullyPredictedDeaths,
+        playerZone = GetZoneText()
+    }
+
+    local added = DeathpoolLogic.AddDeathToDatabase(
+        state,
+        death,
+        self.recentDeathKeys,
+        addDeathOptions
+    )
+
+    if not added then
+        return
+    end
+
+    DeathpoolUI.RegisterObservedZone(death.zone, state)
+
+    if mainFrame then
+        self:RefreshMainFrame()
+    end
+
+    DeathpoolDebug.HandleDeathAdded()
+end
+
+function Deathpool:HandleBlizzardDeathMessage(message)
+    local parsedDeath = DeathpoolParser.ParseBlizzardDeathMessage(message)
+    if parsedDeath then
+        local normalizedDeath = DeathpoolLogic.NormalizeDeathEvent(parsedDeath)
+        DeathpoolDebug.DebugDeathData(normalizedDeath)
+        self:AddDeath(normalizedDeath)
+        return true
+    end
+
+    return false
+end
+
+function Deathpool:HARDCORE_DEATHS(message)
+    self:HandleBlizzardDeathMessage(message)
+end
+
+function Deathpool:PLAYER_LOGIN()
+    local mainFrame = self.mainFrame
+    local disableBlizzardDeathAlerts = DeathpoolDatabase and DeathpoolDatabase.GetDisableBlizzardDeathAlerts(self.state)
+
+    if disableBlizzardDeathAlerts then
+        DeathpoolSettings.SetBlizzardDeathAlertsSuppressed(disableBlizzardDeathAlerts)
+    end
+
+    if mainFrame and not DeathpoolDatabase.GetHidden(self.state) then
+        mainFrame:Show()
+    end
+end
+
+function Deathpool:PLAYER_LOGOUT()
+    self.isShuttingDown = true
+end
+
+-- luacheck: ignore self
+function Deathpool:PLAYER_DEAD()
+    local state = GetState()
+    local formattedScore = DeathpoolUI.FormatNumberWithCommas(DeathpoolDatabase.GetTotalPoints(state))
+
+    Print("Your final score is " .. formattedScore .. ".")
+
+    if DeathpoolDatabase.GetAnnounceDeathToGuild(state) then
+        SendChatMessage(
+            string.format(
+                "%s has died. Their final Hardcore Deathpool score is %s",
+                UnitName("player"),
+                formattedScore
+            ),
+            "GUILD"
+        )
+    end
+end
+
+-- automatically minimize the main ui in combat
+function Deathpool:PLAYER_REGEN_DISABLED()
+    local mainFrame = self.mainFrame
+
+    if not mainFrame then
+        return
+    end
+
+    if mainFrame.isCollapsed then
+        return
+    end
+
+    if not mainFrame:IsShown() then
+        return
+    end
+
+    if DeathpoolDatabase.GetShowInCombat(GetState()) then
+        return
+    end
+
+    DeathpoolUI.SetWindowCollapsed(mainFrame, GetState(), true)
+end
+
+---@param message string
+function Deathpool:HandleSlashCommand(message)
+    local _ = self
+    DeathpoolCommands.HandleSlashCommand(message)
+end
