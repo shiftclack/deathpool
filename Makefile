@@ -79,7 +79,7 @@ build:
 
 build-ci:
 	@mkdir -p dist/Deathpool
-	@cp LICENSE *.lua *.toc dist/Deathpool/
+	@cp LICENSE README.md *.lua *.toc dist/Deathpool/
 	@mkdir -p dist/Deathpool/libs
 	@cp -r libs/LibStub libs/CallbackHandler-1.0 libs/LibDataBroker-1.1 libs/LibDBIcon-1.0 dist/Deathpool/libs/
 
