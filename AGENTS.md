@@ -18,13 +18,14 @@ When project guidance conflicts, use this order of precedence:
 
 ### Status of project
 
-The project is currently in its early stages. We're working toward MVP for initial release. We want to keep things focused on the specific features we need while not worrying about backward compatibility (or database migrations) yet.
+The project is currently in its early stages. We want to keep things focused on the specific features 
+we need while not worrying about backward compatibility yet.
 
 ### Goals
 
 - Provide an experience where the user (a WoW hardcore player) can predict attributes of upcoming deaths of other players
 - There will be a points system where the player is awarded points for correctly guessing deaths
-- These predictions involve no change of any in-game items or currency of any kind
+- These predictions involve no exchange of any in-game items or currency of any kind
 - The UI should reflect the built-in WoW UI style, including its UI elements such as buttons and tooltips
 
 ### Technical goals
@@ -162,12 +163,12 @@ The death feed parser is intentionally conservative. It registers Blizzard's `HA
 
 ### Use of third party libraries
 
-Unrestrained use of third party libraries is prohibited. They should not be introduced, or used, without specific, unambigious, clear instructions. Exceptions:
+Unrestrained use of third party libraries is prohibited. They should not be introduced, or used, without specific, unambigious, clear instructions.
+The current libraries are explicitly permitted:
 
 - Minimap
     - The Minimap icon uses LibDBIcon for compatibility with addons such as Titan Panel and Leatrix. 
     - The use of these libraries should be strictly confined to `DeathpoolUIMinimap.lua`
-    - Do not pollute any other part of the project with them. 
     - Maintain the ability to easily remove them at any time.
     - Permitted Libs for the Minimap
         - LibDBIcon
@@ -242,7 +243,7 @@ Here are some useful functions which are specific to WoW Lua:
 
 #### wipe()
 
-wipe() is like setting table={}, except that it keeps the variables internal pointer
+`wipe()` is like setting `table={}`, except that it keeps the variables internal pointer
 
 Example:
 ```lua
@@ -304,14 +305,14 @@ print(time())
 
 ### Debugging
 
-- Debugging must be performed by the user, as there is no way, and no permission, for the coding agent to take control of World Of Warcraft directly
+- Debugging must be performed by the user, as there is no permission for the coding agent to take control of World Of Warcraft directly
 - Debugging should be facilitated via a simple `make install` command which installs the addon files
 
 ## Datastores
 
 ### SavedVariables
 
-`SavedVariables` is how WoW persists user configuration and data for the addon.
+SavedVariables is how WoW persists user configuration and data for the addon.
 
 - The addon uses per-character SavedVariables via `DeathpoolCharacterState`
 - Treat `DeathpoolCharacterState` as persistent user data
@@ -320,20 +321,14 @@ print(time())
 - Do not persist debug mode in `DeathpoolCharacterState`; debug enablement is session-only state owned by `DeathpoolDebug.lua`
 - When adding fields, initialize missing values defensively in `DeathpoolDatabase`
 - Do not require users to delete SavedVariables for normal addon updates
-    - However, this is acceptable during MVP stage
 - Prefer additive schema changes over breaking renames
-    - However, this is acceptable during MVP stage
 
 ### Migrations
 
 - In `DeathpoolMigration.lua` we have a set of migrations for SavedVariables
 - We don't want to litter the code with backward compatibility checks, so keep migration code in this file
 - It is OK to still program defensively in case of corrupt data loaded from SavedVariables
-- This file is currently ***empty*** until we have a formal release
-
-## Internationalization 
-
-At this time, the addon is English only. Keep an eye on where this might cause problems down the line, but don't add any i8n/i10n features at this time.
+- This file is currently ***empty*** until we have a v1.0 release
 
 ## Documentation hygiene
 
@@ -345,10 +340,10 @@ At this time, the addon is English only. Keep an eye on where this might cause p
 
 ### Example: Use of model
 ```lua
---- GOOD: use DeathpoolDatabase model
+-- GOOD: use DeathpoolDatabase model
 local recentDeaths = DeathpoolDatabase.GetRecentDeaths(database)
 
---- BAD: bypass model accessors
+-- BAD: bypass model accessors
 local recentDeaths = DeathpoolCharacterState.recentDeaths
 ```
 
@@ -390,7 +385,7 @@ DeathpoolCharacterState.totalPoints = 0
 
 ### Example: function with LuaLS annotations
 ```lua
---- GOOD:
+-- GOOD:
 ---@param database DeathpoolCharacterState
 ---@return boolean
  local function isCharacterAlive(database)
@@ -398,11 +393,9 @@ DeathpoolCharacterState.totalPoints = 0
   return true
  end
 
---- BAD (no annotations):
+-- BAD (no annotations):
  local function isCharacterAlive(database)
   [...]
   return true
  end
-
----
 ```
