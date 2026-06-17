@@ -1022,7 +1022,46 @@ local function testDispatcherSkipsUnregisteredEvents()
     )
 end
 
-local function testHardcoreDeathsEventFlowsThroughParserLogicAndUi()
+local function testHardcoreDeathsEventIsNotRegistered()
+    local context = createLoadedAddonContext()
+
+    assertEquals(
+        context.dispatchEvent(context.controller, "HARDCORE_DEATHS", "[Ignored] drowned in Durotar! They were level 6"),
+        false,
+        "native hardcore death alerts should not dispatch through the addon frame"
+    )
+end
+
+local function testNonHardcoreDeathsChannelDoesNotAddDeaths()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = false,
+            hasSeenIntroDemo = true,
+        }),
+        login = true,
+    })
+
+    assertEquals(
+        context.dispatchEvent(
+            context.controller,
+            "CHAT_MSG_CHANNEL",
+            "[Ignored] drowned in Durotar! They were level 6",
+            "Sender",
+            "",
+            "1. General - Durotar",
+            "",
+            "",
+            0,
+            1,
+            "General - Durotar"
+        ),
+        true,
+        "channel chat messages should dispatch through the addon frame"
+    )
+    assertEquals(#DeathpoolCharacterState.recentDeaths, 0, "non-hardcoredeaths channels should not insert deaths")
+end
+
+local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
     local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             hidden = false,
@@ -1051,9 +1090,21 @@ local function testHardcoreDeathsEventFlowsThroughParserLogicAndUi()
     local rawMessage = "[Drakedog] has been slain by Hogger in Elwynn Forest! They were level 12"
 
     assertEquals(
-        dispatchEvent(controller, "HARDCORE_DEATHS", rawMessage),
+        dispatchEvent(
+            controller,
+            "CHAT_MSG_CHANNEL",
+            rawMessage,
+            "Sender",
+            "",
+            "5. hardcoredeaths",
+            "",
+            "",
+            0,
+            5,
+            ""
+        ),
         true,
-        "hardcore deaths event should dispatch through the addon frame"
+        "hardcoredeaths channel messages should dispatch through the addon frame"
     )
     assertEquals(#DeathpoolCharacterState.recentDeaths, 1, "death event should insert a recent death row")
     assertEquals(#DeathpoolCharacterState.deathHistory, 1, "death event should insert a history death row")
@@ -1111,7 +1162,7 @@ local function testHardcoreDeathsEventFlowsThroughParserLogicAndUi()
     assertEquals(DeathpoolDebug.detailValues.awardedPoints:GetText(), tostring(awardedPoints), "ui refresh should update debug awarded points")
 end
 
-local function testHardcoreDeathsWithoutSameZoneBonus()
+local function testHardcoreDeathsChannelWithoutSameZoneBonus()
     local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             hidden = false,
@@ -1138,9 +1189,21 @@ local function testHardcoreDeathsWithoutSameZoneBonus()
     local rawMessage = "[Drakedog] has been slain by Hogger in Westfall! They were level 12"
 
     assertEquals(
-        dispatchEvent(controller, "HARDCORE_DEATHS", rawMessage),
+        dispatchEvent(
+            controller,
+            "CHAT_MSG_CHANNEL",
+            rawMessage,
+            "Sender",
+            "",
+            "5. hardcoredeaths",
+            "",
+            "",
+            0,
+            5,
+            "hardcoredeaths"
+        ),
         true,
-        "hardcore deaths event should still dispatch when the death is outside the player's current zone"
+        "hardcoredeaths channel messages should still dispatch when the death is outside the player's current zone"
     )
 
     local storedDeath = DeathpoolCharacterState.recentDeaths[1]
@@ -1157,7 +1220,7 @@ local function testHardcoreDeathsWithoutSameZoneBonus()
     )
 end
 
-local function testHardcoreDeathsApplySameZoneBonusWithoutZonePrediction()
+local function testHardcoreDeathsChannelApplySameZoneBonusWithoutZonePrediction()
     local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             hidden = false,
@@ -1185,9 +1248,21 @@ local function testHardcoreDeathsApplySameZoneBonusWithoutZonePrediction()
     local rawMessage = "[Drakedog] has been slain by Hogger in Elwynn Forest! They were level 12"
 
     assertEquals(
-        dispatchEvent(controller, "HARDCORE_DEATHS", rawMessage),
+        dispatchEvent(
+            controller,
+            "CHAT_MSG_CHANNEL",
+            rawMessage,
+            "Sender",
+            "",
+            "5. hardcoredeaths",
+            "",
+            "",
+            0,
+            5,
+            "hardcoredeaths"
+        ),
         true,
-        "hardcore deaths event should still dispatch when same-zone bonus comes from a non-zone prediction"
+        "hardcoredeaths channel messages should still dispatch when same-zone bonus comes from a non-zone prediction"
     )
 
     local storedDeath = DeathpoolCharacterState.recentDeaths[1]
@@ -1238,8 +1313,10 @@ testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
 testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
 testSettingsPanelCheckboxesUseSharedSettingHandlers()
 testDispatcherSkipsUnregisteredEvents()
-testHardcoreDeathsEventFlowsThroughParserLogicAndUi()
-testHardcoreDeathsWithoutSameZoneBonus()
-testHardcoreDeathsApplySameZoneBonusWithoutZonePrediction()
+testHardcoreDeathsEventIsNotRegistered()
+testNonHardcoreDeathsChannelDoesNotAddDeaths()
+testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
+testHardcoreDeathsChannelWithoutSameZoneBonus()
+testHardcoreDeathsChannelApplySameZoneBonusWithoutZonePrediction()
 
 suite:finish()

@@ -13,6 +13,25 @@ local function loadParserModule()
     return require("DeathpoolParser")
 end
 
+local OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS = {
+    HARDCORE_CAUSEOFDEATH_CREATURE = "|Hplayer:%s|h[%s]|h has been slain by a %s in %s! They were level %d",
+    HARDCORE_CAUSEOFDEATH_DROWNING = "|Hplayer:%s|h[%s]|h drowned to death in %s! They were level %d",
+    HARDCORE_CAUSEOFDEATH_FALLING = "|Hplayer:%s|h[%s]|h fell to their death in %s! They were level %d",
+    HARDCORE_CAUSEOFDEATH_FATIGUE = "|Hplayer:%s|h[%s]|h died of fatigue in %s! They were level %d",
+    HARDCORE_CAUSEOFDEATH_FIRE = "|Hplayer:%s|h[%s]|h was burnt to death by fire in %s! They were level %d",
+    HARDCORE_CAUSEOFDEATH_LAVA = "|Hplayer:%s|h[%s]|h was burnt to a crisp by lava in %s! They were level %d",
+    HARDCORE_CAUSEOFDEATH_NONE = "|Hplayer:%s|h[%s]|h has died at level %d",
+    HARDCORE_CAUSEOFDEATH_PVP = "|Hplayer:%s|h[%s]|h has been slain by %s in %s! They were level %d",
+}
+
+local function installDefaultHardcoreDeathFormats()
+    for key, value in pairs(OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS) do
+        rawset(_G, key, value)
+    end
+end
+
+installDefaultHardcoreDeathFormats()
+
 local DeathpoolParser = loadParserModule()
 local TestData = require("tests.fixtures.death_announcements")
 local TestHelpers = require("tests.support_helpers")
@@ -60,6 +79,7 @@ local function withParserGlobals(overrides, callback)
         rawset(_G, key, previousValue)
     end
 
+    installDefaultHardcoreDeathFormats()
     DeathpoolParser = loadParserModule()
 
     if not ok then
@@ -98,7 +118,7 @@ end
 local function testLocalizedFormatPattern()
     withParserGlobals({
         UNKNOWN = "Unknown",
-        HARDCORE_CAUSEOFDEATH_FALL = "%s died from falling at level %d",
+        HARDCORE_CAUSEOFDEATH_FALLING = "%s died from falling at level %d",
         HARDCORE_CAUSEOFDEATH_UNKNOWN = "Level %d death",
     }, function(parser)
         local death = parser.ParseBlizzardDeathMessage("Alamo died from falling at level 12")
@@ -106,10 +126,55 @@ local function testLocalizedFormatPattern()
         assertTruthy(death, "generic Blizzard format string should parse")
         assertEquals(death.name, "Alamo", "generic pattern should capture player name")
         assertEquals(death.level, 12, "generic pattern should capture level")
-        assertEquals(death.causeType, "HARDCORE_CAUSEOFDEATH_FALL", "generic pattern should preserve the format source")
-        assertEquals(death.sourceName, nil, "generic pattern should not invent a source name")
+        assertEquals(death.causeType, "HARDCORE_CAUSEOFDEATH_FALLING", "generic pattern should preserve the format source")
+        assertEquals(death.sourceName, "Falling", "generic pattern should infer the environmental source from the cause type")
         assertEquals(death.zone, nil, "generic pattern should not invent a zone")
     end)
+end
+
+local function testOfficialEnglishFormatPatternConversion()
+    local cases = {
+        {
+            name = "creature",
+            format = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_CREATURE,
+            pattern = "^%[(.+)%] has been slain by a (.+) in (.+)! They were level (%d+)$",
+            message = "[C] has been slain by a Kobold Vermin in Elwynn Forest! They were level 6",
+        },
+        {
+            name = "drowning",
+            format = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_DROWNING,
+            pattern = "^%[(.+)%] drowned to death in (.+)! They were level (%d+)$",
+            message = "[D] drowned to death in The Deadmines! They were level 18",
+        },
+        {
+            name = "falling",
+            format = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_FALLING,
+            pattern = "^%[(.+)%] fell to their death in (.+)! They were level (%d+)$",
+            message = "[F] fell to their death in Cliffspring Falls! They were level 16",
+        },
+        {
+            name = "lava",
+            format = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_LAVA,
+            pattern = "^%[(.+)%] was burnt to a crisp by lava in (.+)! They were level (%d+)$",
+            message = "[B] was burnt to a crisp by lava in Ironforge! They were level 13",
+        },
+        {
+            name = "pvp",
+            format = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_PVP,
+            pattern = "^%[(.+)%] has been slain by (.+) in (.+)! They were level (%d+)$",
+            message = "[S] has been slain by Playername in Theramore Isle! They were level 36",
+        },
+    }
+
+    for _, case in ipairs(cases) do
+        local pattern = DeathpoolParser.BuildPatternFromFormat(case.format)
+
+        assertEquals(pattern, case.pattern, case.name .. " official format should convert to the expected pattern")
+        assertTruthy(
+            string.match(case.message, pattern) ~= nil,
+            case.name .. " official pattern should match sanitized channel text"
+        )
+    end
 end
 
 local function testObservedFallingDeath()
@@ -122,12 +187,12 @@ local function testObservedFallingDeath()
     assertEquals(death.level, 16, "observed falling death should capture level")
     assertEquals(death.sourceName, "Falling", "observed falling death should normalize the source label")
     assertEquals(death.zone, "Cliffspring Falls", "observed falling death should capture zone")
-    assertEquals(death.causeType, "HARDCORE_CAUSEOFDEATH_FALL", "observed falling death should set the fall cause type")
+    assertEquals(death.causeType, "HARDCORE_CAUSEOFDEATH_FALLING", "observed falling death should set the fall cause type")
 end
 
 local function testObservedDrowningDeath()
     local death = DeathpoolParser.ParseBlizzardDeathMessage(
-        "[Ming] drowned in The Deadmines! They were level 18"
+        "[Ming] drowned to death in The Deadmines! They were level 18"
     )
 
     assertTruthy(death, "observed Hardcore drowning death should parse")
@@ -140,6 +205,14 @@ local function testObservedDrowningDeath()
         "HARDCORE_CAUSEOFDEATH_DROWNING",
         "observed drowning death should set the drowning cause type"
     )
+end
+
+local function testDrownedInMessageDoesNotParse()
+    local death = DeathpoolParser.ParseBlizzardDeathMessage(
+        "[Ming] drowned in The Deadmines! They were level 18"
+    )
+
+    assertEquals(death, nil, "drowned-in wording should not parse without an official matching format")
 end
 
 local function testObservedDeathStripsNamedArticles()
@@ -214,6 +287,56 @@ local function testGetBlizzardDeathPatternsCachesCurrentGlobalsUntilReload()
         local rebuiltPatterns = parser.GetBlizzardDeathPatterns()
 
         assertEquals(#rebuiltPatterns, 2, "reloading the parser should rebuild patterns from the current globals")
+    end)
+end
+
+local function testInitializeBuildsDefaultPatterns()
+    withParserGlobals({
+        HARDCORE_CAUSEOFDEATH_CREATURE = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_CREATURE,
+    }, function(parser)
+        assertEquals(
+            parser.GetCachedDefaultPatternsSummary(),
+            "cachedDefaultPatterns: not built",
+            "parser initialize test should start before the cache is built"
+        )
+
+        parser.Initialize()
+
+        local summary = parser.GetCachedDefaultPatternsSummary()
+        assertContains(summary, "cachedDefaultPatterns: 1 patterns", "parser initialize should build the pattern cache")
+        assertContains(
+            summary,
+            "HARDCORE_CAUSEOFDEATH_CREATURE",
+            "parser initialize should build patterns from Hardcore death globals"
+        )
+    end)
+end
+
+local function testCachedDefaultPatternsSummary()
+    withParserGlobals({
+        HARDCORE_CAUSEOFDEATH_CREATURE = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_CREATURE,
+    }, function(parser)
+        assertEquals(
+            parser.GetCachedDefaultPatternsSummary(),
+            "cachedDefaultPatterns: not built",
+            "pattern cache summary should report when the cache has not been built"
+        )
+
+        parser.GetBlizzardDeathPatterns()
+
+        local summary = parser.GetCachedDefaultPatternsSummary()
+        assertContains(summary, "cachedDefaultPatterns: 1 patterns", "pattern cache summary should include the cache size")
+        assertContains(summary, "1. HARDCORE_CAUSEOFDEATH_CREATURE", "pattern cache summary should include pattern names")
+        assertContains(
+            summary,
+            "roles=[1=name, 2=sourceName, 3=zone, 4=level]",
+            "pattern cache summary should include capture roles"
+        )
+        assertContains(
+            summary,
+            "pattern=^%[(.+)%] has been slain by a (.+) in (.+)! They were level (%d+)$",
+            "pattern cache summary should include compiled Lua patterns"
+        )
     end)
 end
 
@@ -300,14 +423,18 @@ end
 testObservedCreatureDeath()
 testColorAndHyperlinkSanitizing()
 testLocalizedFormatPattern()
+testOfficialEnglishFormatPatternConversion()
 testObservedFallingDeath()
 testObservedDrowningDeath()
+testDrownedInMessageDoesNotParse()
 testObservedDeathStripsNamedArticles()
 testObservedDeathStripsBracketedArticles()
 testBuildPatternFromMultiplePlaceholders()
 testBuildPatternEscapesLiteralCharacters()
 testGetBlizzardDeathPatternsFiltersAndSorts()
 testGetBlizzardDeathPatternsCachesCurrentGlobalsUntilReload()
+testInitializeBuildsDefaultPatterns()
+testCachedDefaultPatternsSummary()
 testSourceMessagePreservesSanitizedText()
 testBlankMessagesReturnNil()
 testMalformedObservedMessagesReturnNil()

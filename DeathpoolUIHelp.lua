@@ -34,7 +34,7 @@ local function BuildHelpWindowText()
         diamond .. " Missing deaths? " .. diamond,
         "",
         "Press Escape, Press Options, type |cFFFFFF00Hardcore|r into the Search menu. "
-            .. "Set both settings to |cFFFFFF00All Deaths|r. "
+            .. "Set |cFFFFFF00Hardcore death announcements|r to |cFFFFFF00All Deaths|r. "
             .. "Then type |cFFFFFF00/join hardcoredeaths|r to join the chat channel.",
         "",
     }, "\n")

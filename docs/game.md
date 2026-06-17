@@ -95,9 +95,3 @@ The goal of the game is to accumulate as many points as possible from the deaths
 ### Bonuses
 
 - The `same-zone bonus` grants additional points for a matched prediction in the player's current location
-
-## Death parsing
-
-- The addon listens for the game's built-in `HARDCORE_DEATHS` event
-- Parsed deaths from built-in events are treated as verified
-- Duplicates are filtered out within a short time window

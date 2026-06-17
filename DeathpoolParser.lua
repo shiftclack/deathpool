@@ -1,12 +1,15 @@
 ---@class DeathpoolParser
 ---@field BuildPatternFromFormat fun(formatString: string|nil): string|nil
+---@field GetCachedDefaultPatternsSummary fun(): string
 ---@field GetBlizzardDeathPatterns fun(): DeathpoolParserPattern[]
----@field ParseBlizzardDeathMessage fun(message: string|nil): DeathpoolParsedDeathEvent|nil
+---@field Initialize fun()
+---@field ParseBlizzardDeathMessage fun(message: string): DeathpoolParsedDeathEvent|nil
 local DeathpoolParser = {}
 
 ---@class DeathpoolParserPattern
 ---@field name string
 ---@field pattern string
+---@field captureRoles table<integer, string|nil>
 
 ---@class DeathpoolParsedDeathEvent
 ---@field name string
@@ -19,6 +22,30 @@ local DeathpoolParser = {}
 ---@field isBlizzardVerified boolean
 
 local unpack = unpack
+
+local CAPTURE_ROLES_BY_CAUSE_TYPE = {
+    HARDCORE_CAUSEOFDEATH_CREATURE = { "name", "sourceName", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_DROWNING = { "name", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_FALLING = { "name", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_FATIGUE = { "name", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_FIRE = { "name", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_LAVA = { "name", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_NONE = { "name", "level" },
+    HARDCORE_CAUSEOFDEATH_PLAYER = { "name", "sourceName", "zone", "level" },
+    HARDCORE_CAUSEOFDEATH_PVP = { "name", "sourceName", "zone", "level" },
+}
+
+local SOURCE_NAME_BY_CAUSE_TYPE = {
+    HARDCORE_CAUSEOFDEATH_DROWNING = "Drowning",
+    HARDCORE_CAUSEOFDEATH_FALLING = "Falling",
+    HARDCORE_CAUSEOFDEATH_FATIGUE = "Fatigue",
+    HARDCORE_CAUSEOFDEATH_FIRE = "Burning",
+    HARDCORE_CAUSEOFDEATH_LAVA = "Burning",
+}
+
+local NORMALIZED_CAUSE_TYPE_BY_CAUSE_TYPE = {
+    HARDCORE_CAUSEOFDEATH_PLAYER = "HARDCORE_CAUSEOFDEATH_PVP",
+}
 
 -- Blizzard death format globals do not change during normal play, so we cache the
 -- compiled matcher lists instead of rebuilding them on every death event parse.
@@ -36,7 +63,7 @@ local function TrimText(text)
     return trimmed
 end
 
----@param message string|nil
+---@param message string
 ---@return string|nil
 local function SanitizeDeathMessage(message)
     if not message or message == "" then
@@ -60,7 +87,6 @@ local function StripLeadingArticle(text)
     end
 
     stripped = string.gsub(stripped, "^%[(.-)%]$", "%1")
-
     stripped = string.gsub(stripped, "^a%s+", "", 1)
     stripped = string.gsub(stripped, "^an%s+", "", 1)
     stripped = string.gsub(stripped, "^the%s+", "", 1)
@@ -82,13 +108,125 @@ function DeathpoolParser.BuildPatternFromFormat(formatString)
         return nil
     end
 
-    local pattern = EscapePattern(formatString)
+    local visibleFormatString = SanitizeDeathMessage(formatString)
+    if not visibleFormatString then
+        return nil
+    end
+
+    local pattern = EscapePattern(visibleFormatString)
     pattern = string.gsub(pattern, "%%%%%d+%$s", "(.+)")
     pattern = string.gsub(pattern, "%%%%%d+%$d", "(%%d+)")
     pattern = string.gsub(pattern, "%%%%s", "(.+)")
     pattern = string.gsub(pattern, "%%%%d", "(%%d+)")
 
     return "^" .. pattern .. "$"
+end
+
+---@param rolesByArgumentIndex table<integer, string>
+---@param sequentialArgumentIndex integer
+---@param ordinaryKind string
+---@return integer
+local function GetOrdinaryPlaceholderArgumentIndex(rolesByArgumentIndex, sequentialArgumentIndex, ordinaryKind)
+    for candidateIndex = sequentialArgumentIndex, #rolesByArgumentIndex do
+        local role = rolesByArgumentIndex[candidateIndex]
+        local roleMatchesKind = (ordinaryKind == "d" and role == "level")
+            or (ordinaryKind == "s" and role ~= "level")
+        if roleMatchesKind then
+            return candidateIndex
+        end
+    end
+
+    return sequentialArgumentIndex
+end
+
+---@param formatString string
+---@param causeType string
+---@return table<integer, string|nil>
+local function BuildCaptureRolesFromFormat(formatString, causeType)
+    local rolesByArgumentIndex = CAPTURE_ROLES_BY_CAUSE_TYPE[causeType] or {}
+    local captureRoles = {}
+    local sequentialArgumentIndex = 1
+    local searchStart = 1
+    local visibleFormatString = SanitizeDeathMessage(formatString)
+
+    if not visibleFormatString then
+        return captureRoles
+    end
+
+    while true do
+        local placeholderStart, placeholderEnd = string.find(visibleFormatString, "%", searchStart, true)
+        if not placeholderStart then
+            break
+        end
+
+        local placeholderText = string.sub(visibleFormatString, placeholderEnd + 1)
+        local positionalIndex, positionalKind = string.match(placeholderText, "^(%d+)%$([sd])")
+        local argumentIndex = nil
+        local consumedLength = nil
+
+        if positionalKind then
+            argumentIndex = tonumber(positionalIndex)
+            consumedLength = string.len(positionalIndex) + 2
+        else
+            local ordinaryKind = string.match(placeholderText, "^([sd])")
+            if ordinaryKind then
+                argumentIndex = GetOrdinaryPlaceholderArgumentIndex(
+                    rolesByArgumentIndex,
+                    sequentialArgumentIndex,
+                    ordinaryKind
+                )
+                sequentialArgumentIndex = argumentIndex + 1
+                consumedLength = 1
+            end
+        end
+
+        if argumentIndex then
+            captureRoles[#captureRoles + 1] = rolesByArgumentIndex[argumentIndex]
+        end
+
+        searchStart = placeholderEnd + (consumedLength or 1) + 1
+    end
+
+    return captureRoles
+end
+
+---@param captureRoles table<integer, string|nil>
+---@return string
+local function BuildCaptureRolesSummary(captureRoles)
+    local roleNames = {}
+
+    for index, role in ipairs(captureRoles) do
+        roleNames[#roleNames + 1] = tostring(index) .. "=" .. tostring(role)
+    end
+
+    if #roleNames == 0 then
+        return "none"
+    end
+
+    return table.concat(roleNames, ", ")
+end
+
+---@return string
+function DeathpoolParser.GetCachedDefaultPatternsSummary()
+    if cachedDefaultPatterns == nil then
+        return "cachedDefaultPatterns: not built"
+    end
+
+    local lines = {
+        "cachedDefaultPatterns: " .. tostring(#cachedDefaultPatterns) .. " patterns",
+    }
+
+    for index, matcher in ipairs(cachedDefaultPatterns) do
+        lines[#lines + 1] = tostring(index)
+            .. ". "
+            .. matcher.name
+            .. " roles=["
+            .. BuildCaptureRolesSummary(matcher.captureRoles)
+            .. "] pattern="
+            .. matcher.pattern
+    end
+
+    return table.concat(lines, "\n")
 end
 
 ---@return DeathpoolParserPattern[]
@@ -108,6 +246,7 @@ function DeathpoolParser.GetBlizzardDeathPatterns()
                 table.insert(patterns, {
                     name = globalName,
                     pattern = pattern,
+                    captureRoles = BuildCaptureRolesFromFormat(globalValue, globalName),
                 })
             end
         end
@@ -117,7 +256,7 @@ function DeathpoolParser.GetBlizzardDeathPatterns()
         return left.name < right.name
     end)
 
-    -- Parsing sits directly on the HARDCORE_DEATHS hot path, so caching the
+    -- Parsing sits directly on the death chat hot path, so caching the
     -- compiled pattern table keeps repeated death messages from paying the
     -- global scan and pattern-build cost each time.
     cachedDefaultPatterns = patterns
@@ -152,118 +291,74 @@ local function ExtractFirstName(...)
     return nil
 end
 
----@param message string
----@return DeathpoolParsedDeathEvent|nil
-local function ParseObservedHardcoreDeathMessage(message)
-    local playerName, sourceName, zone, level, causeType
-
-    playerName, sourceName, zone, level = string.match(
-        message,
-        "^%[(.-)%]%s+has been slain by (.+) in (.-)! They were level (%d+)$"
-    )
-    causeType = "HARDCORE_CAUSEOFDEATH_CREATURE"
-
-    if not playerName then
-        playerName, zone, level = string.match(
-            message,
-            "^%[(.-)%]%s+fell to their death in (.-)! They were level (%d+)$"
-        )
-
-        if playerName then
-            sourceName = "Falling"
-            causeType = "HARDCORE_CAUSEOFDEATH_FALL"
-        end
+---@param parsedDeath table
+---@param role string|nil
+---@param value any
+local function AssignCapturedValue(parsedDeath, role, value)
+    if role == "level" then
+        parsedDeath.level = tonumber(value)
+    elseif role == "name" then
+        parsedDeath.name = TrimText(value)
+    elseif role == "sourceName" then
+        parsedDeath.sourceName = StripLeadingArticle(value)
+    elseif role == "zone" then
+        parsedDeath.zone = TrimText(value)
     end
-
-    if not playerName then
-        playerName, zone, level = string.match(
-            message,
-            "^%[(.-)%]%s+drowned in (.-)! They were level (%d+)$"
-        )
-
-        if not playerName then
-            playerName, zone, level = string.match(
-                message,
-                "^%[(.-)%]%s+drowned to death in (.-)! They were level (%d+)$"
-            )
-        end
-
-        if playerName then
-            sourceName = "Drowning"
-            causeType = "HARDCORE_CAUSEOFDEATH_DROWNING"
-        end
-    end
-
-    if not playerName then
-        playerName, zone, level = string.match(
-            message,
-            "^%[(.-)%]%s+was burnt to a crisp by lava in (.-)! They were level (%d+)$"
-        )
-
-        if playerName then
-            sourceName = "Burning"
-            causeType = "HARDCORE_CAUSEOFDEATH_BURNING"
-        end
-    end
-
-    if playerName then
-        local trimmedPlayerName = TrimText(playerName)
-        local parsedLevel = tonumber(level)
-        if not trimmedPlayerName or not parsedLevel then
-            return nil
-        end
-
-        return {
-            name = trimmedPlayerName,
-            level = parsedLevel,
-            causeType = causeType,
-            sourceName = StripLeadingArticle(sourceName),
-            zone = TrimText(zone),
-            sourceMessage = message,
-            isBlizzardVerified = true,
-        }
-    end
-
-    return nil
 end
 
----@param message string|nil
+---@param message string
+---@param matcher DeathpoolParserPattern
+---@param captures table
+---@return DeathpoolParsedDeathEvent|nil
+local function BuildParsedDeathFromCaptures(message, matcher, captures)
+    local parsedDeath = {}
+
+    for index, value in ipairs(captures) do
+        AssignCapturedValue(parsedDeath, matcher.captureRoles[index], value)
+    end
+
+    local level = parsedDeath.level or ExtractFirstLevel(unpack(captures))
+    local name = parsedDeath.name or ExtractFirstName(unpack(captures))
+
+    if not name or not level then
+        return nil
+    end
+
+    return {
+        name = name,
+        level = level,
+        causeType = NORMALIZED_CAUSE_TYPE_BY_CAUSE_TYPE[matcher.name] or matcher.name,
+        sourceName = parsedDeath.sourceName or SOURCE_NAME_BY_CAUSE_TYPE[matcher.name],
+        zone = parsedDeath.zone,
+        sourceMessage = message,
+        isBlizzardVerified = true,
+    }
+end
+
+---@param message string
 ---@return DeathpoolParsedDeathEvent|nil
 function DeathpoolParser.ParseBlizzardDeathMessage(message)
+    if not message then
+        return nil
+    end
+
     local sanitizedMessage = SanitizeDeathMessage(message)
     if not sanitizedMessage then
         return nil
     end
 
-    local observedDeath = ParseObservedHardcoreDeathMessage(sanitizedMessage)
-    if observedDeath then
-        return observedDeath
-    end
-
     for _, matcher in ipairs(DeathpoolParser.GetBlizzardDeathPatterns()) do
         local captures = { string.match(sanitizedMessage, matcher.pattern) }
         if captures[1] then
-            local level = ExtractFirstLevel(unpack(captures))
-            if not level then
-                return nil
-            end
-
-            local name = ExtractFirstName(unpack(captures))
-            if not name then
-                return nil
-            end
-
-            return {
-                name = name,
-                level = level,
-                causeType = matcher.name,
-                sourceMessage = sanitizedMessage,
-                isBlizzardVerified = true,
-            }
+            return BuildParsedDeathFromCaptures(sanitizedMessage, matcher, captures)
         end
     end
 
     return nil
+end
+
+function DeathpoolParser.Initialize()
+    DeathpoolParser.GetBlizzardDeathPatterns()
 end
 
 _G.DeathpoolParser = DeathpoolParser

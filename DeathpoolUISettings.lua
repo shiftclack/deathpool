@@ -35,9 +35,6 @@ local categoryFrame = nil
 local announceDeathToGuildCheckbox = nil
 local suppressAlertsCheckbox = nil
 local showInCombatCheckbox = nil
-local historicalLimitCheckbox = nil
-local forceEnableNativeDeathAnnouncements = nil
-local forceEnableNativeDeathAlerts = nil
 
 ---@return DeathpoolUISettingsSettingsApi
 local function GetSettingsApi()
@@ -119,32 +116,6 @@ local function CreateCategoryFrame()
     end)
     suppressAlertsCheckbox:SetPoint("TOPLEFT", announceDeathToGuildCheckbox, "BOTTOMLEFT", 0, -12)
 
-    historicalLimitCheckbox = CreateCheckbox(frame, "Increase historical death tracking limit (may hurt performance)", function(self)
-        local settingsApi = GetSettingsApi()
-        settingsApi.SetShowInCombat(self:GetChecked())
-        RefreshCheckboxStates()
-    end)
-    historicalLimitCheckbox:SetPoint("TOPLEFT", suppressAlertsCheckbox, "BOTTOMLEFT", 0, -12)
-    historicalLimitCheckbox.label:SetTextColor(0.5, 0.5, 0.5, 1)
-    historicalLimitCheckbox:Disable()
-
-    forceEnableNativeDeathAnnouncements = CreateCheckbox(frame, "Force the game to enable death announcements", function(self)
-        local settingsApi = GetSettingsApi()
-        settingsApi.SetShowInCombat(self:GetChecked())
-        RefreshCheckboxStates()
-    end)
-    forceEnableNativeDeathAnnouncements:SetPoint("TOPLEFT", historicalLimitCheckbox, "BOTTOMLEFT", 0, -12)
-    forceEnableNativeDeathAnnouncements.label:SetTextColor(0.5, 0.5, 0.5, 1)
-    forceEnableNativeDeathAnnouncements:Disable()
-
-    forceEnableNativeDeathAlerts = CreateCheckbox(frame, "Force the game to enable death alerts", function(self)
-        local settingsApi = GetSettingsApi()
-        settingsApi.SetShowInCombat(self:GetChecked())
-        RefreshCheckboxStates()
-    end)
-    forceEnableNativeDeathAlerts:SetPoint("TOPLEFT", forceEnableNativeDeathAnnouncements, "BOTTOMLEFT", 0, -12)
-    forceEnableNativeDeathAlerts.label:SetTextColor(0.5, 0.5, 0.5, 1)
-    forceEnableNativeDeathAlerts:Disable()
     frame:SetScript("OnShow", RefreshCheckboxStates)
 
     return frame

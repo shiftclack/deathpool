@@ -683,6 +683,19 @@ local function initializeGlobals(options)
         return "Defias Pillager"
     end
 
+    -- https://wago.tools/db2/GlobalStrings?build=1.15.5.57979&filter%5BBaseTag%5D=HARDCORE_CAUSEOFDEATH&page=1&sort%5BBaseTag%5D=asc
+    -- not all of these are used, we include everything to ensure proper testing
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_CREATURE", "|Hplayer:%s|h[%s]|h has been slain by a %s in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_DROWNING", "|Hplayer:%s|h[%s]|h drowned to death in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_DUEL", "|Hplayer:%s|h[%s]|h has been slain in a duel by %s in $s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_FALLING", "|Hplayer:%s|h[%s]|h fell to their death in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_FATIGUE", "|Hplayer:%s|h[%s]|h died of fatigue in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_FIRE", "|Hplayer:%s|h[%s]|h was burnt to death by fire in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_LAVA", "|Hplayer:%s|h[%s]|h was burnt to a crisp by lava in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_NONE", "|Hplayer:%s|h[%s]|h has died at level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_PVP", "|Hplayer:%s|h[%s]|h has been slain by %s in %s! They were level %d")
+    rawset(_G, "HARDCORE_CAUSEOFDEATH_SLIME", "|Hplayer:%s|h[%s]|h was slimed to death in %s! They w")
+
     rawset(_G, "UnitFactionGroup", function(_)
         return options.faction or "Alliance"
     end)

@@ -156,9 +156,9 @@ There are three environments we develop for:
 
 ### Parsing behavior
 
-The death feed parser is intentionally conservative. It registers Blizzard's `HARDCORE_DEATHS` event and parses localized Blizzard `HARDCORE_CAUSEOFDEATH_*` format strings where available. Do not, under any circumstances, communicate with or parse data from other addons such as Deathlog or the Hardcore addon! (Parsing debug data for development is acceptable.)
+The death feed parser is intentionally conservative. The addon listens only to `CHAT_MSG_CHANNEL` messages from the `hardcoredeaths` channel and parses Blizzard death announcement text plus localized Blizzard `HARDCORE_CAUSEOFDEATH_*` format strings where available. Do not, under any circumstances, communicate with or parse data from other addons such as Deathlog or the Hardcore addon! (Parsing debug data for development is acceptable.)
 
-- Death rows are populated only from the official Blizzard death message payload.
+- Death rows are populated only from the official Blizzard death announcements channel payload.
 - The addon does not attempt `/who` lookups or any other follow-up enrichment for guild, race, or class.
 
 ### Use of third party libraries
@@ -227,7 +227,7 @@ World of Warcraft uses a restricted Lua 5.1 runtime with significant differences
   All addon files execute in a shared global scope unless explicitly scoped. Namespacing via tables (e.g., `Deathpool.*`) is required to avoid collisions.
 
 - **Event-driven execution model**  
-  Code runs in response to Blizzard API events (e.g., `HARDCORE_DEATHS`) rather than a traditional main loop.
+  Code runs in response to Blizzard API events (e.g., `CHAT_MSG_CHANNEL`) rather than a traditional main loop.
 
 - **Sandboxed and API-limited**  
   Only Blizzard-provided APIs are available. Many standard Lua libraries are partially or fully unavailable.
