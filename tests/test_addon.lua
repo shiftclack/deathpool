@@ -963,15 +963,15 @@ local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
             rawMessage,
             "Sender",
             "",
-            "5. hardcoredeaths",
+            "5. HardcoreDeaths",
             "",
             "",
             0,
             5,
-            ""
+            "HardcoreDeaths"
         ),
         true,
-        "hardcoredeaths channel messages should dispatch through the addon frame"
+        "HardcoreDeaths channel messages should dispatch through the addon frame"
     )
     assertEquals(#DeathpoolCharacterState.recentDeaths, 1, "death event should insert a recent death row")
     assertEquals(#DeathpoolCharacterState.deathHistory, 1, "death event should insert a history death row")
@@ -1062,15 +1062,15 @@ local function testHardcoreDeathsChannelWithoutSameZoneBonus()
             rawMessage,
             "Sender",
             "",
-            "5. hardcoredeaths",
+            "5. HardcoreDeaths",
             "",
             "",
             0,
             5,
-            "hardcoredeaths"
+            "HardcoreDeaths"
         ),
         true,
-        "hardcoredeaths channel messages should still dispatch when the death is outside the player's current zone"
+        "HardcoreDeaths channel messages should still dispatch when the death is outside the player's current zone"
     )
 
     local storedDeath = DeathpoolCharacterState.recentDeaths[1]
@@ -1121,15 +1121,15 @@ local function testHardcoreDeathsChannelApplySameZoneBonusWithoutZonePrediction(
             rawMessage,
             "Sender",
             "",
-            "5. hardcoredeaths",
+            "5. HardcoreDeaths",
             "",
             "",
             0,
             5,
-            "hardcoredeaths"
+            "HardcoreDeaths"
         ),
         true,
-        "hardcoredeaths channel messages should still dispatch when same-zone bonus comes from a non-zone prediction"
+        "HardcoreDeaths channel messages should still dispatch when same-zone bonus comes from a non-zone prediction"
     )
 
     local storedDeath = DeathpoolCharacterState.recentDeaths[1]

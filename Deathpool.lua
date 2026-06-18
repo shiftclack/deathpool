@@ -12,7 +12,7 @@ local DeathpoolUISettings = _G.DeathpoolUISettings
 local DeathpoolDemo = _G.DeathpoolDemo
 
 local STORAGE_RULES = DeathpoolConstants.STORAGE
-local HARDCORE_DEATHS_CHANNEL_NAME = "hardcoredeaths"
+local HARDCORE_DEATHS_CHANNEL_NAME = "HardcoreDeaths"
 local STARTUP_EVENTS = {
     "PLAYER_LOGIN",
     "PLAYER_LOGOUT",
@@ -37,31 +37,6 @@ local function RegisterStartupEvents(frame)
     for _, eventName in ipairs(STARTUP_EVENTS) do
         frame:RegisterEvent(eventName)
     end
-end
-
----@param channelName string
----@return string|nil
-local function NormalizeChannelName(channelName)
-    if type(channelName) ~= "string" then
-        return nil
-    end
-
-    local normalized = string.lower(channelName)
-    normalized = string.gsub(normalized, "^%s*%d+%.%s*", "")
-    normalized = string.match(normalized, "^%s*(.-)%s*$")
-    if normalized == "" then
-        return nil
-    end
-
-    return normalized
-end
-
----@param channelName string
----@param channelBaseName string
----@return boolean
-local function IsHardcoreDeathsChannel(channelName, channelBaseName)
-    return NormalizeChannelName(channelBaseName) == HARDCORE_DEATHS_CHANNEL_NAME
-        or NormalizeChannelName(channelName) == HARDCORE_DEATHS_CHANNEL_NAME
 end
 
 local function AttachMainFrameScripts(frame, addonFrame)
@@ -230,16 +205,30 @@ function Deathpool:HandleBlizzardDeathMessage(message)
 end
 
 ---@param message string
----@param ... any
-function Deathpool:CHAT_MSG_CHANNEL(message, ...)
-    if not message or message == "" then
+---@param _sender string
+---@param _languageName string
+---@param _channelName string
+---@param _target string
+---@param _flags string
+---@param _zoneChannelID number
+---@param _channelIndex number
+---@param channelBaseName string
+function Deathpool:CHAT_MSG_CHANNEL(
+    message,
+    _sender,
+    _languageName,
+    _channelName,
+    _target,
+    _flags,
+    _zoneChannelID,
+    _channelIndex,
+    channelBaseName
+)
+    if channelBaseName ~= HARDCORE_DEATHS_CHANNEL_NAME then
         return
     end
 
-    local channelName = select(3, ...)
-    local channelBaseName = select(8, ...)
-
-    if not IsHardcoreDeathsChannel(channelName, channelBaseName) then
+    if not message or message == "" then
         return
     end
 
