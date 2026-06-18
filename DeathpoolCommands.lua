@@ -57,7 +57,6 @@ end
 local function PrintSlashHelp()
     Print("Commands: /deathpool show, /deathpool hide, /deathpool toggle, /deathpool minimap")
     Print("Windows: /deathpool log, /deathpool demo, /deathpool showincombat")
-    Print("Alerting: /deathpool disablealerts")
     Print("Debug: /deathpool debug, /deathpool testdeath, /deathpool debugdeath <deathstring>")
     Print("Dangerous: /deathpool resetintro, /deathpool reset")
 end
@@ -114,18 +113,6 @@ local function ToggleMinimapCommand()
             Print("Minimap icon enabled.")
         end
     end
-end
-
----@return boolean
-local function DisableAlertsCommand()
-    local ok = DeathpoolSettings.EnableBlizzardDeathAlertSuppression()
-    if ok then
-        Print("Default Hardcore alerts disabled.")
-    else
-        Print("Default Hardcore alerts could not be disabled.")
-    end
-
-    return ok
 end
 
 local function ShowCommand()
@@ -207,7 +194,6 @@ local SLASH_COMMAND_HANDLERS = {
     reset = ResetCommand,
     showincombat = ToggleShowInCombatCommand,
     minimap = ToggleMinimapCommand,
-    disablealerts = DisableAlertsCommand,
     toggle = ToggleWindowCommand,
     [""] = ToggleWindowCommand,
     help = PrintSlashHelp,

@@ -44,9 +44,6 @@ ITEM_QUALITY_COLORS = {}
 ---@type string[]
 UISpecialFrames = {}
 
----@type RaidWarningFrame|nil
-RaidWarningFrame = nil
-
 ---@type SettingsApi
 Settings = {
     RegisterCanvasLayoutCategory = function(_, name)

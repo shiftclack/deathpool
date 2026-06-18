@@ -248,11 +248,6 @@ end
 
 function Deathpool:PLAYER_LOGIN()
     local mainFrame = self.mainFrame
-    local disableBlizzardDeathAlerts = DeathpoolDatabase and DeathpoolDatabase.GetDisableBlizzardDeathAlerts(self.state)
-
-    if disableBlizzardDeathAlerts then
-        DeathpoolSettings.SetBlizzardDeathAlertsSuppressed(disableBlizzardDeathAlerts)
-    end
 
     if mainFrame and not DeathpoolDatabase.GetHidden(self.state) then
         mainFrame:Show()

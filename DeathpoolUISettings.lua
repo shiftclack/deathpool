@@ -10,17 +10,14 @@
 ---@field Click fun(self: DeathpoolUISettingsPanelCheckbox, button: string|nil)
 
 ---@class DeathpoolUISettingsSettingsApi
----@field GetBlizzardDeathAlertsSuppressed fun(): boolean
 ---@field GetDeathAnnouncementToGuild fun(): boolean
 ---@field GetShowInCombat fun(): boolean
----@field SetBlizzardDeathAlertsSuppressed fun(enabled: boolean): boolean
 ---@field SetDeathAnnouncementToGuild fun(enabled: boolean): boolean
 ---@field SetShowInCombat fun(enabled: boolean): boolean
 
 ---@class DeathpoolUISettingsPanelModule
 ---@field categoryFrame table|nil
 ---@field announceDeathToGuildCheckbox DeathpoolUISettingsPanelCheckbox|nil
----@field suppressAlertsCheckbox DeathpoolUISettingsPanelCheckbox|nil
 ---@field showInCombatCheckbox DeathpoolUISettingsPanelCheckbox|nil
 ---@field Initialize fun(settingsApi: DeathpoolUISettingsSettingsApi)
 
@@ -33,7 +30,6 @@ local activeSettingsApi = nil
 local categoryRegistered = false
 local categoryFrame = nil
 local announceDeathToGuildCheckbox = nil
-local suppressAlertsCheckbox = nil
 local showInCombatCheckbox = nil
 
 ---@return DeathpoolUISettingsSettingsApi
@@ -45,10 +41,6 @@ end
 
 local function RefreshCheckboxStates()
     local settingsApi = GetSettingsApi()
-
-    if suppressAlertsCheckbox then
-        suppressAlertsCheckbox:SetChecked(settingsApi.GetBlizzardDeathAlertsSuppressed())
-    end
 
     if announceDeathToGuildCheckbox then
         announceDeathToGuildCheckbox:SetChecked(settingsApi.GetDeathAnnouncementToGuild())
@@ -109,13 +101,6 @@ local function CreateCategoryFrame()
     end)
     announceDeathToGuildCheckbox:SetPoint("TOPLEFT", showInCombatCheckbox, "BOTTOMLEFT", 0, -12)
 
-    suppressAlertsCheckbox = CreateCheckbox(frame, "Hide native death alerts (experimental)", function(self)
-        local settingsApi = GetSettingsApi()
-        settingsApi.SetBlizzardDeathAlertsSuppressed(self:GetChecked())
-        RefreshCheckboxStates()
-    end)
-    suppressAlertsCheckbox:SetPoint("TOPLEFT", announceDeathToGuildCheckbox, "BOTTOMLEFT", 0, -12)
-
     frame:SetScript("OnShow", RefreshCheckboxStates)
 
     return frame
@@ -133,7 +118,6 @@ function DeathpoolUISettings.Initialize(settingsApi)
 
         DeathpoolUISettings.categoryFrame = categoryFrame
         DeathpoolUISettings.announceDeathToGuildCheckbox = announceDeathToGuildCheckbox
-        DeathpoolUISettings.suppressAlertsCheckbox = suppressAlertsCheckbox
         DeathpoolUISettings.showInCombatCheckbox = showInCombatCheckbox
     end
 

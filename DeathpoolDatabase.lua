@@ -40,7 +40,6 @@
 ---@field hasSeenFirstRun boolean
 ---@field logWindowShown boolean
 ---@field historySuccessfulOnly boolean
----@field disableBlizzardDeathAlerts boolean
 ---@field announceDeathToGuild boolean
 ---@field showInCombat boolean
 ---@field collapsed boolean
@@ -66,7 +65,6 @@ DeathpoolDatabase.DEFAULTS = {
     hasSeenFirstRun = false,
     logWindowShown = false,
     historySuccessfulOnly = true,
-    disableBlizzardDeathAlerts = false,
     announceDeathToGuild = true,
     showInCombat = false,
     collapsed = false,
@@ -224,20 +222,6 @@ end
 function DeathpoolDatabase.SetHistorySuccessfulOnly(database, successfulOnly)
     database.historySuccessfulOnly = successfulOnly == true
     return database.historySuccessfulOnly
-end
-
----@param database DeathpoolCharacterState
----@return boolean
-function DeathpoolDatabase.GetDisableBlizzardDeathAlerts(database)
-    return database.disableBlizzardDeathAlerts == true
-end
-
----@param database DeathpoolCharacterState
----@param enabled boolean
----@return boolean
-function DeathpoolDatabase.SetDisableBlizzardDeathAlerts(database, enabled)
-    database.disableBlizzardDeathAlerts = enabled == true
-    return database.disableBlizzardDeathAlerts
 end
 
 ---@param database DeathpoolCharacterState

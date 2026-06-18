@@ -516,16 +516,6 @@ local function testAddonLoadDefaultsCombatAutoMinimizeToEnabled()
     assertEquals(DeathpoolCharacterState.showInCombat, getDefault("showInCombat"), "addon load should honor the configured show-in-combat default")
 end
 
-local function testAddonLoadDefaultsBlizzardAlertSuppressionToDisabled()
-    createLoadedAddonContext()
-
-    assertEquals(
-        DeathpoolCharacterState.disableBlizzardDeathAlerts,
-        getDefault("disableBlizzardDeathAlerts"),
-        "addon load should honor the configured Blizzard alert suppression default"
-    )
-end
-
 local function testAddonLoadDefaultsDeathAnnouncementToEnabled()
     createLoadedAddonContext()
 
@@ -773,76 +763,9 @@ local function testSlashCommandsReachTheirExpectedBranches()
     )
 end
 
-local function testDisableAlertsCommandSafelyUnregistersRaidWarningFrame()
-    local context = createLoadedAddonContext({
-        state = Fixtures.addonDatabase({
-            hidden = false,
-            hasSeenIntroDemo = true,
-        }),
-        login = true,
-    })
-    local chatMessages = context.chatMessages
-    local unregisteredEventName = nil
-
-    _G.RaidWarningFrame = {
-        UnregisterEvent = function(_, eventName)
-            unregisteredEventName = eventName
-        end,
-    }
-
-    context.runSlash("disableAlerts")
-    assertEquals(
-        DeathpoolCharacterState.disableBlizzardDeathAlerts,
-        true,
-        "disableAlerts should persist Blizzard alert suppression"
-    )
-    assertEquals(
-        unregisteredEventName,
-        "HARDCORE_DEATHS",
-        "disableAlerts should unregister the native hardcore death warning event"
-    )
-    assertEquals(
-        chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: Default Hardcore alerts disabled.",
-        "disableAlerts should confirm the native alerts were disabled"
-    )
-
-    _G.RaidWarningFrame = nil
-    context.runSlash("disableAlerts")
-    assertEquals(
-        chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: Default Hardcore alerts could not be disabled.",
-        "disableAlerts should fail safely when RaidWarningFrame is unavailable"
-    )
-end
-
-local function testPlayerLoginAppliesSavedBlizzardAlertSuppression()
-    local context = createLoadedAddonContext({
-        state = Fixtures.addonDatabase({
-            disableBlizzardDeathAlerts = true,
-        }),
-        login = false,
-    })
-    local unregisteredEventName = nil
-
-    _G.RaidWarningFrame = {
-        UnregisterEvent = function(_, eventName)
-            unregisteredEventName = eventName
-        end,
-    }
-
-    assertEquals(context.dispatchEvent(context.controller, "PLAYER_LOGIN"), true, "player login should dispatch when registered")
-    assertEquals(
-        unregisteredEventName,
-        "HARDCORE_DEATHS",
-        "player login should apply saved Blizzard alert suppression"
-    )
-end
-
 local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
     createLoadedAddonContext({
         state = Fixtures.addonDatabase({
-            disableBlizzardDeathAlerts = true,
             announceDeathToGuild = true,
             showInCombat = true,
         }),
@@ -858,11 +781,6 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
 
     category.frame:Show()
     assertEquals(
-        settingsModule.suppressAlertsCheckbox:GetChecked(),
-        true,
-        "settings panel should reflect saved Blizzard alert suppression state"
-    )
-    assertEquals(
         settingsModule.announceDeathToGuildCheckbox:GetChecked(),
         true,
         "settings panel should reflect saved death announcement state"
@@ -877,7 +795,6 @@ end
 local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
     createLoadedAddonContext({
         state = Fixtures.addonDatabase({
-            disableBlizzardDeathAlerts = false,
             showInCombat = false,
         }),
     })
@@ -885,23 +802,16 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
     ---@type DeathpoolUISettingsPanelModule
     local settingsModule = _G.DeathpoolUISettings
     local reboundState = Fixtures.addonDatabase({
-        disableBlizzardDeathAlerts = true,
         announceDeathToGuild = true,
         showInCombat = true,
     })
 
     settingsModule.Initialize({
-        GetBlizzardDeathAlertsSuppressed = function()
-            return DeathpoolDatabase.GetDisableBlizzardDeathAlerts(reboundState)
-        end,
         GetDeathAnnouncementToGuild = function()
             return DeathpoolDatabase.GetAnnounceDeathToGuild(reboundState)
         end,
         GetShowInCombat = function()
             return DeathpoolDatabase.GetShowInCombat(reboundState)
-        end,
-        SetBlizzardDeathAlertsSuppressed = function(enabled)
-            return DeathpoolDatabase.SetDisableBlizzardDeathAlerts(reboundState, enabled)
         end,
         SetDeathAnnouncementToGuild = function(enabled)
             return DeathpoolDatabase.SetAnnounceDeathToGuild(reboundState, enabled)
@@ -911,11 +821,6 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
         end,
     })
 
-    assertEquals(
-        settingsModule.suppressAlertsCheckbox:GetChecked(),
-        true,
-        "settings initialize should refresh Blizzard alert suppression from the latest options"
-    )
     assertEquals(
         settingsModule.announceDeathToGuildCheckbox:GetChecked(),
         true,
@@ -931,7 +836,6 @@ end
 local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
     createLoadedAddonContext({
         state = Fixtures.addonDatabase({
-            disableBlizzardDeathAlerts = false,
             announceDeathToGuild = false,
             showInCombat = false,
         }),
@@ -939,45 +843,8 @@ local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
 
     ---@type DeathpoolUISettingsPanelModule
     local settingsModule = _G.DeathpoolUISettings
-    local registeredEventName = nil
-    local unregisteredEventName = nil
-
-    _G.RaidWarningFrame = {
-        RegisterEvent = function(_, eventName)
-            registeredEventName = eventName
-        end,
-        UnregisterEvent = function(_, eventName)
-            unregisteredEventName = eventName
-        end,
-    }
 
     settingsModule.categoryFrame:Show()
-
-    settingsModule.suppressAlertsCheckbox:SetChecked(true)
-    settingsModule.suppressAlertsCheckbox:Click()
-    assertEquals(
-        DeathpoolCharacterState.disableBlizzardDeathAlerts,
-        true,
-        "settings suppression checkbox should persist the enabled state"
-    )
-    assertEquals(
-        unregisteredEventName,
-        "HARDCORE_DEATHS",
-        "settings suppression checkbox should disable Blizzard death alerts"
-    )
-
-    settingsModule.suppressAlertsCheckbox:SetChecked(false)
-    settingsModule.suppressAlertsCheckbox:Click()
-    assertEquals(
-        DeathpoolCharacterState.disableBlizzardDeathAlerts,
-        false,
-        "settings suppression checkbox should persist the disabled state"
-    )
-    assertEquals(
-        registeredEventName,
-        "HARDCORE_DEATHS",
-        "settings suppression checkbox should re-enable Blizzard death alerts"
-    )
 
     settingsModule.showInCombatCheckbox:SetChecked(true)
     settingsModule.showInCombatCheckbox:Click()
@@ -1297,7 +1164,6 @@ testAddonRestoresOpenLogWindowAfterReload()
 testAddonRestoresSavedHistoryFilterAfterReload()
 testAddonLoadRestoresSavedCollapsedWindowPosition()
 testAddonLoadDefaultsCombatAutoMinimizeToEnabled()
-testAddonLoadDefaultsBlizzardAlertSuppressionToDisabled()
 testAddonLoadDefaultsDeathAnnouncementToEnabled()
 testCombatAutoMinimizeCollapsesVisibleExpandedWindow()
 testShowInCombatCommandKeepsWindowVisibleInCombat()
@@ -1307,8 +1173,6 @@ testAddonLoadRestoresLearnedZonesIntoSuggestions()
 testEscapeClosesAndPersistsMainWindowHiddenState()
 testEscapeDoesNotCloseCollapsedMainWindow()
 testSlashCommandsReachTheirExpectedBranches()
-testDisableAlertsCommandSafelyUnregistersRaidWarningFrame()
-testPlayerLoginAppliesSavedBlizzardAlertSuppression()
 testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
 testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
 testSettingsPanelCheckboxesUseSharedSettingHandlers()
