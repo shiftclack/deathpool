@@ -61,9 +61,7 @@ local function AttachMainFrameScripts(frame, addonFrame)
             didShowSetup = DeathpoolUISetup.ShowOnMainWindowOpen(self.setupFrame, self)
         end
 
-        if didShowSetup then
-            self.shouldStartIntroDemoAfterSetup = ShouldAutoStartIntroDemo(self, state)
-        elseif ShouldAutoStartIntroDemo(self, state) then
+        if not didShowSetup and ShouldAutoStartIntroDemo(self, state) then
             self.introDemoController:Show()
         end
     end)
@@ -78,7 +76,6 @@ local function AttachMainFrameScripts(frame, addonFrame)
         end
 
         if self.setupFrame and self.setupFrame:IsShown() then
-            self.shouldStartIntroDemoAfterSetup = false
             self.setupFrame:Hide()
         end
 

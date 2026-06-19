@@ -23,6 +23,7 @@ local DeathpoolSetup = _G.DeathpoolSetup
 ---@field joinHardcoreDeathsText DeathpoolSetupFontString
 ---@field backdropOverlay DeathpoolModalBackdropOverlay
 ---@field titlebarDragHandle DeathpoolModalTitlebarDragHandle
+---@field CloseButton DeathpoolSetupButton|nil
 ---@field ownerFrame table
 
 ---@class DeathpoolSetupButton
@@ -93,6 +94,42 @@ local function HideOwnerLogWindow(ownerFrame)
     ownerFrame.logFrame:Hide()
 end
 
+---@param ownerFrame table
+---@return boolean
+local function ShouldStartIntroDemoAfterSetupClose(ownerFrame)
+    local database = DeathpoolUI.GetState(ownerFrame)
+    local introDemoController = ownerFrame.introDemoController
+
+    return ownerFrame:IsShown()
+        and DeathpoolSetup.IsComplete()
+        and not DeathpoolDatabase.GetHasSeenIntroDemo(database)
+        and introDemoController ~= nil
+        and introDemoController:IsActive() ~= true
+end
+
+---@param ownerFrame table
+---@return boolean
+local function CanCloseSetupWindow(ownerFrame)
+    local database = DeathpoolUI.GetState(ownerFrame)
+    return DeathpoolDatabase.GetHasSeenIntroDemo(database)
+        and DeathpoolDatabase.GetHasSeenFirstRun(database)
+end
+
+---@param setupFrame DeathpoolSetupFrame
+---@param ownerFrame table
+local function RefreshSetupCloseButtonState(setupFrame, ownerFrame)
+    local closeButton = setupFrame.CloseButton
+    if not closeButton then
+        return
+    end
+
+    if CanCloseSetupWindow(ownerFrame) then
+        closeButton:Enable()
+    else
+        closeButton:Disable()
+    end
+end
+
 ---@param setupFrame DeathpoolSetupFrame
 ---@param ownerFrame table
 ---@param forceHide boolean
@@ -107,6 +144,7 @@ function DeathpoolUISetup.Refresh(setupFrame, ownerFrame, forceHide)
 
     DeathpoolUISetup.ApplyMainWindowState(ownerFrame, active)
     RefreshSetupRows(setupFrame, setupState)
+    RefreshSetupCloseButtonState(setupFrame, ownerFrame)
 
     if active then
         setupFrame.backdropOverlay:Show()
@@ -133,7 +171,6 @@ function DeathpoolUISetup.ShowOnMainWindowOpen(setupFrame, ownerFrame)
         return false
     end
 
-    DeathpoolSetup.MarkShownThisSession()
     DeathpoolUISetup.Show(setupFrame, ownerFrame)
     return true
 end
@@ -147,6 +184,7 @@ function DeathpoolUISetup.Show(setupFrame, ownerFrame)
     HideOwnerLogWindow(ownerFrame)
     DeathpoolUISetup.ApplyMainWindowState(ownerFrame, setupState.isComplete ~= true)
     RefreshSetupRows(setupFrame, setupState)
+    RefreshSetupCloseButtonState(setupFrame, ownerFrame)
     setupFrame.backdropOverlay:Show()
     setupFrame:Show()
 end
@@ -169,19 +207,28 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
 
     setupFrame:SetScript("OnShow", function(self)
         self.backdropOverlay:Show()
+        RefreshSetupCloseButtonState(self, ownerFrame)
         HideOwnerLogWindow(ownerFrame)
     end)
     setupFrame:SetScript("OnHide", function(self)
-        local shouldStartIntroDemo = ownerFrame.shouldStartIntroDemoAfterSetup == true
+        local shouldStartIntroDemo = ShouldStartIntroDemoAfterSetupClose(ownerFrame)
 
         self.backdropOverlay:Hide()
         DeathpoolUISetup.ApplyMainWindowState(ownerFrame, false)
-        ownerFrame.shouldStartIntroDemoAfterSetup = false
 
-        if shouldStartIntroDemo and ownerFrame:IsShown() and ownerFrame.introDemoController then
+        if shouldStartIntroDemo then
             ownerFrame.introDemoController:Show()
         end
     end)
+
+    if setupFrame.CloseButton then
+        setupFrame.CloseButton:SetScript("OnClick", function()
+            if CanCloseSetupWindow(ownerFrame) then
+                setupFrame:Hide()
+            end
+        end)
+        RefreshSetupCloseButtonState(setupFrame, ownerFrame)
+    end
 
     local title = setupFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     ---@cast title DeathpoolSetupFontString

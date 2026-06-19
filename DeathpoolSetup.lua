@@ -11,7 +11,6 @@ local HARDCORE_DEATHS_CHANNEL_NAME = "HardcoreDeaths"
 local sessionState = {
     hasEnabledDeathAnnouncements = false,
     hasJoinedHardcoreDeathsChannel = false,
-    hasShownSetupThisSession = false,
 }
 
 ---@return boolean
@@ -54,11 +53,7 @@ end
 
 ---@return boolean
 function DeathpoolSetup.ShouldShowOnMainWindowOpen()
-    return sessionState.hasShownSetupThisSession ~= true and not DeathpoolSetup.IsComplete()
-end
-
-function DeathpoolSetup.MarkShownThisSession()
-    sessionState.hasShownSetupThisSession = true
+    return not DeathpoolSetup.IsComplete()
 end
 
 function DeathpoolSetup.EnableDeathAnnouncements()

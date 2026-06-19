@@ -384,6 +384,20 @@ local function createRegion(regionKind, name, parent, template)
     return region
 end
 
+local function attachBasicFrameCloseButton(frame, name)
+    local closeButtonName = name and (name .. "CloseButton") or nil
+    local closeButton = createRegion("Button", closeButtonName, frame, "UIPanelCloseButton")
+    closeButton:SetScript("OnClick", function()
+        frame:Hide()
+    end)
+
+    frame.children[#frame.children + 1] = closeButton
+    frame.CloseButton = closeButton
+    if closeButtonName then
+        _G[closeButtonName] = closeButton
+    end
+end
+
 local function walkRegions(region, callback)
     callback(region)
     for _, child in ipairs(region.children or {}) do
@@ -559,6 +573,9 @@ local function initializeGlobals(options)
         end
         if name then
             _G[name] = frame
+        end
+        if template == "BasicFrameTemplateWithInset" then
+            attachBasicFrameCloseButton(frame, name)
         end
         return frame
     end

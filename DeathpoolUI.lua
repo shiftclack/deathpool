@@ -731,6 +731,50 @@ local function IsSetupWindowShown(frame)
 end
 
 ---@param frame table
+---@return boolean
+local function IsHelpWindowShown(frame)
+    return frame.helpFrame ~= nil and frame.helpFrame:IsShown() == true
+end
+
+---@param frame table
+local function ReapplyHelpModalPredictionState(frame)
+    if not IsHelpWindowShown(frame) then
+        return
+    end
+
+    if frame.SetPredictionInputsLocked then
+        frame.SetPredictionInputsLocked(true)
+    end
+
+    if frame.RefreshPredictionActionButtonState then
+        frame.RefreshPredictionActionButtonState()
+    end
+end
+
+---@param frame table
+local function RefreshWindowAfterCollapseStateChange(frame)
+    if frame.RefreshCollapsedSummary then
+        frame:RefreshCollapsedSummary()
+    end
+
+    if not frame.isCollapsed then
+        if frame.RefreshRecentDeathLogState then
+            frame:RefreshRecentDeathLogState()
+        end
+        ReapplyHelpModalPredictionState(frame)
+    end
+
+    if frame.RefreshIntroDemoVisibility and HasActiveIntroDemo(frame) then
+        frame:RefreshIntroDemoVisibility()
+    elseif frame.demoModeWatermark then
+        frame.demoModeWatermark:Hide()
+        if frame.introDemoAttractPanel then
+            frame.introDemoAttractPanel:Hide()
+        end
+    end
+end
+
+---@param frame table
 ---@param database DeathpoolCharacterState
 ---@param collapsed boolean
 function DeathpoolUI.SetWindowCollapsed(frame, database, collapsed)
@@ -757,19 +801,7 @@ function DeathpoolUI.SetWindowCollapsed(frame, database, collapsed)
     DeathpoolUI.HideGameInfoCallout(frame.gameInfoCallout)
 
     DeathpoolDatabase.SetCollapsed(database, frame.isCollapsed)
-
-    if frame.RefreshCollapsedSummary then
-        frame:RefreshCollapsedSummary()
-    end
-
-    if frame.RefreshIntroDemoVisibility and HasActiveIntroDemo(frame) then
-        frame:RefreshIntroDemoVisibility()
-    elseif frame.demoModeWatermark then
-        frame.demoModeWatermark:Hide()
-        if frame.introDemoAttractPanel then
-            frame.introDemoAttractPanel:Hide()
-        end
-    end
+    RefreshWindowAfterCollapseStateChange(frame)
 end
 
 ---@param database DeathpoolCharacterState

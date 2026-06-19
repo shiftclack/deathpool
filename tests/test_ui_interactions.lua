@@ -725,6 +725,73 @@ local function testSetupWindowShowsBothIncompleteSetupItems()
     assertEquals(Deathpool.zoneEditBox:IsEnabled(), false, "setup window should disable zone input")
 end
 
+local function testSetupCloseButtonBlocksNewCharacters()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenIntroDemo = false,
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    showSetupWindow(Deathpool)
+
+    assertTruthy(Deathpool.setupFrame.CloseButton ~= nil, "setup window should expose the template close button")
+    assertEquals(Deathpool.setupFrame.CloseButton:IsEnabled(), false, "new characters should not be able to close setup with X")
+
+    Deathpool.setupFrame.CloseButton:Click()
+
+    assertEquals(Deathpool.setupFrame:IsShown(), true, "setup X should keep setup visible before Deathpool has started")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), true, "blocked setup X should keep the setup backdrop visible")
+end
+
+local function testSetupCloseButtonBlocksBeforeFirstPrediction()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenIntroDemo = true,
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "1",
+        hardcoreDeathsJoined = true,
+    })
+    local Deathpool = context.Deathpool
+
+    showSetupWindow(Deathpool)
+
+    assertEquals(Deathpool.setupFrame.CloseButton:IsEnabled(), false, "setup X should stay disabled until the first prediction is made")
+
+    Deathpool.setupFrame.CloseButton:Click()
+
+    assertEquals(Deathpool.setupFrame:IsShown(), true, "setup X should not close setup after demo but before first prediction")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), true, "blocked setup X after demo should keep the backdrop visible")
+end
+
+local function testSetupCloseButtonClosesForDeathpoolPlayers()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenIntroDemo = true,
+        hasSeenFirstRun = true,
+    }), {
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    showSetupWindow(Deathpool)
+
+    assertEquals(Deathpool.setupFrame.CloseButton:IsEnabled(), true, "Deathpool players should be able to close setup with X")
+
+    Deathpool.setupFrame.CloseButton:Click()
+
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "setup X should close setup once Deathpool has started")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "setup X should clear the backdrop when setup closes")
+end
+
 local function testSetupWindowEnableChecksOnlyDeathAnnouncementItem()
     local context = createUIContext(Fixtures.uiDatabase({
         hasSeenFirstRun = false,
@@ -933,6 +1000,33 @@ local function testWaitingForFirstDeathNotificationUsesSharedPromptPane()
         "waiting message should keep animating the dots after the help hint appears"
     )
     assertEquals(Deathpool.waitingPromptHelpText:IsShown(), true, "waiting message should keep the help hint visible while the dots continue")
+end
+
+local function testWaitingForFirstDeathNotificationRestoresAfterMinimize()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = true,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+        recentDeaths = {},
+    }))
+    local DeathpoolUI = context.DeathpoolUI
+    local Deathpool = context.Deathpool
+
+    Deathpool:RefreshDeaths()
+    assertEquals(Deathpool.waitingPromptText:IsShown(), true, "waiting prompt should start visible before minimizing")
+
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+
+---@diagnostic disable-next-line: need-check-nil
+    Deathpool:GetScript("OnUpdate")(Deathpool, 1)
+    assertEquals(Deathpool.waitingPromptText:IsShown(), false, "collapsed refresh should hide the expanded waiting prompt")
+
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
+
+    assertEquals(Deathpool.waitingPromptText:IsShown(), true, "expanding should restore the waiting prompt base text")
+    assertEquals(Deathpool.waitingPromptDots:IsShown(), true, "expanding should restore the waiting prompt dots")
+    assertEquals(Deathpool.deathRows[1]:IsShown(), false, "expanding should keep empty death rows hidden while waiting")
 end
 
 local function testWaitingForFirstDeathNotificationStaysVisibleForMinimumDuration()
@@ -1839,12 +1933,16 @@ testRefreshLockedPredictionRestoresInputsAndPauseButtonState()
 testRefreshLockedPredictionHandlesEmptyState()
 testEmptyPredictionPromptReplacesMainDeathLogUntilPredictionSelected()
 testSetupWindowShowsBothIncompleteSetupItems()
+testSetupCloseButtonBlocksNewCharacters()
+testSetupCloseButtonBlocksBeforeFirstPrediction()
+testSetupCloseButtonClosesForDeathpoolPlayers()
 testSetupWindowEnableChecksOnlyDeathAnnouncementItem()
 testSetupWindowJoinChecksOnlyChannelItem()
 testSetupWindowShowsPrecompletedDeathAnnouncements()
 testSetupWindowCompletedSetupAdvancesToPrediction()
 testReturningPlayersDoNotSeeFirstRunPrompt()
 testWaitingForFirstDeathNotificationUsesSharedPromptPane()
+testWaitingForFirstDeathNotificationRestoresAfterMinimize()
 testWaitingForFirstDeathNotificationStaysVisibleForMinimumDuration()
 testSuccessOnlyHistoryUsesTimestampTieBreakerForEqualScores()
 testPredictionButtons()
