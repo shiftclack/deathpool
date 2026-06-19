@@ -303,9 +303,9 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     ---@param uiMode DeathpoolUIModeState
     ---@param notificationText string|nil
     local function RefreshRecentDeathPanePrompt(frame, uiMode, notificationText)
-        if uiMode.mode == "demo" then
+        if DeathpoolUIMode.IsDemoMode(uiMode) or DeathpoolUIMode.HasModal(uiMode) then
             RefreshEmptyPredictionPrompt(frame, nil, nil)
-            DeathpoolUISetup.Refresh(frame.setupFrame, frame, true)
+            DeathpoolUISetup.Refresh(frame.setupFrame, frame, not DeathpoolUIMode.IsSetupModal(uiMode))
             RefreshWaitingPromptText(frame, nil)
             RefreshWaitingPromptHelpText(frame, false, nil)
             return
@@ -367,7 +367,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     ---@param frame DeathpoolRefreshReadyControllerFrame
     local function DisablePredictionActionsForDemo(frame)
         local uiMode = DeathpoolUIMode.Resolve(frame, GetDisplayedState(frame), GetState())
-        if uiMode.mode ~= "demo" then
+        if not DeathpoolUIMode.IsDemoMode(uiMode) then
             return
         end
 

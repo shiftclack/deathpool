@@ -13,6 +13,8 @@ local DOWNLOAD_AREA_WIDTH = 204
 ---@field downloadUrlBox table
 ---@field closeButton table
 ---@field demoButton table
+---@field backdropOverlay DeathpoolModalBackdropOverlay
+---@field titlebarDragHandle DeathpoolModalTitlebarDragHandle
 
 ---@return string
 local function BuildHelpWindowText()
@@ -52,26 +54,48 @@ function DeathpoolUI.GetDownloadUrl()
 end
 
 ---@param ownerFrame DeathpoolHelpOwnerFrame
+---@param active boolean
+local function RefreshOwnerFrameForHelpModal(ownerFrame, active)
+    if ownerFrame:IsShown() then
+        if active then
+            ownerFrame.SetPredictionInputsLocked(true)
+            ownerFrame.RefreshPredictionActionButtonState()
+        else
+            ownerFrame:RefreshLockedPrediction()
+        end
+    end
+end
+
+---@param ownerFrame DeathpoolHelpOwnerFrame
 ---@return DeathpoolHelpFrame
 function DeathpoolUI.CreateHelpWindow(ownerFrame)
     local downloadUrl = DeathpoolUI.GetDownloadUrl()
 
     local helpFrame = CreateFrame("Frame", "DeathpoolHelpFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast helpFrame DeathpoolHelpFrame
-    helpFrame:SetSize(500, 410)
-    helpFrame:SetPoint("CENTER", UIParent, "CENTER", 20, -10)
+    helpFrame:SetSize(500, 369)
+    helpFrame:SetPoint("CENTER", ownerFrame, "CENTER", 0, 0)
     helpFrame:SetFrameStrata("DIALOG")
     helpFrame:SetToplevel(true)
-    helpFrame:SetMovable(true)
+    helpFrame:SetMovable(false)
     helpFrame:EnableMouse(true)
-    helpFrame:RegisterForDrag("LeftButton")
-    helpFrame:SetScript("OnDragStart", helpFrame.StartMoving)
-    helpFrame:SetScript("OnDragStop", helpFrame.StopMovingOrSizing)
     helpFrame:Hide()
+    helpFrame.backdropOverlay = DeathpoolUI.CreateModalBackdropOverlay(ownerFrame)
+
+    helpFrame:SetScript("OnShow", function(self)
+        DeathpoolUI.ShowExpandedOwnerFrame(ownerFrame)
+        self.backdropOverlay:Show()
+        RefreshOwnerFrameForHelpModal(ownerFrame, true)
+    end)
+    helpFrame:SetScript("OnHide", function(self)
+        self.backdropOverlay:Hide()
+        RefreshOwnerFrameForHelpModal(ownerFrame, false)
+    end)
 
     local title = helpFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     title:SetPoint("TOP", helpFrame, "TOP", 0, -6)
     title:SetText("HELP")
+    helpFrame.titlebarDragHandle = DeathpoolUI.CreateModalTitlebarDragHandle(helpFrame, ownerFrame)
 
     local scrollFrame = CreateFrame("ScrollFrame", "DeathpoolHelpScrollFrame", helpFrame, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", helpFrame, "TOPLEFT", 18, -32)

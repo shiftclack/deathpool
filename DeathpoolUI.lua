@@ -81,6 +81,101 @@ DeathpoolUI.LAYOUT = {
     predictionButtonY = 22,
 }
 
+---@class DeathpoolModalBackdropOverlay
+---@field Show fun(self: DeathpoolModalBackdropOverlay)
+---@field Hide fun(self: DeathpoolModalBackdropOverlay)
+---@field SetAllPoints fun(self: DeathpoolModalBackdropOverlay)
+---@field SetFrameLevel fun(self: DeathpoolModalBackdropOverlay, frameLevel: number)
+---@field EnableMouse fun(self: DeathpoolModalBackdropOverlay, enabled: boolean)
+---@field RegisterForDrag fun(self: DeathpoolModalBackdropOverlay, button: string)
+---@field SetScript fun(self: DeathpoolModalBackdropOverlay, scriptType: string, handler: function)
+---@field CreateTexture fun(self: DeathpoolModalBackdropOverlay, name: string|nil, layer: string): DeathpoolModalBackdropTexture
+---@field texture DeathpoolModalBackdropTexture
+
+---@class DeathpoolModalTitlebarDragHandle
+---@field SetPoint fun(self: DeathpoolModalTitlebarDragHandle, point: string, relativeTo: table, relativePoint: string, xOffset: number, yOffset: number)
+---@field SetHeight fun(self: DeathpoolModalTitlebarDragHandle, height: number)
+---@field EnableMouse fun(self: DeathpoolModalTitlebarDragHandle, enabled: boolean)
+---@field RegisterForDrag fun(self: DeathpoolModalTitlebarDragHandle, button: string)
+---@field SetScript fun(self: DeathpoolModalTitlebarDragHandle, scriptType: string, handler: function)
+
+---@class DeathpoolModalBackdropTexture
+---@field SetAllPoints fun(self: DeathpoolModalBackdropTexture)
+---@field SetColorTexture fun(self: DeathpoolModalBackdropTexture, red: number, green: number, blue: number, alpha: number)
+
+local MODAL_BACKDROP_ALPHA = 0.58
+local MODAL_BACKDROP_FRAME_LEVEL_OFFSET = 40
+local MODAL_DRAG_BUTTON = "LeftButton"
+
+---@param ownerFrame table
+local function StartOwnerFrameDrag(ownerFrame)
+    ownerFrame:StartMoving()
+end
+
+---@param ownerFrame table
+local function StopOwnerFrameDrag(ownerFrame)
+    ownerFrame:StopMovingOrSizing()
+    DeathpoolUI.SaveWindowPosition(ownerFrame, DeathpoolUI.GetState(ownerFrame), ownerFrame.isCollapsed)
+end
+
+---@param ownerFrame table
+function DeathpoolUI.ShowExpandedOwnerFrame(ownerFrame)
+    if ownerFrame.isCollapsed == true then
+        DeathpoolUI.SetWindowCollapsed(ownerFrame, DeathpoolUI.GetState(ownerFrame), false)
+    end
+
+    if not ownerFrame:IsShown() then
+        ownerFrame:Show()
+    end
+end
+
+---@param ownerFrame table
+---@return DeathpoolModalBackdropOverlay
+function DeathpoolUI.CreateModalBackdropOverlay(ownerFrame)
+    local backdropOverlay = CreateFrame("Frame", nil, ownerFrame)
+    ---@cast backdropOverlay DeathpoolModalBackdropOverlay
+    backdropOverlay:SetAllPoints()
+    backdropOverlay:SetFrameLevel(ownerFrame:GetFrameLevel() + MODAL_BACKDROP_FRAME_LEVEL_OFFSET)
+    backdropOverlay:EnableMouse(true)
+    backdropOverlay:RegisterForDrag(MODAL_DRAG_BUTTON)
+    backdropOverlay:SetScript("OnDragStart", function()
+        StartOwnerFrameDrag(ownerFrame)
+    end)
+    backdropOverlay:SetScript("OnDragStop", function()
+        StopOwnerFrameDrag(ownerFrame)
+    end)
+
+    local backdropTexture = backdropOverlay:CreateTexture(nil, "BACKGROUND")
+    ---@cast backdropTexture DeathpoolModalBackdropTexture
+    backdropTexture:SetAllPoints()
+    backdropTexture:SetColorTexture(0, 0, 0, MODAL_BACKDROP_ALPHA)
+    backdropOverlay.texture = backdropTexture
+    backdropOverlay:Hide()
+
+    return backdropOverlay
+end
+
+---@param modalFrame table
+---@param ownerFrame table
+---@return DeathpoolModalTitlebarDragHandle
+function DeathpoolUI.CreateModalTitlebarDragHandle(modalFrame, ownerFrame)
+    local titlebarDragHandle = CreateFrame("Frame", nil, modalFrame)
+    ---@cast titlebarDragHandle DeathpoolModalTitlebarDragHandle
+    titlebarDragHandle:SetPoint("TOPLEFT", modalFrame, "TOPLEFT", 8, -4)
+    titlebarDragHandle:SetPoint("TOPRIGHT", modalFrame, "TOPRIGHT", -32, -4)
+    titlebarDragHandle:SetHeight(22)
+    titlebarDragHandle:EnableMouse(true)
+    titlebarDragHandle:RegisterForDrag(MODAL_DRAG_BUTTON)
+    titlebarDragHandle:SetScript("OnDragStart", function()
+        StartOwnerFrameDrag(ownerFrame)
+    end)
+    titlebarDragHandle:SetScript("OnDragStop", function()
+        StopOwnerFrameDrag(ownerFrame)
+    end)
+
+    return titlebarDragHandle
+end
+
 ---@param height number|nil
 ---@return number
 function DeathpoolUI.NormalizeCollapsedWindowHeight(height)

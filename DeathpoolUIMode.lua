@@ -9,17 +9,60 @@ local WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS =
     DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
 
 ---@class DeathpoolUIModeState
----@field mode "setup"|"demo"|"collapsed"|"normal"
+---@field mode "demo"|"collapsed"|"normal"
+---@field modal "setup"|"help"|nil
 ---@field prompt string|nil
 ---@field inputsLocked boolean
 ---@field mainBlocked boolean
 ---@field showRecentDeathRows boolean
 ---@field showWaitingHelp boolean
 
+---@param uiMode DeathpoolUIModeState
+---@return boolean
+function DeathpoolUIMode.IsDemoMode(uiMode)
+    return uiMode.mode == "demo"
+end
+
+---@param uiMode DeathpoolUIModeState
+---@return boolean
+function DeathpoolUIMode.IsCollapsedMode(uiMode)
+    return uiMode.mode == "collapsed"
+end
+
+---@param uiMode DeathpoolUIModeState
+---@return boolean
+function DeathpoolUIMode.IsNormalMode(uiMode)
+    return uiMode.mode == "normal"
+end
+
+---@param uiMode DeathpoolUIModeState
+---@return boolean
+function DeathpoolUIMode.HasModal(uiMode)
+    return uiMode.modal ~= nil
+end
+
+---@param uiMode DeathpoolUIModeState
+---@return boolean
+function DeathpoolUIMode.IsSetupModal(uiMode)
+    return uiMode.modal == "setup"
+end
+
+---@param uiMode DeathpoolUIModeState
+---@return boolean
+function DeathpoolUIMode.IsHelpModal(uiMode)
+    return uiMode.modal == "help"
+end
+
 ---@param frame table
 ---@return boolean
 local function IsSetupVisible(frame)
     return frame.setupFrame ~= nil and frame.setupFrame:IsShown() == true
+end
+
+---@param frame table
+---@return boolean
+local function IsHelpVisible(frame)
+    return frame.helpFrame ~= nil and frame.helpFrame:IsShown() == true
 end
 
 ---@param frame table
@@ -50,35 +93,57 @@ local function ShouldShowWaitingForFirstDeathHelp(frame, displayState)
 end
 
 ---@param frame table
+---@return "setup"|"help"|nil
+local function ResolveModal(frame)
+    if IsSetupVisible(frame) then
+        return "setup"
+    end
+
+    if IsHelpVisible(frame) then
+        return "help"
+    end
+
+    return nil
+end
+
+---@param frame table
+---@return "demo"|"collapsed"|"normal"
+local function ResolveMode(frame)
+    if IsIntroDemoActive(frame) then
+        return "demo"
+    end
+
+    if frame.isCollapsed == true then
+        return "collapsed"
+    end
+
+    return "normal"
+end
+
+---@param frame table
 ---@param displayState DeathpoolDisplayState
 ---@param database DeathpoolCharacterState
 ---@return DeathpoolUIModeState
 function DeathpoolUIMode.Resolve(frame, displayState, database)
-    if IsSetupVisible(frame) then
+    local modal = ResolveModal(frame)
+    local mode = ResolveMode(frame)
+
+    if modal ~= nil or mode == "demo" then
         return {
-            mode = "setup",
+            mode = mode,
+            modal = modal,
             prompt = nil,
             inputsLocked = true,
-            mainBlocked = true,
+            mainBlocked = modal ~= nil,
             showRecentDeathRows = true,
             showWaitingHelp = false,
         }
     end
 
-    if IsIntroDemoActive(frame) then
+    if mode == "collapsed" then
         return {
-            mode = "demo",
-            prompt = nil,
-            inputsLocked = true,
-            mainBlocked = false,
-            showRecentDeathRows = true,
-            showWaitingHelp = false,
-        }
-    end
-
-    if frame.isCollapsed == true then
-        return {
-            mode = "collapsed",
+            mode = mode,
+            modal = nil,
             prompt = nil,
             inputsLocked = displayState.lockedPrediction ~= nil,
             mainBlocked = false,
@@ -95,7 +160,8 @@ function DeathpoolUIMode.Resolve(frame, displayState, database)
     end
 
     return {
-        mode = "normal",
+        mode = mode,
+        modal = nil,
         prompt = prompt,
         inputsLocked = displayState.lockedPrediction ~= nil,
         mainBlocked = false,

@@ -264,14 +264,14 @@ local function RefreshActionButtonState(ctx)
     local frame = ctx.frame
     local uiMode = ResolveMainWindowMode(ctx)
 
-    if uiMode.mode == "demo" then
-        frame.lockButton:Enable()
+    if uiMode.mainBlocked then
+        frame.lockButton:Disable()
         frame.pauseButton:Disable()
         return
     end
 
-    if uiMode.mainBlocked then
-        frame.lockButton:Disable()
+    if DeathpoolUIMode.IsDemoMode(uiMode) then
+        frame.lockButton:Enable()
         frame.pauseButton:Disable()
         return
     end
@@ -1062,7 +1062,7 @@ end
 ---@param uiMode DeathpoolUIModeState
 local function RefreshAuxiliaryWindowState(ctx, uiMode)
     local frame = ctx.frame
-    local isDemoShown = uiMode.mode == "demo"
+    local isDemoShown = DeathpoolUIMode.IsDemoMode(uiMode)
     local hasSeenFirstRun = DeathpoolDatabase.GetHasSeenFirstRun(GetState(frame))
 
     if isDemoShown or not hasSeenFirstRun then
@@ -1093,7 +1093,7 @@ end
 ---@param ctx DeathpoolMainContext
 local function RefreshIntroDemoVisibility(frame, ctx)
     local uiMode = ResolveMainWindowMode(ctx)
-    local isIntroDemoShown = uiMode.mode == "demo"
+    local isIntroDemoShown = DeathpoolUIMode.IsDemoMode(uiMode)
     local shouldShowIntroDemo = isIntroDemoShown and not frame.isCollapsed and frame:IsShown()
 
     RefreshAuxiliaryWindowState(ctx, uiMode)
