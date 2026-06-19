@@ -2,6 +2,8 @@ local DeathpoolUI = _G.DeathpoolUI or {}
 local DeathpoolDatabase = _G.DeathpoolDatabase
 local DeathpoolDebug = _G.DeathpoolDebug
 local DeathpoolConstants = _G.DeathpoolConstants
+local DeathpoolUIMode = _G.DeathpoolUIMode
+local DeathpoolUISetup = _G.DeathpoolUISetup
 local SCORE_RULES = DeathpoolConstants.SCORING
 local DEMO_RULES = DeathpoolConstants.DEMO
 local EMPTY_PREDICTION_PROMPT_TEXT = "Make your prediction"
@@ -98,6 +100,7 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstD
 ---@field waitingPromptText DeathpoolWidget
 ---@field waitingPromptDots DeathpoolWidget
 ---@field waitingPromptHelpText DeathpoolWidget
+---@field setupFrame DeathpoolSetupFrame
 ---@field deathRows DeathpoolWidget[]
 ---@field totalPointsValue DeathpoolWidget
 ---@field currentStreakValue DeathpoolWidget
@@ -109,6 +112,7 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstD
 ---@field lockedPredictionValue DeathpoolWidget
 ---@field selectedLevelRange string
 ---@field predictionInputsLocked boolean
+---@field setupActive boolean
 ---@field waitingPromptDotCount integer
 ---@field waitingPromptElapsed number
 ---@field waitingPromptDisplayDuration number
@@ -169,10 +173,10 @@ local function GetIntroDemoDisplayedState(frame, logic)
     return nil
 end
 
----@param points number|nil
+---@param points number
 ---@return string
 local function FormatPointCallout(points)
-    local awardedPoints = tonumber(points) or 0
+    local awardedPoints = points or 0
 
     if awardedPoints == 1 then
         return "1 point"
@@ -244,11 +248,30 @@ local function SetPredictionInputsLocked(ctx, locked)
 end
 
 ---@param ctx DeathpoolMainContext
+---@return DeathpoolDisplayState
+local function GetMainWindowDisplayState(ctx)
+    return GetIntroDemoDisplayedState(ctx.frame, ctx.logic) or ctx.logic.GetDisplayState(GetState(ctx.frame))
+end
+
+---@param ctx DeathpoolMainContext
+---@return DeathpoolUIModeState
+local function ResolveMainWindowMode(ctx)
+    return DeathpoolUIMode.Resolve(ctx.frame, GetMainWindowDisplayState(ctx), GetState(ctx.frame))
+end
+
+---@param ctx DeathpoolMainContext
 local function RefreshActionButtonState(ctx)
     local frame = ctx.frame
+    local uiMode = ResolveMainWindowMode(ctx)
 
-    if IsIntroDemoActive(frame) then
+    if uiMode.mode == "demo" then
         frame.lockButton:Enable()
+        frame.pauseButton:Disable()
+        return
+    end
+
+    if uiMode.mainBlocked then
+        frame.lockButton:Disable()
         frame.pauseButton:Disable()
         return
     end
@@ -590,9 +613,6 @@ local function CreateRecentDeathsSection(ctx)
     })
 
     frame.deathRows = recentDeathsFrame.rows
-    for _, row in ipairs(frame.deathRows) do
-        DeathpoolUI.RegisterCollapsibleRegion(frame, row)
-    end
 end
 
 ---@param ctx DeathpoolMainBuildContext
@@ -1039,24 +1059,25 @@ local function AttachPredictionEditBoxHandlers(ctx, editBox, suggestionList)
 end
 
 ---@param ctx DeathpoolMainContext
-local function RefreshAuxiliaryWindowState(ctx)
+---@param uiMode DeathpoolUIModeState
+local function RefreshAuxiliaryWindowState(ctx, uiMode)
     local frame = ctx.frame
-    local isIntroDemoShown = IsIntroDemoActive(frame)
+    local isDemoShown = uiMode.mode == "demo"
     local hasSeenFirstRun = DeathpoolDatabase.GetHasSeenFirstRun(GetState(frame))
 
-    if isIntroDemoShown or not hasSeenFirstRun then
+    if isDemoShown or not hasSeenFirstRun then
         frame.bottomLogButton:Disable()
     else
         frame.bottomLogButton:Enable()
     end
 
-    if isIntroDemoShown then
+    if isDemoShown then
         frame.helpButton:Disable()
     else
         frame.helpButton:Enable()
     end
 
-    if isIntroDemoShown then
+    if isDemoShown then
         frame.logFrame:Hide()
         frame.helpFrame:Hide()
 
@@ -1071,10 +1092,15 @@ end
 ---@param frame DeathpoolMainFrame
 ---@param ctx DeathpoolMainContext
 local function RefreshIntroDemoVisibility(frame, ctx)
-    local isIntroDemoShown = IsIntroDemoActive(frame)
+    local uiMode = ResolveMainWindowMode(ctx)
+    local isIntroDemoShown = uiMode.mode == "demo"
     local shouldShowIntroDemo = isIntroDemoShown and not frame.isCollapsed and frame:IsShown()
 
-    RefreshAuxiliaryWindowState(ctx)
+    RefreshAuxiliaryWindowState(ctx, uiMode)
+
+    if isIntroDemoShown then
+        SetPredictionInputsLocked(ctx, uiMode.inputsLocked)
+    end
 
     if frame.demoModeWatermark then
         if shouldShowIntroDemo then
@@ -1111,7 +1137,7 @@ local function AttachMainFrameMethods(ctx)
     end
     frame.RefreshAuxiliaryWindowState = function(_self)
         ---@cast ctx DeathpoolMainContext
-        RefreshAuxiliaryWindowState(ctx)
+        RefreshAuxiliaryWindowState(ctx, ResolveMainWindowMode(ctx))
     end
     frame.RefreshIntroDemoVisibility = function(self)
         ---@cast ctx DeathpoolMainContext
@@ -1124,6 +1150,7 @@ end
 local function InitializeMainFrameDefaults(frame)
     frame.collapsedWindowStates = {}
     frame.predictionInputsLocked = false
+    frame.setupActive = false
     frame.waitingPromptDotCount = 0
     frame.waitingPromptElapsed = 0
     frame.waitingPromptDisplayDuration = 0
@@ -1183,8 +1210,10 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
     local debugWindow = DeathpoolUI.CreateDebugWindow()
     local logWindow = DeathpoolUI.CreateHistoryWindow(frame)
     local helpWindow = DeathpoolUI.CreateHelpWindow(frame)
+    local setupWindow = DeathpoolUISetup.CreateWindow(frame)
     frame.helpFrame = helpWindow
     frame.logFrame = logWindow
+    frame.setupFrame = setupWindow
     frame.dropdown = DeathpoolUI.CreateSuggestionDropdown(frame)
 
     DeathpoolUI.AttachRefreshMethods(frame, debugWindow, logWindow, logic)

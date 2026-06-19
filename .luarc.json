@@ -40,6 +40,8 @@
       "GameFontNormalSmall",
       "GameMenuButtonTemplate",
       "GameTooltip",
+      "GetCVar",
+      "GetChannelName",
       "GetRealmName",
       "GetZoneText",
       "HARDCORE_CAUSEOFDEATH_CREATURE",

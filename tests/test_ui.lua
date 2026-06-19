@@ -9,11 +9,144 @@ local assertTruthy = testContext.assertTruthy
 local function testModuleSurface()
     local context = createUIContext()
     local DeathpoolUI = context.DeathpoolUI
+    local DeathpoolSetup = _G.DeathpoolSetup
+    local DeathpoolUISetup = _G.DeathpoolUISetup
+    local DeathpoolUIMode = _G.DeathpoolUIMode
 
     assertTruthy(DeathpoolUI.Initialize, "UI module should expose Initialize")
     assertTruthy(DeathpoolUI.SetWindowCollapsed, "UI module should expose SetWindowCollapsed")
     assertTruthy(DeathpoolUI.CreateDeathLogList, "UI module should expose the flexible death log list builder")
     assertTruthy(DeathpoolUI.RefreshDeathLogRows, "UI module should expose the flexible death log list refresher")
+    assertTruthy(DeathpoolSetup.GetState, "setup controller should expose GetState")
+    assertTruthy(DeathpoolSetup.ShouldShowOnMainWindowOpen, "setup controller should expose first-open eligibility")
+    assertTruthy(DeathpoolSetup.MarkShownThisSession, "setup controller should expose session display marking")
+    assertTruthy(DeathpoolSetup.EnableDeathAnnouncements, "setup controller should expose death announcement action")
+    assertTruthy(DeathpoolSetup.JoinHardcoreDeathsChannel, "setup controller should expose channel join action")
+    assertTruthy(DeathpoolUISetup.ShowOnMainWindowOpen, "setup UI should expose first-open show behavior")
+    assertTruthy(DeathpoolUISetup.Show, "setup UI should expose manual show behavior")
+    assertTruthy(DeathpoolUISetup.Refresh, "setup UI should expose refresh behavior")
+    assertTruthy(DeathpoolUISetup.CreateWindow, "setup UI should expose setup window creation")
+    assertTruthy(DeathpoolUIMode.Resolve, "UI mode resolver should expose Resolve")
+end
+
+local function buildModeDisplayState(options)
+    options = options or {}
+    return {
+        deaths = options.deaths or {},
+        lockedPrediction = options.lockedPrediction,
+    }
+end
+
+local function setFakeIntroDemoActive(frame)
+    frame.introDemoController = {
+        IsActive = function()
+            return true
+        end,
+    }
+end
+
+local function testUIModeResolverPrioritizesSetup()
+    local context = createUIContext()
+    local Deathpool = context.Deathpool
+    local DeathpoolUIMode = _G.DeathpoolUIMode
+
+    Deathpool.setupFrame:Show()
+    setFakeIntroDemoActive(Deathpool)
+
+    local mode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+
+    assertEquals(mode.mode, "setup", "setup should take priority over intro demo")
+    assertEquals(mode.prompt, nil, "setup mode should suppress normal prompts")
+    assertEquals(mode.inputsLocked, true, "setup mode should lock prediction inputs")
+    assertEquals(mode.mainBlocked, true, "setup mode should block the main window")
+    assertEquals(mode.showRecentDeathRows, true, "setup mode should keep expanded death row data visible-ready")
+    assertEquals(mode.showWaitingHelp, false, "setup mode should hide waiting help")
+end
+
+local function testUIModeResolverPrioritizesIntroDemoBeforeCollapsedAndPrompts()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+    }))
+    local Deathpool = context.Deathpool
+    local DeathpoolUI = context.DeathpoolUI
+    local DeathpoolUIMode = _G.DeathpoolUIMode
+
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+    setFakeIntroDemoActive(Deathpool)
+
+    local mode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+
+    assertEquals(mode.mode, "demo", "intro demo should take priority over collapsed and first-run prompt state")
+    assertEquals(mode.prompt, nil, "intro demo should suppress normal prompts")
+    assertEquals(mode.inputsLocked, true, "intro demo should lock prediction inputs")
+    assertEquals(mode.mainBlocked, false, "intro demo should keep the main window available for ending the demo")
+    assertEquals(mode.showRecentDeathRows, true, "intro demo should show demo death rows")
+    assertEquals(mode.showWaitingHelp, false, "intro demo should hide waiting help")
+end
+
+local function testUIModeResolverHandlesCollapsedMode()
+    local context = createUIContext()
+    local Deathpool = context.Deathpool
+    local DeathpoolUI = context.DeathpoolUI
+    local DeathpoolUIMode = _G.DeathpoolUIMode
+
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+
+    local mode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+
+    assertEquals(mode.mode, "collapsed", "collapsed mode should suppress expanded prompt behavior")
+    assertEquals(mode.prompt, nil, "collapsed mode should not show expanded prompts")
+    assertEquals(mode.inputsLocked, false, "collapsed mode should inherit unlocked prediction inputs")
+    assertEquals(mode.mainBlocked, false, "collapsed mode should not block the main window")
+    assertEquals(mode.showRecentDeathRows, true, "collapsed mode should keep expanded death row data visible-ready")
+    assertEquals(mode.showWaitingHelp, false, "collapsed mode should hide waiting help")
+end
+
+local function testUIModeResolverHandlesNormalPromptsAndLocks()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+    }))
+    local Deathpool = context.Deathpool
+    local DeathpoolUIMode = _G.DeathpoolUIMode
+
+    local firstRunMode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+    assertEquals(firstRunMode.mode, "normal", "first-run prompt should stay in normal mode")
+    assertEquals(firstRunMode.prompt, "firstRun", "normal mode should surface the first-run prompt")
+    assertEquals(firstRunMode.inputsLocked, false, "first-run prompt should leave prediction inputs unlocked")
+    assertEquals(firstRunMode.mainBlocked, false, "first-run prompt should not block the main window")
+    assertEquals(firstRunMode.showRecentDeathRows, false, "first-run prompt should hide expanded death rows")
+    assertEquals(firstRunMode.showWaitingHelp, false, "first-run prompt should hide waiting help")
+
+    DeathpoolCharacterState.hasSeenFirstRun = true
+    local waitingMode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+    assertEquals(waitingMode.mode, "normal", "waiting prompt should stay in normal mode")
+    assertEquals(waitingMode.prompt, "waiting", "normal mode should surface waiting prompt with no deaths")
+    assertEquals(waitingMode.inputsLocked, false, "waiting prompt should leave prediction inputs unlocked")
+    assertEquals(waitingMode.mainBlocked, false, "waiting prompt should not block the main window")
+    assertEquals(waitingMode.showRecentDeathRows, false, "waiting prompt should hide expanded death rows")
+    assertEquals(waitingMode.showWaitingHelp, false, "waiting help should wait for the configured delay")
+
+    Deathpool.waitingPromptDisplayDuration = _G.DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
+    local waitingHelpMode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+    assertEquals(waitingHelpMode.showRecentDeathRows, false, "waiting help should keep expanded death rows hidden")
+    assertEquals(waitingHelpMode.showWaitingHelp, true, "waiting help should show after the configured delay")
+
+    local lockedMode = DeathpoolUIMode.Resolve(
+        Deathpool,
+        buildModeDisplayState({
+            deaths = {
+                Fixtures.storedDeath(),
+            },
+            lockedPrediction = Fixtures.prediction(),
+        }),
+        DeathpoolCharacterState
+    )
+    assertEquals(lockedMode.mode, "normal", "locked prediction should stay in normal mode")
+    assertEquals(lockedMode.prompt, nil, "locked prediction should suppress prompts")
+    assertEquals(lockedMode.inputsLocked, true, "locked prediction should lock inputs")
+    assertEquals(lockedMode.mainBlocked, false, "locked prediction should not block the main window")
+    assertEquals(lockedMode.showRecentDeathRows, true, "normal locked mode should show death rows")
+    assertEquals(lockedMode.showWaitingHelp, false, "locked prediction should hide waiting help")
 end
 
 local function testInitializeReturnsFrames()
@@ -101,10 +234,51 @@ local function testInitializeReturnsFrames()
     )
     assertTruthy(Deathpool.introDemoAttractPanel, "main frame should create the intro demo marquee panel")
     assertTruthy(Deathpool.emptyPredictionPrompt, "main frame should create the empty-prediction prompt")
+    assertTruthy(Deathpool.setupFrame, "main frame should create the standalone setup window")
+    assertTruthy(Deathpool.setupFrame.enableDeathAnnouncementsButton, "setup window should create the death announcement enable button")
+    assertTruthy(Deathpool.setupFrame.enableDeathAnnouncementsText, "setup window should create the death announcement enable text")
+    assertTruthy(Deathpool.setupFrame.joinHardcoreDeathsButton, "setup window should create the hardcore deaths channel join button")
+    assertTruthy(Deathpool.setupFrame.joinHardcoreDeathsText, "setup window should create the hardcore deaths channel join text")
+    assertTruthy(Deathpool.setupFrame.backdropOverlay, "setup window should create a main-window backdrop overlay")
+    assertTruthy(Deathpool.setupFrame.titlebarDragHandle, "setup window should create a titlebar drag handle")
     assertTruthy(Deathpool.waitingPromptText, "main frame should create the waiting prompt base text")
     assertTruthy(Deathpool.waitingPromptDots, "main frame should create the waiting prompt dots")
     assertTruthy(Deathpool.waitingPromptHelpText, "main frame should create the waiting prompt help text")
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "empty-prediction prompt should start hidden")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "setup window should start hidden")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "setup backdrop should start hidden")
+    assertEquals(Deathpool.setupFrame.backdropOverlay.allPoints, true, "setup backdrop should cover the main window")
+    assertEquals(Deathpool.setupFrame.backdropOverlay.mouseEnabled, true, "setup backdrop should block main window clicks")
+    assertEquals(Deathpool.setupFrame.backdropOverlay.dragButton, "LeftButton", "setup backdrop should preserve main-window dragging")
+    assertTruthy(Deathpool.setupFrame.backdropOverlay:GetScript("OnDragStart"), "setup backdrop should start main-window dragging")
+    assertTruthy(Deathpool.setupFrame.backdropOverlay:GetScript("OnDragStop"), "setup backdrop should stop main-window dragging")
+    assertEquals(Deathpool.setupFrame.titlebarDragHandle.dragButton, "LeftButton", "setup titlebar should preserve main-window dragging")
+    assertTruthy(Deathpool.setupFrame.titlebarDragHandle:GetScript("OnDragStart"), "setup titlebar should start main-window dragging")
+    assertTruthy(Deathpool.setupFrame.titlebarDragHandle:GetScript("OnDragStop"), "setup titlebar should stop main-window dragging")
+    assertEquals(
+        Deathpool.setupFrame.backdropOverlay:GetFrameLevel() > Deathpool:GetFrameLevel(),
+        true,
+        "setup backdrop should sit above main window contents"
+    )
+    assertEquals(Deathpool.setupFrame.backdropOverlay.texture.colorTexture[4], 0.58, "setup backdrop should obscure the main window")
+    assertEquals(Deathpool.setupFrame.title:GetText(), "SETUP", "setup window should use the setup title")
+    assertEquals(Deathpool.setupFrame.subtitle:GetText(), "Let's make sure you're set up!", "setup window should introduce setup")
+    assertEquals(Deathpool.setupFrame.subtitle.template, "GameFontNormal", "setup subtitle should match row text size")
+    assertEquals(select(2, Deathpool.setupFrame:GetPoint(1)), Deathpool, "setup window should be centered on the main window")
+    assertEquals(select(4, Deathpool.setupFrame:GetPoint(1)), 0, "setup window should not offset horizontally from the main window")
+    assertEquals(select(5, Deathpool.setupFrame:GetPoint(1)), 0, "setup window should not offset vertically from the main window")
+    assertEquals(Deathpool.setupFrame.movable, false, "setup window should not be movable")
+    assertEquals(Deathpool.setupFrame.dragButton, nil, "setup window should not register for dragging")
+    assertEquals(Deathpool.configPromptFrame, nil, "main frame should not create an inline setup prompt")
+    assertEquals(Deathpool.configPromptTitle, nil, "main frame should not create an inline setup title")
+    assertEquals(Deathpool.deathAnnouncementsCheckbox, nil, "config walkthrough should not create a death announcement checkbox")
+    assertEquals(Deathpool.hardcoreDeathsChannelCheckbox, nil, "config walkthrough should not create a channel checkbox")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton.template, "GameMenuButtonTemplate", "death announcement action should use a real button template")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton:GetText(), "ENABLE", "death announcement button should use the enable label")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsText:GetText(), "Hardcore death announcements", "death announcement text should explain the action")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton.template, "GameMenuButtonTemplate", "channel action should use a real button template")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton:GetText(), "JOIN", "channel button should use the join label")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsText:GetText(), "The HardcoreDeaths channel", "channel text should explain the action")
     assertEquals(
         Deathpool.emptyPredictionPrompt:GetText(),
         "Make your prediction",
@@ -350,6 +524,36 @@ local function testDesiredLogWindowStateReopensWhenMainWindowShowsOrExpands()
     assertEquals(DeathpoolLog:IsShown(), false, "expanding should keep the log hidden when the desired state is closed")
 end
 
+local function testAuxiliaryWindowRefreshUsesResolvedDemoMode()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = true,
+        logWindowShown = true,
+    }))
+    local Deathpool = context.Deathpool
+    local DeathpoolLog = context.DeathpoolLog
+
+    Deathpool:Show()
+    DeathpoolLog:Show()
+    Deathpool.helpFrame:Show()
+
+    Deathpool.introDemoController:Show()
+    Deathpool:RefreshAuxiliaryWindowState()
+
+    assertEquals(Deathpool.bottomLogButton:IsEnabled(), false, "demo mode should disable the log button through auxiliary refresh")
+    assertEquals(Deathpool.helpButton:IsEnabled(), false, "demo mode should disable the help button through auxiliary refresh")
+    assertEquals(DeathpoolLog:IsShown(), false, "demo mode should close the log window through auxiliary refresh")
+    assertEquals(Deathpool.helpFrame:IsShown(), false, "demo mode should close the help window through auxiliary refresh")
+    assertEquals(Deathpool.collapsedWindowStates.logFrame, false, "demo mode should clear remembered log state")
+    assertEquals(Deathpool.collapsedWindowStates.helpFrame, false, "demo mode should clear remembered help state")
+
+    Deathpool.introDemoController:Dismiss()
+    Deathpool:RefreshAuxiliaryWindowState()
+
+    assertEquals(Deathpool.bottomLogButton:IsEnabled(), true, "normal mode should re-enable the log button after demo")
+    assertEquals(Deathpool.helpButton:IsEnabled(), true, "normal mode should re-enable the help button after demo")
+    assertEquals(DeathpoolLog:IsShown(), true, "normal mode should restore the desired log window state")
+end
+
 local function testCollapsedWindowPositionIsRemembered()
     local context = createUIContext({})
     local DeathpoolUI = context.DeathpoolUI
@@ -457,7 +661,56 @@ local function testLogTitlebarDragMovesMainWindow()
     assertTruthy(DeathpoolCharacterState.collapsedWindowPosition ~= nil, "dragging from the log titlebar while minimized should save the minimized position")
 end
 
+local function testSetupTitlebarDragMovesMainWindow()
+    local context = createUIContext({})
+    local DeathpoolUI = context.DeathpoolUI
+    local Deathpool = context.Deathpool
+    local setupTitlebar = Deathpool.setupFrame.titlebarDragHandle
+
+    setupTitlebar:GetScript("OnDragStart")()
+    assertTruthy(Deathpool.startedMoving, "dragging the setup titlebar should start moving the main window")
+
+    Deathpool:ClearAllPoints()
+    Deathpool:SetPoint("CENTER", UIParent, "CENTER", 180, -95)
+    setupTitlebar:GetScript("OnDragStop")()
+    assertTruthy(Deathpool.stoppedMoving, "releasing the setup titlebar should stop moving the main window")
+    assertTruthy(DeathpoolCharacterState.windowPosition ~= nil, "dragging from the setup titlebar should save the main window position")
+
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+    Deathpool:ClearAllPoints()
+    Deathpool:SetPoint("CENTER", UIParent, "CENTER", -120, 40)
+    setupTitlebar:GetScript("OnDragStop")()
+    assertTruthy(
+        DeathpoolCharacterState.collapsedWindowPosition ~= nil,
+        "dragging from the setup titlebar while minimized should save the minimized position"
+    )
+end
+
+local function testSetupTintFollowsSetupWindowVisibility()
+    local context = createUIContext({})
+    local Deathpool = context.Deathpool
+
+    Deathpool.setupFrame:Show()
+    assertEquals(
+        Deathpool.setupFrame.backdropOverlay:IsShown(),
+        true,
+        "setup backdrop should show when the setup window is shown directly"
+    )
+
+    Deathpool.setupFrame:Hide()
+    assertEquals(
+        Deathpool.setupFrame.backdropOverlay:IsShown(),
+        false,
+        "setup backdrop should hide when the setup window is hidden directly"
+    )
+    assertEquals(Deathpool.setupActive, false, "hiding setup should restore main window interaction state")
+end
+
 testModuleSurface()
+testUIModeResolverPrioritizesSetup()
+testUIModeResolverPrioritizesIntroDemoBeforeCollapsedAndPrompts()
+testUIModeResolverHandlesCollapsedMode()
+testUIModeResolverHandlesNormalPromptsAndLocks()
 testInitializeReturnsFrames()
 testInitializeRestoresSavedHistoryFilterMode()
 testEscapeClosesMainWindow()
@@ -467,8 +720,11 @@ testCollapsedDeathLogRowClickExpandsMainWindow()
 testBottomLogButtonBehavior()
 testMinimizeButtonUsesGameInfoCallout()
 testDesiredLogWindowStateReopensWhenMainWindowShowsOrExpands()
+testAuxiliaryWindowRefreshUsesResolvedDemoMode()
 testCollapsedWindowPositionIsRemembered()
 testLogTitlebarDragMovesMainWindow()
+testSetupTitlebarDragMovesMainWindow()
+testSetupTintFollowsSetupWindowVisibility()
 testCollapsedWindowHeightCanBeResizedAndRestored()
 
 suite:finish()

@@ -52,6 +52,8 @@ local function createLoadedAddonContext(options)
 
     local context = UIHarness.CreateAddon({
         state = options.state,
+        hardcoreDeathChatType = options.hardcoreDeathChatType,
+        hardcoreDeathsJoined = options.hardcoreDeathsJoined,
     })
     local controller = context.controller
     local dispatchEvent = context.dispatchEvent
@@ -122,6 +124,81 @@ local function testMainWindowVisibilityPersistsThroughStartup()
     assertEquals(dispatchEvent(controller, "PLAYER_LOGIN"), true, "dispatcher should keep firing registered events after state changes")
     refreshUiFrames(context)
     assertEquals(Deathpool:IsShown(), false, "player login should respect a previously hidden main window")
+end
+
+local function testIncompleteSetupShowsOnceWhenMainWindowFirstOpens()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = true,
+            collapsed = true,
+            hasSeenIntroDemo = true,
+        }),
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    assertEquals(Deathpool:IsShown(), false, "incomplete setup should not force open a saved-hidden main window")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "incomplete setup should not show before the main window opens")
+
+    context.runSlash("show")
+    assertTruthy(Deathpool:IsShown(), "show command should open the main window")
+    assertEquals(Deathpool.isCollapsed, false, "first-open setup should expand the main window before showing setup")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "first main-window open should show incomplete setup")
+    assertEquals(DeathpoolCharacterState.hidden, false, "opening the main window should persist it as visible")
+    assertEquals(DeathpoolCharacterState.collapsed, false, "first-open setup should persist the expanded main window")
+
+    Deathpool.setupFrame:Hide()
+    Deathpool:Hide()
+    context.runSlash("show")
+    assertTruthy(Deathpool:IsShown(), "show command should reopen the main window")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "automatic setup should only show once per session")
+end
+
+local function testSetupShowsBeforeIntroDemoOnFirstOpen()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = true,
+            collapsed = false,
+            hasSeenIntroDemo = false,
+        }),
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    context.runSlash("show")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "first main-window open should show setup before intro demo")
+    assertEquals(getIntroDemoState(Deathpool), nil, "setup should defer intro demo while it is visible")
+
+    Deathpool.setupFrame:Hide()
+    assertEquals(getIntroDemoState(Deathpool) ~= nil, true, "closing first-open setup should start the intro demo")
+    assertEquals(Deathpool.lockButton:GetText(), "START GAME", "deferred intro demo should relabel the lock button")
+end
+
+local function testHidingMainWindowClosesSetupWithoutStartingDeferredIntroDemo()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = true,
+            collapsed = false,
+            hasSeenIntroDemo = false,
+        }),
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    context.runSlash("show")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "first main-window open should show setup before hiding")
+    assertTruthy(Deathpool.setupFrame.backdropOverlay:IsShown(), "setup backdrop should show before hiding")
+    assertEquals(getIntroDemoState(Deathpool), nil, "setup should defer intro demo before hiding")
+
+    Deathpool:Hide()
+    assertEquals(Deathpool:IsShown(), false, "hiding the main window should hide the main frame")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "hiding the main window should close setup")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "hiding the main window should clear setup backdrop")
+    assertEquals(getIntroDemoState(Deathpool), nil, "hiding the main window should not start deferred intro demo")
+    assertEquals(Deathpool.shouldStartIntroDemoAfterSetup, false, "hiding the main window should cancel deferred intro demo")
 end
 
 local function testAddonLoadRebindsUiToSavedVariablesTable()
@@ -428,6 +505,39 @@ local function testHidingMainWindowClosesLogWindow()
     )
 end
 
+local function testSetupWindowClosesLogWindowWithoutRememberingLogState()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = false,
+            hasSeenIntroDemo = true,
+            logWindowShown = false,
+        }),
+        login = true,
+    })
+    local Deathpool = context.Deathpool
+    local DeathpoolLog = context.DeathpoolLog
+
+    context.runSlash("log")
+    assertTruthy(DeathpoolLog:IsShown(), "log command should show the log before setup opens")
+    assertEquals(DeathpoolCharacterState.logWindowShown, true, "log command should persist the desired open state")
+
+    context.runSlash("setup")
+
+    assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should show setup")
+    assertEquals(DeathpoolLog:IsShown(), false, "setup should close the log window")
+    assertEquals(
+        DeathpoolCharacterState.logWindowShown,
+        true,
+        "setup should not persist a closed desired log state"
+    )
+
+    DeathpoolUI.SetLogWindowShown(Deathpool, DeathpoolCharacterState, false)
+    context.runSlash("log")
+
+    assertEquals(DeathpoolCharacterState.logWindowShown, true, "log command should still update desired log state")
+    assertEquals(DeathpoolLog:IsShown(), false, "setup should keep the log hidden when log is toggled open")
+end
+
 local function testHidingMainWindowEndsIntroDemo()
     local context = createLoadedAddonContext()
     local Deathpool = context.Deathpool
@@ -508,6 +618,37 @@ local function testAddonLoadRestoresSavedCollapsedWindowPosition()
     assertEquals(Deathpool.height, 98, "addon load should restore the minimized height")
     assertEquals(Deathpool.points[1][4], -180, "addon load should restore the saved minimized x offset")
     assertEquals(Deathpool.points[1][5], 72, "addon load should restore the saved minimized y offset")
+end
+
+local function testExpandingReloadedCollapsedWindowRestoresRecentDeathRows()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = false,
+            hasSeenIntroDemo = true,
+            hasSeenFirstRun = true,
+            collapsed = true,
+            recentDeaths = {
+                Fixtures.storedDeath({
+                    name = "Reloadmini",
+                    level = 19,
+                    source = "Murloc",
+                    zone = "Westfall",
+                }),
+            },
+        }),
+    })
+    local Deathpool = context.Deathpool
+
+    assertEquals(Deathpool.isCollapsed, true, "startup should restore the saved mini-log state")
+    assertEquals(Deathpool.recentDeathsFrame:IsShown(), false, "collapsed startup should hide the expanded recent death pane")
+    assertEquals(Deathpool.deathRows[1].name:GetText(), "Reloadmini", "collapsed startup should still populate expanded death row data")
+
+    _G.DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
+
+    assertEquals(Deathpool.isCollapsed, false, "expanding the mini-log should restore the expanded state")
+    assertEquals(Deathpool.recentDeathsFrame:IsShown(), true, "expanding the mini-log should show the expanded recent death pane")
+    assertEquals(Deathpool.deathRows[1]:IsShown(), true, "expanding the mini-log should show populated death rows")
+    assertEquals(Deathpool.deathRows[1].name:GetText(), "Reloadmini", "expanded death rows should show saved recent deaths")
 end
 
 local function testAddonLoadDefaultsCombatAutoMinimizeToEnabled()
@@ -713,6 +854,21 @@ local function testSlashCommandsReachTheirExpectedBranches()
     assertEquals(DeathpoolLog:IsShown(), false, "log command should hide the history window after it was opened")
     assertEquals(DeathpoolCharacterState.logWindowShown, false, "log command should persist the desired closed state")
 
+    context.runSlash("setup")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should show the setup window")
+
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+    context.runSlash("setup")
+    assertEquals(Deathpool.isCollapsed, false, "setup command should expand the main window before showing setup")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should keep setup visible after expanding the main window")
+
+    Deathpool:Hide()
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "hiding the main window should close slash-opened setup")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "hiding the main window should clear slash-opened setup backdrop")
+    context.runSlash("setup")
+    assertTruthy(Deathpool:IsShown(), "setup command should show the main window")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should keep the setup window shown after showing main")
+
     context.runSlash("debug")
     assertEquals(_G.DeathpoolDebugState.IsEnabled(), true, "debug command should reach the debug toggle branch")
 
@@ -733,13 +889,17 @@ local function testSlashCommandsReachTheirExpectedBranches()
     local messageCountBeforeHelp = #chatMessages
     context.runSlash("help")
     local sawIntroHelp = false
+    local sawSetupHelp = false
     for messageIndex = messageCountBeforeHelp + 1, #chatMessages do
         if string.find(chatMessages[messageIndex], "/deathpool resetintro", 1, true) then
             sawIntroHelp = true
-            break
+        end
+        if string.find(chatMessages[messageIndex], "/deathpool setup", 1, true) then
+            sawSetupHelp = true
         end
     end
     assertEquals(sawIntroHelp, true, "help command should list the resetintro command")
+    assertEquals(sawSetupHelp, true, "help command should list the setup command")
 
     local messageCountBeforeMissingDebugDeath = #chatMessages
     context.runSlash("debugdeath")
@@ -1148,6 +1308,9 @@ end
 
 testAddonDefersUiCreationUntilAddonLoaded()
 testMainWindowVisibilityPersistsThroughStartup()
+testIncompleteSetupShowsOnceWhenMainWindowFirstOpens()
+testSetupShowsBeforeIntroDemoOnFirstOpen()
+testHidingMainWindowClosesSetupWithoutStartingDeferredIntroDemo()
 testAddonLoadRebindsUiToSavedVariablesTable()
 testReloadDoesNotPersistVisibleMainWindowAsHidden()
 testDebugLogOnlyPrintsWhileDebugModeIsEnabled()
@@ -1159,10 +1322,12 @@ testDemoCommandPrintsErrorWhileCollapsed()
 testIntroCommandResetsIntroductionFlagsAndPrintsMessage()
 testResetCommandRequiresDebugModeAndReinitializesDefaults()
 testHidingMainWindowClosesLogWindow()
+testSetupWindowClosesLogWindowWithoutRememberingLogState()
 testHidingMainWindowEndsIntroDemo()
 testAddonRestoresOpenLogWindowAfterReload()
 testAddonRestoresSavedHistoryFilterAfterReload()
 testAddonLoadRestoresSavedCollapsedWindowPosition()
+testExpandingReloadedCollapsedWindowRestoresRecentDeathRows()
 testAddonLoadDefaultsCombatAutoMinimizeToEnabled()
 testAddonLoadDefaultsDeathAnnouncementToEnabled()
 testCombatAutoMinimizeCollapsesVisibleExpandedWindow()

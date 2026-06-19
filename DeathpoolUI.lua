@@ -630,6 +630,12 @@ local function ApplyLogWindowDisplayState(logFrame, shouldShow)
 end
 
 ---@param frame table
+---@return boolean
+local function IsSetupWindowShown(frame)
+    return frame.setupFrame ~= nil and frame.setupFrame:IsShown() == true
+end
+
+---@param frame table
 ---@param database DeathpoolCharacterState
 ---@param collapsed boolean
 function DeathpoolUI.SetWindowCollapsed(frame, database, collapsed)
@@ -693,6 +699,11 @@ function DeathpoolUI.SetLogWindowShown(frame, database, shown)
         frame.collapsedWindowStates.logFrame = shouldShow
     end
 
+    if IsSetupWindowShown(frame) then
+        frame.logFrame:Hide()
+        return
+    end
+
     ApplyLogWindowDisplayState(frame.logFrame, shouldShow)
 end
 
@@ -708,7 +719,7 @@ function DeathpoolUI.ApplyDesiredLogWindowState(frame, database)
     frame.collapsedWindowStates = frame.collapsedWindowStates or {}
     frame.collapsedWindowStates.logFrame = shouldShow
 
-    if frame.isCollapsed or not frame:IsShown() then
+    if frame.isCollapsed or not frame:IsShown() or IsSetupWindowShown(frame) then
         frame.logFrame:Hide()
         return
     end

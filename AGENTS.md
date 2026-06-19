@@ -81,12 +81,15 @@ Top-level addon files:
 - `DeathpoolLogicState.lua` should contain database-backed gameplay state transitions
 - `DeathpoolMigration.lua` should contain code for migrating SavedVariables on startup
 - `DeathpoolSettings.lua` should contain settings actions and controller-owned Blizzard settings side effects
+- `DeathpoolSetup.lua` should contain setup state, setup actions, and controller-owned Blizzard setup side effects
 - `DeathpoolDemo.lua` should contain controller-owned intro demo session lifecycle, playback, and dismissal orchestration
 - `DeathpoolUI.lua` should contain shared UI constants, layout values, common widget helpers, and top-level frame creation
 - `DeathpoolUITooltip.lua` should contain standardized tooltip building for death rows and prediction previews
 - `DeathpoolUIDeathLogList.lua` should contain reusable death log row creation and row refresh behavior
 - `DeathpoolUIAutocomplete.lua` should contain learned suggestion lists and dropdown behavior for prediction inputs
 - `DeathpoolUIHelp.lua` should contain the help window
+- `DeathpoolUISetup.lua` should contain the setup window
+- `DeathpoolUIMode.lua` should contain the resolver for the current ui mode
 - `DeathpoolUIRefresh.lua` should coordinate refreshing windows and projecting model state into widgets
 - `DeathpoolUILog.lua` should contain the historical death log window
 - `DeathpoolUISettings.lua` should contain the Blizzard Settings panel

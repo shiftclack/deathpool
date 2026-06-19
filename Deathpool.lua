@@ -8,6 +8,7 @@ local DeathpoolCommands = _G.DeathpoolCommands
 local DeathpoolSettings = _G.DeathpoolSettings
 local DeathpoolUI = _G.DeathpoolUI
 local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
+local DeathpoolUISetup = _G.DeathpoolUISetup
 local DeathpoolUISettings = _G.DeathpoolUISettings
 local DeathpoolDemo = _G.DeathpoolDemo
 
@@ -39,15 +40,30 @@ local function RegisterStartupEvents(frame)
     end
 end
 
+---@param frame table
+---@param state DeathpoolCharacterState
+local function ShouldAutoStartIntroDemo(frame, state)
+    return not DeathpoolDatabase.GetHasSeenIntroDemo(state)
+        and not frame.introDemoController:IsActive()
+end
+
 local function AttachMainFrameScripts(frame, addonFrame)
     local existingOnHide = frame:GetScript("OnHide")
 
     frame:SetScript("OnShow", function(self)
         local state = addonFrame.state
+        local didShowSetup = false
 
         DeathpoolDatabase.SetHidden(state, false)
         DeathpoolUI.ApplyDesiredLogWindowState(self, state)
-        if not DeathpoolDatabase.GetHasSeenIntroDemo(state) and self.introDemoController then
+
+        if self.setupFrame then
+            didShowSetup = DeathpoolUISetup.ShowOnMainWindowOpen(self.setupFrame, self)
+        end
+
+        if didShowSetup then
+            self.shouldStartIntroDemoAfterSetup = ShouldAutoStartIntroDemo(self, state)
+        elseif ShouldAutoStartIntroDemo(self, state) then
             self.introDemoController:Show()
         end
     end)
@@ -59,6 +75,11 @@ local function AttachMainFrameScripts(frame, addonFrame)
 
         if not addonFrame.isShuttingDown then
             DeathpoolDatabase.SetHidden(addonFrame.state, true)
+        end
+
+        if self.setupFrame and self.setupFrame:IsShown() then
+            self.shouldStartIntroDemoAfterSetup = false
+            self.setupFrame:Hide()
         end
 
         if self.introDemoController and self.introDemoController:IsActive() then

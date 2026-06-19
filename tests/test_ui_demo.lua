@@ -91,6 +91,8 @@ local function testIntroDemoRefreshUsesMainWindowOnlyState()
     assertTruthy(Deathpool.lockButton:IsEnabled(), "intro demo should keep the lock button enabled for dismissing demo mode")
     assertEquals(Deathpool.lockButton:GetText(), "START GAME", "intro demo should relabel the lock button as start game")
     assertEquals(Deathpool.pauseButton:IsEnabled(), false, "intro demo should keep the pause button disabled")
+    assertEquals(Deathpool.sourceEditBox:IsEnabled(), false, "intro demo should disable the source input")
+    assertEquals(Deathpool.zoneEditBox:IsEnabled(), false, "intro demo should disable the location input")
     assertEquals(Deathpool.helpButton:IsEnabled(), false, "intro demo should disable the help button")
     assertEquals(Deathpool.bottomLogButton:IsEnabled(), false, "intro demo should disable the log button")
 end
@@ -122,12 +124,14 @@ local function testIntroDemoHidesWaitingForFirstDeathPrompt()
     local Deathpool = context.Deathpool
 
     Deathpool:Show()
+    Deathpool.setupFrame:Show()
     Deathpool.waitingPromptText:Show()
     Deathpool.waitingPromptDots:Show()
     Deathpool.waitingPromptHelpText:Show()
 
     Deathpool.introDemoController:Show()
 
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "intro demo should not show the setup window")
     assertEquals(Deathpool.waitingPromptText:IsShown(), false, "intro demo should not show the waiting prompt text")
     assertEquals(Deathpool.waitingPromptDots:IsShown(), false, "intro demo should not show the waiting prompt dots")
     assertEquals(Deathpool.waitingPromptHelpText:IsShown(), false, "intro demo should not show the waiting prompt help text")

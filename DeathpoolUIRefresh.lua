@@ -1,6 +1,7 @@
 local DeathpoolUI = _G.DeathpoolUI or {}
 local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolConstants = _G.DeathpoolConstants
+local DeathpoolUIMode = _G.DeathpoolUIMode
+local DeathpoolUISetup = _G.DeathpoolUISetup
 
 ---@alias DeathpoolRefreshFontStringMap table<string, table>
 
@@ -78,6 +79,7 @@ local DeathpoolConstants = _G.DeathpoolConstants
 ---@field longestStreakValue table|nil
 ---@field recentDeathsFrame table|nil
 ---@field emptyPredictionPrompt table|nil
+---@field setupFrame DeathpoolSetupFrame|nil
 ---@field waitingPromptText table|nil
 ---@field waitingPromptDots table|nil
 ---@field waitingPromptHelpText table|nil
@@ -85,6 +87,7 @@ local DeathpoolConstants = _G.DeathpoolConstants
 ---@field waitingPromptElapsed number|nil
 ---@field waitingPromptDisplayDuration number|nil
 ---@field isWaitingForFirstDeathPromptShown boolean|nil
+---@field setupActive boolean|nil
 ---@field detailValues DeathpoolRefreshFontStringMap|nil
 ---@field lockedPredictionValue table|nil
 ---@field pauseButton table|nil
@@ -107,7 +110,9 @@ local DeathpoolConstants = _G.DeathpoolConstants
 ---@field currentStreakValue table
 ---@field longestStreakValue table
 ---@field recentDeathsFrame table
+---@field deathRows table[]
 ---@field emptyPredictionPrompt table
+---@field setupFrame DeathpoolSetupFrame
 ---@field waitingPromptText table
 ---@field waitingPromptDots table
 ---@field waitingPromptHelpText table
@@ -115,6 +120,7 @@ local DeathpoolConstants = _G.DeathpoolConstants
 ---@field waitingPromptElapsed number
 ---@field waitingPromptDisplayDuration number
 ---@field isWaitingForFirstDeathPromptShown boolean
+---@field setupActive boolean
 ---@field detailValues DeathpoolRefreshFontStringMap|nil
 ---@field lockedPredictionValue table
 ---@field collapsedLogFrame table
@@ -168,10 +174,6 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     local FIRST_RUN_PROMPT_TEXT = "Make your prediction"
     local WAITING_FOR_FIRST_DEATH_TEXT = "Waiting for first death"
     local WAITING_FOR_FIRST_DEATH_HELP_TEXT = "Click HELP if you are missing deaths"
-    local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DeathpoolConstants.DEMO.waitingForFirstDeathMinDurationSeconds
-    local WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS =
-        DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
-
     ---@return DeathpoolCharacterState
     local function GetState()
         return DeathpoolUI.GetState(Deathpool)
@@ -216,52 +218,10 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
         return BuildDisplayedState(displayState)
     end
 
-    ---@param frame DeathpoolRefreshControllerFrame
-    ---@return boolean
-    local function IsIntroDemoActive(frame)
-        local introDemoController = frame.introDemoController
-        return introDemoController ~= nil and introDemoController:IsActive() == true
-    end
-
     ---@param frame DeathpoolRefreshReadyControllerFrame
     ---@return DeathpoolDisplayState
     local function GetDisplayedState(frame)
         return GetDemoDisplayedState(frame) or GetBaseDisplayedState()
-    end
-
-    ---@param frame DeathpoolRefreshReadyControllerFrame
-    ---@param state DeathpoolDisplayState
-    ---@return boolean
-    local function ShouldShowWaitingForFirstDeathPrompt(frame, state)
-        if #state.deaths <= 0 then
-            return true
-        end
-
-        return frame.isWaitingForFirstDeathPromptShown == true
-            and frame.waitingPromptDisplayDuration < WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS
-    end
-
-    ---@param frame DeathpoolRefreshReadyControllerFrame
-    ---@param state DeathpoolDisplayState
-    ---@return string|nil
-    local function GetRecentDeathPaneNotificationKind(frame, state)
-        if state.lockedPrediction == nil and not DeathpoolDatabase.GetHasSeenFirstRun(GetState()) then
-            return "firstRun"
-        end
-
-        if ShouldShowWaitingForFirstDeathPrompt(frame, state) then
-            return "waiting"
-        end
-
-        return nil
-    end
-
-    ---@param frame DeathpoolRefreshReadyControllerFrame
-    ---@param state DeathpoolDisplayState
-    ---@return boolean
-    local function ShouldShowWaitingForFirstDeathHelpText(frame, state)
-        return #state.deaths <= 0
-            and frame.waitingPromptDisplayDuration >= WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS
     end
 
     ---@param frame DeathpoolRefreshReadyControllerFrame
@@ -328,22 +288,33 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     end
 
     ---@param frame DeathpoolRefreshReadyControllerFrame
-    ---@param state DeathpoolDisplayState
-    ---@param notificationKind string|nil
+    ---@param showRows boolean
+    local function RefreshRecentDeathRowVisibility(frame, showRows)
+        for _, row in ipairs(frame.deathRows) do
+            if showRows and row.death ~= nil then
+                row:Show()
+            else
+                row:Hide()
+            end
+        end
+    end
+
+    ---@param frame DeathpoolRefreshReadyControllerFrame
+    ---@param uiMode DeathpoolUIModeState
     ---@param notificationText string|nil
-    local function RefreshRecentDeathPanePrompt(frame, state, notificationKind, notificationText)
-        if IsIntroDemoActive(frame) then
+    local function RefreshRecentDeathPanePrompt(frame, uiMode, notificationText)
+        if uiMode.mode == "demo" then
             RefreshEmptyPredictionPrompt(frame, nil, nil)
+            DeathpoolUISetup.Refresh(frame.setupFrame, frame, true)
             RefreshWaitingPromptText(frame, nil)
             RefreshWaitingPromptHelpText(frame, false, nil)
             return
         end
 
-        local showWaitingHelpText = notificationKind == "waiting" and ShouldShowWaitingForFirstDeathHelpText(frame, state)
-
-        RefreshEmptyPredictionPrompt(frame, notificationKind, notificationText)
-        RefreshWaitingPromptText(frame, notificationKind)
-        RefreshWaitingPromptHelpText(frame, showWaitingHelpText, notificationKind)
+        RefreshEmptyPredictionPrompt(frame, uiMode.prompt, notificationText)
+        DeathpoolUISetup.Refresh(frame.setupFrame, frame, false)
+        RefreshWaitingPromptText(frame, uiMode.prompt)
+        RefreshWaitingPromptHelpText(frame, uiMode.showWaitingHelp, uiMode.prompt)
     end
 
     ---@param frame DeathpoolRefreshHistoryFrame
@@ -395,11 +366,12 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
 
     ---@param frame DeathpoolRefreshReadyControllerFrame
     local function DisablePredictionActionsForDemo(frame)
-        local introDemoController = frame.introDemoController
-        if not (introDemoController and introDemoController:IsActive()) then
+        local uiMode = DeathpoolUIMode.Resolve(frame, GetDisplayedState(frame), GetState())
+        if uiMode.mode ~= "demo" then
             return
         end
 
+        frame.SetPredictionInputsLocked(uiMode.inputsLocked)
         frame.pauseButton:Disable()
     end
 
@@ -538,12 +510,10 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     function Deathpool:RefreshRecentDeathLogState()
         local state = GetDisplayedState(self)
         local deaths = state.deaths
+        local uiMode = DeathpoolUIMode.Resolve(self, state, GetState())
         local recentEntries = GetCachedViewEntries("recentView", deaths, {})
         local wasWaitingForFirstDeathPromptShown = self.isWaitingForFirstDeathPromptShown == true
-        local recentDeathPaneNotificationKind = nil
-        if not IsIntroDemoActive(self) then
-            recentDeathPaneNotificationKind = GetRecentDeathPaneNotificationKind(self, state)
-        end
+        local recentDeathPaneNotificationKind = uiMode.prompt
         local recentDeathPaneNotificationText = GetRecentDeathPaneNotificationText(self, recentDeathPaneNotificationKind)
 
         self.isWaitingForFirstDeathPromptShown = recentDeathPaneNotificationKind == "waiting"
@@ -559,12 +529,14 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
             self.waitingPromptDisplayDuration = 0
         end
 
-        DeathpoolUI.RefreshDeathLogRows(self.recentDeathsFrame, recentDeathPaneNotificationText and {} or recentEntries, {
+        DeathpoolUI.RefreshDeathLogRows(self.recentDeathsFrame, recentEntries, {
             columns = deathLogColumns,
             reverseOrder = false,
         })
+        RefreshRecentDeathRowVisibility(self, uiMode.showRecentDeathRows)
 
-        RefreshRecentDeathPanePrompt(self, state, recentDeathPaneNotificationKind, recentDeathPaneNotificationText)
+        RefreshRecentDeathPanePrompt(self, uiMode, recentDeathPaneNotificationText)
+        self.RefreshPredictionActionButtonState()
     end
 
     ---@param self DeathpoolRefreshReadyControllerFrame
@@ -609,13 +581,14 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
         local state = GetDisplayedState(self)
         local lockedPrediction = state.lockedPrediction
         local inputPrediction = lockedPrediction or state.draftPrediction or state.lastPrediction
+        local uiMode = DeathpoolUIMode.Resolve(self, state, GetState())
         self.lockedPredictionValue:SetText(logic.FormatLockedPrediction(lockedPrediction))
 
         self.ApplyPredictionInputState(inputPrediction)
 
         DeathpoolUI.HideDropdown(self)
 
-        self.SetPredictionInputsLocked(lockedPrediction ~= nil)
+        self.SetPredictionInputsLocked(uiMode.inputsLocked)
 
         self.RefreshPredictionActionButtonState()
         self:RefreshRecentDeathLogState()

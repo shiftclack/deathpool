@@ -15,6 +15,7 @@ local DeathpoolDebug = _G.DeathpoolDebug
 local DeathpoolDebugState = _G.DeathpoolDebugState
 local DeathpoolSettings = _G.DeathpoolSettings
 local DeathpoolUI = _G.DeathpoolUI
+local DeathpoolUISetup = _G.DeathpoolUISetup
 local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
 
 ---@type DeathpoolCommandsAddonFrame|nil
@@ -56,7 +57,7 @@ end
 
 local function PrintSlashHelp()
     Print("Commands: /deathpool show, /deathpool hide, /deathpool toggle, /deathpool minimap")
-    Print("Windows: /deathpool log, /deathpool demo, /deathpool showincombat")
+    Print("Windows: /deathpool log, /deathpool demo, /deathpool setup, /deathpool showincombat")
     Print("Debug: /deathpool debug, /deathpool testdeath, /deathpool debugdeath <deathstring>")
     Print("Dangerous: /deathpool resetintro, /deathpool reset")
 end
@@ -141,6 +142,17 @@ local function DemoCommand()
     end
 end
 
+local function SetupCommand()
+    local addonFrame = GetAddonFrame()
+    local mainFrame = addonFrame and addonFrame.mainFrame or nil
+    local setupFrame = mainFrame and mainFrame.setupFrame or nil
+    if not mainFrame or not setupFrame then
+        return
+    end
+
+    DeathpoolUISetup.Show(setupFrame, mainFrame)
+end
+
 local function IntroCommand()
     local state = GetState()
     if not state then
@@ -190,6 +202,7 @@ local SLASH_COMMAND_HANDLERS = {
     debug = DeathpoolDebug.ToggleDebugCommand,
     log = ToggleLogCommand,
     demo = DemoCommand,
+    setup = SetupCommand,
     resetintro = IntroCommand,
     reset = ResetCommand,
     showincombat = ToggleShowInCombatCommand,

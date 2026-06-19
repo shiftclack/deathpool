@@ -510,6 +510,9 @@ local function initializeGlobals(options)
     UIParent:SetSize(1024, 768)
     DeathpoolCharacterState = nil
     _G.LibStub = nil
+    _G.DeathpoolSetup = nil
+    _G.DeathpoolUISetup = nil
+    _G.DeathpoolUIMode = nil
     _G.UISpecialFrames = {}
     _G.__frames = {}
     local function registerCanvasLayoutCategory(frame, name)
@@ -577,6 +580,37 @@ local function initializeGlobals(options)
             language = language,
             target = target,
         }
+    end)
+
+    _G.__cvars = {
+        hardcoreDeathChatType = options.hardcoreDeathChatType or "1",
+    }
+    _G.__setCVarCalls = {}
+    rawset(_G, "GetCVar", function(name)
+        return _G.__cvars[name]
+    end)
+    rawset(_G, "SetCVar", function(name, value)
+        _G.__setCVarCalls[#_G.__setCVarCalls + 1] = {
+            name = name,
+            value = value,
+        }
+        _G.__cvars[name] = value
+    end)
+
+    _G.__joinedChannels = {
+        HardcoreDeaths = options.hardcoreDeathsJoined ~= false,
+    }
+    _G.__joinedChannelNames = {}
+    rawset(_G, "GetChannelName", function(name)
+        if _G.__joinedChannels[name] then
+            return 1, name
+        end
+
+        return 0, nil
+    end)
+    rawset(_G, "JoinChannelByName", function(name)
+        _G.__joinedChannelNames[#_G.__joinedChannelNames + 1] = name
+        _G.__joinedChannels[name] = true
     end)
 
     SlashCmdList = {}
@@ -735,6 +769,9 @@ local function loadUiModules()
     package.loaded.DeathpoolUIDeathLogList = nil
     package.loaded.DeathpoolUIAutocomplete = nil
     package.loaded.DeathpoolUIHelp = nil
+    package.loaded.DeathpoolSetup = nil
+    package.loaded.DeathpoolUISetup = nil
+    package.loaded.DeathpoolUIMode = nil
     package.loaded.DeathpoolUIRefresh = nil
     package.loaded.DeathpoolUILog = nil
     package.loaded.DeathpoolSettings = nil
@@ -754,6 +791,9 @@ local function loadUiModules()
     require("DeathpoolUIDeathLogList")
     require("DeathpoolUIAutocomplete")
     require("DeathpoolUIHelp")
+    require("DeathpoolSetup")
+    require("DeathpoolUISetup")
+    require("DeathpoolUIMode")
     require("DeathpoolUIRefresh")
     require("DeathpoolUILog")
     require("DeathpoolSettings")
@@ -798,6 +838,10 @@ function UIHarness.Create(options)
         DeathpoolLog = DeathpoolLog,
         introDemoController = introDemoController,
         printedMessages = printedMessages,
+        cvars = _G.__cvars,
+        setCVarCalls = _G.__setCVarCalls,
+        joinedChannels = _G.__joinedChannels,
+        joinedChannelNames = _G.__joinedChannelNames,
         dispatchEvent = dispatchEvent,
         pressEscape = pressEscape,
         findRegionText = findRegionText,

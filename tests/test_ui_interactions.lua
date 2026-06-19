@@ -18,6 +18,10 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DeathpoolConstants.DEMO.wai
 local WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS =
     DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
 
+local function showSetupWindow(Deathpool)
+    _G.DeathpoolUISetup.Show(Deathpool.setupFrame, Deathpool)
+end
+
 local function findTooltipLineIndex(label)
     for index, line in ipairs(GameTooltip.lines or {}) do
         if line.left == label then
@@ -671,11 +675,13 @@ local function testEmptyPredictionPromptReplacesMainDeathLogUntilPredictionSelec
 
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), true, "main window should show the empty-prediction prompt when nothing is selected")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "main window should hide recent death rows until a prediction exists")
+    assertEquals(Deathpool.deathRows[1].name:GetText(), "Promptcheck", "hidden prompt rows should retain current death text")
 
     Deathpool.levelRangeButtons[2]:GetScript("OnClick")(Deathpool.levelRangeButtons[2])
 
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), true, "selecting a prediction should keep the empty-prediction prompt visible before lock-in")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "selecting a prediction should keep recent death rows hidden before lock-in")
+    assertEquals(Deathpool.deathRows[1].name:GetText(), "Promptcheck", "selecting a prediction should not clear hidden death rows")
 
     Deathpool.lockButton:GetScript("OnClick")()
 
@@ -683,6 +689,132 @@ local function testEmptyPredictionPromptReplacesMainDeathLogUntilPredictionSelec
     assertEquals(Deathpool.deathRows[1]:IsShown(), true, "locking in a prediction should show recent death rows again")
     assertEquals(DeathpoolCharacterState.hasSeenFirstRun, true, "locking in a prediction should persist the first-run flag")
     assertEquals(Deathpool.deathRows[1].name:GetText(), "Promptcheck", "recent deaths should return once a prediction is selected")
+end
+
+local function testSetupWindowShowsBothIncompleteSetupItems()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    Deathpool:RefreshDeaths()
+    Deathpool:RefreshLockedPrediction()
+
+    assertEquals(Deathpool.configPromptFrame, nil, "incomplete setup should not create an inline setup prompt")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "incomplete setup should not show from refresh alone")
+
+    showSetupWindow(Deathpool)
+
+    assertEquals(Deathpool.setupFrame:IsShown(), true, "incomplete setup should show the setup window")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), true, "incomplete setup should obscure the main window")
+    assertEquals(Deathpool.setupFrame.title:GetText(), "SETUP", "setup window should use the setup title")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton:IsShown(), true, "incomplete setup should show the enable button")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton:IsEnabled(), true, "disabled death announcements should leave enable clickable")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton:IsShown(), true, "incomplete setup should show the join button")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton:IsEnabled(), true, "missing hardcore deaths channel should leave join clickable")
+    assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "setup window should hide the first-run prompt")
+    assertEquals(Deathpool.lockButton:IsEnabled(), false, "setup window should disable locking predictions")
+    assertEquals(Deathpool.levelRangeButtons[2]:IsEnabled(), false, "setup window should disable level buttons")
+    assertEquals(Deathpool.sourceEditBox:IsEnabled(), false, "setup window should disable source input")
+    assertEquals(Deathpool.zoneEditBox:IsEnabled(), false, "setup window should disable zone input")
+end
+
+local function testSetupWindowEnableChecksOnlyDeathAnnouncementItem()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    showSetupWindow(Deathpool)
+    Deathpool.setupFrame.enableDeathAnnouncementsButton:Click()
+
+    assertEquals(#context.setCVarCalls, 1, "clicking enable should set the death announcement CVar once")
+    assertEquals(context.setCVarCalls[1].name, "hardcoreDeathChatType", "clicking enable should set the death announcement CVar")
+    assertEquals(context.setCVarCalls[1].value, "1", "clicking enable should enable game death announcements")
+    assertEquals(Deathpool.setupFrame:IsShown(), true, "remaining channel setup should keep the setup window visible")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton:IsEnabled(), false, "completed death announcements should disable enable")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton:IsEnabled(), true, "missing channel should keep join clickable")
+    assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "partially complete setup should not advance to first-run prompt")
+    assertEquals(Deathpool.lockButton:IsEnabled(), false, "partially complete setup should keep prediction locking disabled")
+end
+
+local function testSetupWindowJoinChecksOnlyChannelItem()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    showSetupWindow(Deathpool)
+    Deathpool.setupFrame.joinHardcoreDeathsButton:Click()
+
+    assertEquals(#context.joinedChannelNames, 1, "clicking join should join one channel")
+    assertEquals(context.joinedChannelNames[1], "HardcoreDeaths", "clicking join should request the HardcoreDeaths channel")
+    assertEquals(Deathpool.setupFrame:IsShown(), true, "remaining death announcement setup should keep the setup window visible")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton:IsEnabled(), true, "disabled death announcements should keep enable clickable")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton:IsEnabled(), false, "completed channel setup should disable join")
+    assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "partially complete setup should not advance to first-run prompt")
+    assertEquals(Deathpool.lockButton:IsEnabled(), false, "partially complete setup should keep prediction locking disabled")
+end
+
+local function testSetupWindowShowsPrecompletedDeathAnnouncements()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "1",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    showSetupWindow(Deathpool)
+
+    assertEquals(Deathpool.setupFrame:IsShown(), true, "one incomplete item should keep the setup window visible")
+    assertEquals(Deathpool.setupFrame.enableDeathAnnouncementsButton:IsEnabled(), false, "enabled death announcements should disable enable")
+    assertEquals(Deathpool.setupFrame.joinHardcoreDeathsButton:IsEnabled(), true, "missing channel should keep join clickable")
+    assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "one incomplete item should hide first-run prompt")
+end
+
+local function testSetupWindowCompletedSetupAdvancesToPrediction()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = false,
+        lockedPrediction = false,
+        draftPrediction = false,
+        lastPrediction = false,
+    }), {
+        hardcoreDeathChatType = "1",
+        hardcoreDeathsJoined = true,
+    })
+    local Deathpool = context.Deathpool
+
+    Deathpool:RefreshDeaths()
+    Deathpool:RefreshLockedPrediction()
+
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "completed setup should hide the setup window")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "completed setup should hide the main-window backdrop")
+    assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), true, "completed setup should advance to the first-run prompt")
+    assertEquals(Deathpool.levelRangeButtons[2]:IsEnabled(), true, "completed setup should unlock level buttons")
+    assertEquals(Deathpool.sourceEditBox:IsEnabled(), true, "completed setup should unlock source input")
+    assertEquals(Deathpool.zoneEditBox:IsEnabled(), true, "completed setup should unlock zone input")
 end
 
 local function testReturningPlayersDoNotSeeFirstRunPrompt()
@@ -831,11 +963,13 @@ local function testWaitingForFirstDeathNotificationStaysVisibleForMinimumDuratio
     assertEquals(Deathpool.waitingPromptText:IsShown(), true, "incoming deaths should keep the waiting prompt visible until the minimum duration completes")
     assertEquals(Deathpool.waitingPromptDots:GetText(), "..", "incoming deaths should preserve the current waiting animation state")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "incoming deaths should stay hidden while the waiting prompt minimum duration is still active")
+    assertEquals(Deathpool.deathRows[1].name:GetText(), "Soonenough", "incoming deaths should populate hidden rows while waiting")
 
 ---@diagnostic disable-next-line: need-check-nil
     Deathpool:GetScript("OnUpdate")(Deathpool, WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS - 3)
     assertEquals(Deathpool.waitingPromptText:IsShown(), true, "incoming deaths should still wait until the minimum duration before revealing the log")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "incoming deaths should remain hidden before the minimum duration completes")
+    assertEquals(Deathpool.deathRows[1].name:GetText(), "Soonenough", "waiting rows should keep populated death data before reveal")
     assertEquals(Deathpool.waitingPromptHelpText:IsShown(), false, "incoming deaths should not show the no-deaths help prompt while a death is already ready")
 
 ---@diagnostic disable-next-line: need-check-nil
@@ -1704,6 +1838,11 @@ testRefreshMethodsPreferIntroDemoStateOverLiveDatabase()
 testRefreshLockedPredictionRestoresInputsAndPauseButtonState()
 testRefreshLockedPredictionHandlesEmptyState()
 testEmptyPredictionPromptReplacesMainDeathLogUntilPredictionSelected()
+testSetupWindowShowsBothIncompleteSetupItems()
+testSetupWindowEnableChecksOnlyDeathAnnouncementItem()
+testSetupWindowJoinChecksOnlyChannelItem()
+testSetupWindowShowsPrecompletedDeathAnnouncements()
+testSetupWindowCompletedSetupAdvancesToPrediction()
 testReturningPlayersDoNotSeeFirstRunPrompt()
 testWaitingForFirstDeathNotificationUsesSharedPromptPane()
 testWaitingForFirstDeathNotificationStaysVisibleForMinimumDuration()

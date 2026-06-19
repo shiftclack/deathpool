@@ -69,6 +69,8 @@ local function createUIContext(state, options)
     local ui = UIHarness.Create({
         state = state,
         faction = options and options.faction or nil,
+        hardcoreDeathChatType = options and options.hardcoreDeathChatType or nil,
+        hardcoreDeathsJoined = options and options.hardcoreDeathsJoined,
     })
 
     return {
@@ -77,6 +79,10 @@ local function createUIContext(state, options)
         DeathpoolDebug = ui.DeathpoolDebug,
         DeathpoolLog = ui.DeathpoolLog,
         printedMessages = ui.printedMessages,
+        cvars = ui.cvars,
+        setCVarCalls = ui.setCVarCalls,
+        joinedChannels = ui.joinedChannels,
+        joinedChannelNames = ui.joinedChannelNames,
         pressEscape = ui.pressEscape,
         findRegionText = ui.findRegionText,
         findDropdownButtonByText = ui.findDropdownButtonByText,
