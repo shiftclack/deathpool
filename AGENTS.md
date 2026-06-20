@@ -46,7 +46,7 @@ The `Makefile` should wrap all common commands used by the human developer and c
 - `make coverage-summary` print out the `luacov` code coverage summary
 - `make install` will install the addon files to a local Windows WoW installation
 - `make dist` to build a .zip file for distribution
-- `make deps` to install require build dependencies in Windows
+- `make deps` to install required build dependencies in Windows
 
 Note: `make build-ci`, `dist-ci`, `deps-ci`, and `clean-ci` are UNIX compatible equivalents to the Windows commands.
 
@@ -89,7 +89,7 @@ Top-level addon files:
 - `DeathpoolUIAutocomplete.lua` should contain learned suggestion lists and dropdown behavior for prediction inputs
 - `DeathpoolUIHelp.lua` should contain the help window
 - `DeathpoolUISetup.lua` should contain the setup window
-- `DeathpoolUIMode.lua` should contain the resolver for the current ui mode
+- `DeathpoolUIMode.lua` should contain the resolver for the current UI mode
 - `DeathpoolUIRefresh.lua` should coordinate refreshing windows and projecting model state into widgets
 - `DeathpoolUILog.lua` should contain the historical death log window
 - `DeathpoolUISettings.lua` should contain the Blizzard Settings panel
@@ -148,7 +148,7 @@ There are three environments we develop for:
 ### Compatibility
 
 - Do not attempt to be forward-compatible with newer versions of Lua
-- It's better to only support 5.1 for the sake of simplicity and low likelyhood of wow upgrade in the future
+- It's better to only support 5.1 for the sake of simplicity and low likelihood of a WoW upgrade in the future
 - Do not unnecessarily add shims for backward compatibility without explicit instructions
 - Do not use `require()` anywhere in the addon code as its not supported by WoW Lua. The only exception are unit tests in the `tests/` directory
 - Only use Blizzard APIs that are available to Classic-era addons
@@ -166,7 +166,7 @@ The death feed parser is intentionally conservative. The addon listens only to `
 
 ### Use of third party libraries
 
-Unrestrained use of third party libraries is prohibited. They should not be introduced, or used, without specific, unambigious, clear instructions.
+Unrestrained use of third party libraries is prohibited. They should not be introduced, or used, without specific, unambiguous, clear instructions.
 The current libraries are explicitly permitted:
 
 - Minimap
@@ -205,7 +205,7 @@ The current libraries are explicitly permitted:
 ### LuaLS annotations
 
 - LuaLS is used to provide type checking via annotations
-- Warnings are surfaced both in the editor UI and as as part of `make check`
+- Warnings are surfaced both in the editor UI and as part of `make check`
 - When adding new functions, add LuaLS style `---@param` and `---@return` comments to specify types
 - Check for existing types before adding new ones, especially for files with similar names like DeathpoolUI*.lua or DeathpoolLogic*.lua.
 - Prefer being strict about parameters, it helps future developers reason about the codebase
@@ -246,7 +246,7 @@ Here are some useful functions which are specific to WoW Lua:
 
 #### wipe()
 
-`wipe()` is like setting `table={}`, except that it keeps the variables internal pointer
+`wipe()` is like setting `table={}`, except that it keeps the variable's internal pointer
 
 Example:
 ```lua
@@ -281,7 +281,7 @@ print(time())
 
 - Use `make check` to run all tests
 - Linting is provided by `luacheck` (`make lint`)
-- Use `lua-language-userver` to check our LuaLS/EmmyLua annotations (`make luals`)
+- Use `lua-language-server` to check our LuaLS/EmmyLua annotations (`make luals`)
 - When running into issues with `make check` around globals, check:
   - `.luacheckrc` which defines exceptions for WoW globals in the build system
   - `.luarc.json` which defines exceptions for `lua-language-server`
@@ -308,7 +308,7 @@ print(time())
 
 ### Debugging
 
-- Debugging must be performed by the user, as there is no permission for the coding agent to take control of World Of Warcraft directly
+- Debugging must be performed by the user, as there is no permission for the coding agent to take control of World of Warcraft directly
 - Debugging should be facilitated via a simple `make install` command which installs the addon files
 
 ## Datastores
