@@ -34,11 +34,14 @@ local DeathpoolSetup = _G.DeathpoolSetup
 ---@field SetPoint fun(self: DeathpoolSetupButton, point: string, relativeTo: table, relativePoint: string, xOffset: number, yOffset: number)
 ---@field SetText fun(self: DeathpoolSetupButton, text: string)
 ---@field SetScript fun(self: DeathpoolSetupButton, scriptType: string, handler: function)
+---@field GetFontString fun(self: DeathpoolSetupButton): DeathpoolSetupFontString
 
 ---@class DeathpoolSetupFontString
+---@field ClearAllPoints fun(self: DeathpoolSetupFontString)
 ---@field SetPoint fun(self: DeathpoolSetupFontString, point: string, relativeTo: table, relativePoint: string, xOffset: number, yOffset: number)
 ---@field SetText fun(self: DeathpoolSetupFontString, text: string)
 ---@field SetJustifyH fun(self: DeathpoolSetupFontString, justify: string)
+---@field SetJustifyV fun(self: DeathpoolSetupFontString, justify: string)
 ---@field SetTextColor fun(self: DeathpoolSetupFontString, red: number, green: number, blue: number, alpha: number)
 
 ---@param ownerFrame table
@@ -77,14 +80,18 @@ end
 ---@param setupState DeathpoolSetupState
 local function RefreshSetupRows(setupFrame, setupState)
     if setupState.hasEnabledDeathAnnouncements then
+        setupFrame.enableDeathAnnouncementsButton:SetText("ENABLED")
         setupFrame.enableDeathAnnouncementsButton:Disable()
     else
+        setupFrame.enableDeathAnnouncementsButton:SetText("ENABLE")
         setupFrame.enableDeathAnnouncementsButton:Enable()
     end
 
     if setupState.hasJoinedHardcoreDeathsChannel then
+        setupFrame.joinHardcoreDeathsButton:SetText("JOINED")
         setupFrame.joinHardcoreDeathsButton:Disable()
     else
+        setupFrame.joinHardcoreDeathsButton:SetText("JOIN")
         setupFrame.joinHardcoreDeathsButton:Enable()
     end
 end
@@ -248,6 +255,9 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
     ---@cast enableDeathAnnouncementsButton DeathpoolSetupButton
     enableDeathAnnouncementsButton:SetSize(96, 24)
     enableDeathAnnouncementsButton:SetPoint("TOPLEFT", setupFrame, "TOPLEFT", 70, -64)
+    enableDeathAnnouncementsButton:GetFontString():ClearAllPoints()
+    enableDeathAnnouncementsButton:GetFontString():SetPoint("CENTER", enableDeathAnnouncementsButton, "CENTER", 0, -1)
+    enableDeathAnnouncementsButton:GetFontString():SetJustifyV("MIDDLE")
     enableDeathAnnouncementsButton:SetText("ENABLE")
     enableDeathAnnouncementsButton:SetScript("OnClick", function()
         if not enableDeathAnnouncementsButton:IsEnabled() then
@@ -271,6 +281,9 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
     ---@cast joinHardcoreDeathsButton DeathpoolSetupButton
     joinHardcoreDeathsButton:SetSize(96, 24)
     joinHardcoreDeathsButton:SetPoint("TOPLEFT", enableDeathAnnouncementsButton, "BOTTOMLEFT", 0, -8)
+    joinHardcoreDeathsButton:GetFontString():ClearAllPoints()
+    joinHardcoreDeathsButton:GetFontString():SetPoint("CENTER", joinHardcoreDeathsButton, "CENTER", 0, -1)
+    joinHardcoreDeathsButton:GetFontString():SetJustifyV("MIDDLE")
     joinHardcoreDeathsButton:SetText("JOIN")
     joinHardcoreDeathsButton:SetScript("OnClick", function()
         if not joinHardcoreDeathsButton:IsEnabled() then

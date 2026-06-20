@@ -19,8 +19,7 @@ local function HasEnabledGameDeathAnnouncements()
         return true
     end
 
-    local deathChatType = tonumber(GetCVar(HARDCORE_DEATH_CHAT_TYPE_CVAR))
-    return deathChatType ~= 0
+    return tonumber(GetCVar(HARDCORE_DEATH_CHAT_TYPE_CVAR)) ~= 0
 end
 
 ---@return boolean
