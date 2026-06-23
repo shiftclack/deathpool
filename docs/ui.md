@@ -109,7 +109,8 @@ have the following columns:
 ## Minimap Icon
 
 There is a clickable minimap icon that the user can use to toggle open/closed the module's windows.
-The `/deathpool minimap` command toggles whether the icon is shown, and it is enabled by default.
+The `/deathpool minimap` command and the "Disable minimap icon" configuration option toggle whether
+the icon is shown, and it is enabled by default.
 
 ## Command line
 

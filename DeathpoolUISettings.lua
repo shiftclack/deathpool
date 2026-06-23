@@ -10,14 +10,17 @@
 ---@field Click fun(self: DeathpoolUISettingsPanelCheckbox, button: string|nil)
 
 ---@class DeathpoolUISettingsSettingsApi
+---@field GetDisableMinimapIcon fun(): boolean
 ---@field GetDeathAnnouncementToGuild fun(): boolean
 ---@field GetShowInCombat fun(): boolean
+---@field SetDisableMinimapIcon fun(disabled: boolean): boolean
 ---@field SetDeathAnnouncementToGuild fun(enabled: boolean): boolean
 ---@field SetShowInCombat fun(enabled: boolean): boolean
 
 ---@class DeathpoolUISettingsPanelModule
 ---@field categoryFrame table|nil
 ---@field announceDeathToGuildCheckbox DeathpoolUISettingsPanelCheckbox|nil
+---@field disableMinimapIconCheckbox DeathpoolUISettingsPanelCheckbox|nil
 ---@field showInCombatCheckbox DeathpoolUISettingsPanelCheckbox|nil
 ---@field Initialize fun(settingsApi: DeathpoolUISettingsSettingsApi)
 
@@ -30,6 +33,7 @@ local activeSettingsApi = nil
 local categoryRegistered = false
 local categoryFrame = nil
 local announceDeathToGuildCheckbox = nil
+local disableMinimapIconCheckbox = nil
 local showInCombatCheckbox = nil
 
 ---@return DeathpoolUISettingsSettingsApi
@@ -48,6 +52,10 @@ local function RefreshCheckboxStates()
 
     if showInCombatCheckbox then
         showInCombatCheckbox:SetChecked(settingsApi.GetShowInCombat())
+    end
+
+    if disableMinimapIconCheckbox then
+        disableMinimapIconCheckbox:SetChecked(settingsApi.GetDisableMinimapIcon())
     end
 end
 
@@ -101,6 +109,13 @@ local function CreateCategoryFrame()
     end)
     announceDeathToGuildCheckbox:SetPoint("TOPLEFT", showInCombatCheckbox, "BOTTOMLEFT", 0, -12)
 
+    disableMinimapIconCheckbox = CreateCheckbox(frame, "Disable minimap icon", function(self)
+        local settingsApi = GetSettingsApi()
+        settingsApi.SetDisableMinimapIcon(self:GetChecked())
+        RefreshCheckboxStates()
+    end)
+    disableMinimapIconCheckbox:SetPoint("TOPLEFT", announceDeathToGuildCheckbox, "BOTTOMLEFT", 0, -12)
+
     frame:SetScript("OnShow", RefreshCheckboxStates)
 
     return frame
@@ -118,6 +133,7 @@ function DeathpoolUISettings.Initialize(settingsApi)
 
         DeathpoolUISettings.categoryFrame = categoryFrame
         DeathpoolUISettings.announceDeathToGuildCheckbox = announceDeathToGuildCheckbox
+        DeathpoolUISettings.disableMinimapIconCheckbox = disableMinimapIconCheckbox
         DeathpoolUISettings.showInCombatCheckbox = showInCombatCheckbox
     end
 

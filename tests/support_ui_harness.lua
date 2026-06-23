@@ -483,6 +483,12 @@ end
 local function initializeBundledLibs()
     local libDataBroker = {}
     local libDBIcon = {}
+    local libDBIconState = {
+        hideCalls = {},
+        showCalls = {},
+    }
+
+    _G.__libDBIconState = libDBIconState
 
     function libDataBroker.NewDataObject(_, _, dataObject)
         return dataObject
@@ -494,10 +500,12 @@ local function initializeBundledLibs()
     function libDBIcon.Refresh()
     end
 
-    function libDBIcon.Hide()
+    function libDBIcon.Hide(_, name)
+        libDBIconState.hideCalls[#libDBIconState.hideCalls + 1] = name
     end
 
-    function libDBIcon.Show()
+    function libDBIcon.Show(_, name)
+        libDBIconState.showCalls[#libDBIconState.showCalls + 1] = name
     end
 
     _G.LibStub = function(libraryName, silent)
@@ -907,6 +915,7 @@ function UIHarness.CreateAddon(options)
         getLogFrame = getLogFrame,
         chatMessages = DEFAULT_CHAT_FRAME.messages,
         sentChatMessages = _G.__sentChatMessages,
+        libDBIconState = _G.__libDBIconState,
         dispatchEvent = dispatchEvent,
         pressEscape = pressEscape,
     }

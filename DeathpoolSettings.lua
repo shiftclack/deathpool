@@ -3,8 +3,10 @@
 ---@field SetShowInCombat fun(database: DeathpoolCharacterState, enabled: boolean): boolean
 ---@field GetAnnounceDeathToGuild fun(database: DeathpoolCharacterState): boolean
 ---@field SetAnnounceDeathToGuild fun(database: DeathpoolCharacterState, enabled: boolean): boolean
+---@field GetMinimapHidden fun(database: DeathpoolCharacterState): boolean
 
 local DeathpoolSettings = _G.DeathpoolSettings or {}
+local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
 
 ---@type DeathpoolCharacterState|nil
 local activeDatabase = nil
@@ -36,6 +38,11 @@ function DeathpoolSettings.GetDeathAnnouncementToGuild()
     return GetDatabaseApi().GetAnnounceDeathToGuild(GetDatabase())
 end
 
+---@return boolean
+function DeathpoolSettings.GetDisableMinimapIcon()
+    return GetDatabaseApi().GetMinimapHidden(GetDatabase())
+end
+
 ---@param database DeathpoolCharacterState
 ---@param databaseApi DeathpoolSettingsDatabaseApi
 function DeathpoolSettings.Initialize(database, databaseApi)
@@ -53,6 +60,12 @@ end
 ---@return boolean
 function DeathpoolSettings.SetDeathAnnouncementToGuild(enabled)
     return GetDatabaseApi().SetAnnounceDeathToGuild(GetDatabase(), enabled)
+end
+
+---@param disabled boolean
+---@return boolean
+function DeathpoolSettings.SetDisableMinimapIcon(disabled)
+    return DeathpoolUIMinimap.SetHidden(nil, GetDatabase(), disabled)
 end
 
 ---@return boolean

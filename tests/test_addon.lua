@@ -937,6 +937,9 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
     createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             announceDeathToGuild = true,
+            minimap = {
+                hide = true,
+            },
             showInCombat = true,
         }),
     })
@@ -960,6 +963,11 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
         true,
         "settings panel should reflect saved show-in-combat state"
     )
+    assertEquals(
+        settingsModule.disableMinimapIconCheckbox:GetChecked(),
+        true,
+        "settings panel should reflect saved minimap icon state"
+    )
 end
 
 local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
@@ -973,15 +981,24 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
     local settingsModule = _G.DeathpoolUISettings
     local reboundState = Fixtures.addonDatabase({
         announceDeathToGuild = true,
+        minimap = {
+            hide = true,
+        },
         showInCombat = true,
     })
 
     settingsModule.Initialize({
+        GetDisableMinimapIcon = function()
+            return DeathpoolDatabase.GetMinimapHidden(reboundState)
+        end,
         GetDeathAnnouncementToGuild = function()
             return DeathpoolDatabase.GetAnnounceDeathToGuild(reboundState)
         end,
         GetShowInCombat = function()
             return DeathpoolDatabase.GetShowInCombat(reboundState)
+        end,
+        SetDisableMinimapIcon = function(disabled)
+            return DeathpoolDatabase.SetMinimapHidden(reboundState, disabled)
         end,
         SetDeathAnnouncementToGuild = function(enabled)
             return DeathpoolDatabase.SetAnnounceDeathToGuild(reboundState, enabled)
@@ -1001,12 +1018,20 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
         true,
         "settings initialize should refresh show-in-combat from the latest options"
     )
+    assertEquals(
+        settingsModule.disableMinimapIconCheckbox:GetChecked(),
+        true,
+        "settings initialize should refresh minimap icon state from the latest options"
+    )
 end
 
 local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
-    createLoadedAddonContext({
+    local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             announceDeathToGuild = false,
+            minimap = {
+                hide = false,
+            },
             showInCombat = false,
         }),
     })
@@ -1046,6 +1071,32 @@ local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
         DeathpoolCharacterState.announceDeathToGuild,
         false,
         "settings death announcement checkbox should persist the disabled state"
+    )
+
+    settingsModule.disableMinimapIconCheckbox:SetChecked(true)
+    settingsModule.disableMinimapIconCheckbox:Click()
+    assertEquals(
+        DeathpoolCharacterState.minimap.hide,
+        true,
+        "settings minimap checkbox should persist the disabled state"
+    )
+    assertEquals(
+        context.libDBIconState.hideCalls[#context.libDBIconState.hideCalls],
+        "Deathpool",
+        "settings minimap checkbox should hide the registered minimap icon"
+    )
+
+    settingsModule.disableMinimapIconCheckbox:SetChecked(false)
+    settingsModule.disableMinimapIconCheckbox:Click()
+    assertEquals(
+        DeathpoolCharacterState.minimap.hide,
+        false,
+        "settings minimap checkbox should persist the enabled state"
+    )
+    assertEquals(
+        context.libDBIconState.showCalls[#context.libDBIconState.showCalls],
+        "Deathpool",
+        "settings minimap checkbox should show the registered minimap icon"
     )
 end
 
