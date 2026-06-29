@@ -200,8 +200,6 @@ function Deathpool:AddDeath(death)
         return
     end
 
-    DeathpoolUI.RegisterObservedZone(death.zone, state)
-
     if mainFrame then
         self:RefreshMainFrame()
     end

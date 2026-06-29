@@ -474,9 +474,6 @@ local function testResetCommandRequiresDebugModeAndReinitializesDefaults()
                     name = "Saveddeath",
                 }),
             },
-            learnedZones = {
-                "Custom Canyon",
-            },
         }),
         login = true,
     })
@@ -768,29 +765,6 @@ local function testPlayerDeathSkipsGuildAnnouncementWhenDisabled()
     assertEquals(dispatchEvent(controller, "PLAYER_DEAD"), true, "player death should still dispatch when guild announcement is disabled")
     assertTruthy(string.find(context.chatMessages[#context.chatMessages], "score", 1, true), "player death should still print the final score when guild announcement is disabled")
     assertEquals(#sentChatMessages, 0, "player death should skip the guild chat announcement when disabled")
-end
-
-local function testAddonLoadRestoresLearnedZonesIntoSuggestions()
-    local context = createLoadedAddonContext({
-        state = Fixtures.addonDatabase({
-            hidden = true,
-            hasSeenIntroDemo = true,
-            learnedZones = {
-                "Custom Canyon",
-            },
-        }),
-    })
-    local DeathpoolUI = context.DeathpoolUI
-
-    local foundCustomZone = false
-    for _, zone in ipairs(DeathpoolUI.ZoneList) do
-        if zone == "Custom Canyon" then
-            foundCustomZone = true
-            break
-        end
-    end
-
-    assertTruthy(foundCustomZone, "addon load should rebuild autocomplete suggestions with learned zones from SavedVariables")
 end
 
 local function testEscapeClosesAndPersistsMainWindowHiddenState()
@@ -1395,7 +1369,6 @@ testCombatAutoMinimizeCollapsesVisibleExpandedWindow()
 testShowInCombatCommandKeepsWindowVisibleInCombat()
 testPlayerDeathPreservesFinalScoreAndPrintsIt()
 testPlayerDeathSkipsGuildAnnouncementWhenDisabled()
-testAddonLoadRestoresLearnedZonesIntoSuggestions()
 testEscapeClosesAndPersistsMainWindowHiddenState()
 testEscapeDoesNotCloseCollapsedMainWindow()
 testSlashCommandsReachTheirExpectedBranches()

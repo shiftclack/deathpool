@@ -56,13 +56,14 @@ It looks like this:
 ### Source Details
 
 - The "Source" is an autocompleting text field with a suggestion dropdown
-- The player can select from a predetermined list of popular dangerous sources, or specify their own
+- The player can select from an alphabetical list combining popular dangerous sources with sources
+  found in the retained death history, or specify their own
 
 ### Zone (Location) Details
 
 - The `zone` is called `location` in the UI
-- The `location` has an autocompleting text field with a sugeestion dropdown
-- The addon starts with list of default zones
+- The `location` has an autocompleting text field with a suggestion dropdown
+- The addon uses an alphabetical list combining default zones with locations found in the retained death history
 - The user can also input their own zones
 
 ## Collapsed Prediction UI Window

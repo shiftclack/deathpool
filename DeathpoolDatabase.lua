@@ -50,7 +50,6 @@
 ---@field lockedPrediction DeathpoolPrediction|nil
 ---@field draftPrediction DeathpoolPrediction|nil
 ---@field lastPrediction DeathpoolPrediction|nil
----@field learnedZones string[]
 ---@field totalPoints integer
 ---@field correctPredictionStreak integer
 ---@field longestPredictionStreak integer
@@ -72,7 +71,6 @@ DeathpoolDatabase.DEFAULTS = {
     deathHistory = {},
     successfullyPredictedDeaths = {},
     draftPrediction = nil,
-    learnedZones = {},
     totalPoints = 0,
     correctPredictionStreak = 0,
     longestPredictionStreak = 0,
@@ -125,8 +123,6 @@ local function EnsureDatabase(database)
     EnsureTableField(database, "recentDeaths")
     EnsureTableField(database, "deathHistory")
     EnsureTableField(database, "successfullyPredictedDeaths")
-    EnsureTableField(database, "learnedZones")
-
     local minimap = EnsureTableField(database, "minimap")
     if minimap.hide == nil then
         minimap.hide = false
@@ -340,15 +336,43 @@ function DeathpoolDatabase.GetDeathHistory(database)
 end
 
 ---@param database DeathpoolCharacterState
----@return DeathpoolDeath[]
-function DeathpoolDatabase.GetSuccessfullyPredictedDeaths(database)
-    return EnsureTableField(database, "successfullyPredictedDeaths")
+---@param fieldName string
+---@return string[]
+local function GetUniqueDeathHistoryValues(database, fieldName)
+    local values = {}
+    local seenValues = {}
+
+    for _, death in ipairs(DeathpoolDatabase.GetDeathHistory(database)) do
+        if type(death) == "table" and type(death[fieldName]) == "string" then
+            local value = death[fieldName]
+            if not seenValues[value] then
+                seenValues[value] = true
+                values[#values + 1] = value
+            end
+        end
+    end
+
+    table.sort(values)
+
+    return values
 end
 
 ---@param database DeathpoolCharacterState
 ---@return string[]
-function DeathpoolDatabase.GetLearnedZones(database)
-    return EnsureTableField(database, "learnedZones")
+function DeathpoolDatabase.GetDeathHistorySourceNames(database)
+    return GetUniqueDeathHistoryValues(database, "sourceName")
+end
+
+---@param database DeathpoolCharacterState
+---@return string[]
+function DeathpoolDatabase.GetDeathHistoryZones(database)
+    return GetUniqueDeathHistoryValues(database, "zone")
+end
+
+---@param database DeathpoolCharacterState
+---@return DeathpoolDeath[]
+function DeathpoolDatabase.GetSuccessfullyPredictedDeaths(database)
+    return EnsureTableField(database, "successfullyPredictedDeaths")
 end
 
 ---@param database DeathpoolCharacterState

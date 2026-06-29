@@ -86,7 +86,7 @@ Top-level addon files:
 - `DeathpoolUI.lua` should contain shared UI constants, layout values, common widget helpers, and top-level frame creation
 - `DeathpoolUITooltip.lua` should contain standardized tooltip building for death rows and prediction previews
 - `DeathpoolUIDeathLogList.lua` should contain reusable death log row creation and row refresh behavior
-- `DeathpoolUIAutocomplete.lua` should contain learned suggestion lists and dropdown behavior for prediction inputs
+- `DeathpoolUIAutocomplete.lua` should contain history-backed suggestion lists and dropdown behavior for prediction inputs
 - `DeathpoolUIHelp.lua` should contain the help window
 - `DeathpoolUISetup.lua` should contain the setup window
 - `DeathpoolUIMode.lua` should contain the resolver for the current UI mode

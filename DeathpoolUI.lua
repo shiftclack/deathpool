@@ -403,24 +403,6 @@ function DeathpoolUI.TrimText(value)
     return trimmed
 end
 
----@param list string[]
----@param value any
-function DeathpoolUI.EnsureUniqueValue(list, value)
-    local trimmed = DeathpoolUI.TrimText(value)
-    if not trimmed then
-        return
-    end
-
-    local normalizedValue = string.lower(trimmed)
-    for _, existingValue in ipairs(list) do
-        if string.lower(tostring(existingValue)) == normalizedValue then
-            return
-        end
-    end
-
-    table.insert(list, trimmed)
-end
-
 ---@param frame table
 ---@return DeathpoolFrameAnchor|nil
 local function GetFrameAnchor(frame)

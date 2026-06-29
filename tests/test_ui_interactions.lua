@@ -1155,10 +1155,10 @@ local function testPredictionButtons()
     Deathpool.sourceEditBox:SetText("def")
     Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
     local defiasButton = findDropdownButtonByText(Deathpool.dropdown, "Defias Trapper")
-    assertTruthy(defiasButton, "highlighted Defias Trapper suggestion should be present in the source dropdown")
+    assertTruthy(defiasButton, "Defias Trapper suggestion should be present in the source dropdown")
 ---@diagnostic disable-next-line: need-check-nil
     defiasButton:GetScript("OnClick")()
-    assertEquals(Deathpool.sourceEditBox:GetText(), "Defias Trapper", "clicking a highlighted source suggestion should still fill the source edit box")
+    assertEquals(Deathpool.sourceEditBox:GetText(), "Defias Trapper", "clicking a source suggestion should still fill the source edit box")
 
     Deathpool.zoneEditBox:GetScript("OnEditFocusGained")(Deathpool.zoneEditBox)
     Deathpool.zoneEditBox:SetText(targetZoneInput)

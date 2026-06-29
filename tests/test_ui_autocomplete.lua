@@ -6,42 +6,61 @@ local createUIContext = testContext.createUIContext
 local assertEquals = testContext.assertEquals
 local assertTruthy = testContext.assertTruthy
 
-local function testAutocompleteLearnsAndDedupesZones()
+local function testAutocompleteBuildsBothListsFromCurrentDeathHistory()
+    local context = createUIContext()
+    local Deathpool = context.Deathpool
+    local findDropdownButtonByText = context.findDropdownButtonByText
+
+    table.insert(DeathpoolCharacterState.deathHistory, Fixtures.storedDeath({
+        sourceName = "Zealous History Beast",
+        zone = "Zephyr Canyon",
+    }))
+
+    Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:SetText("zealous")
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    assertTruthy(
+        findDropdownButtonByText(Deathpool.dropdown, "Zealous History Beast"),
+        "source suggestions should query history added after UI initialization"
+    )
+
+    Deathpool.zoneEditBox:GetScript("OnEditFocusGained")(Deathpool.zoneEditBox)
+    Deathpool.zoneEditBox:SetText("zephyr")
+    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox)
+    assertTruthy(
+        findDropdownButtonByText(Deathpool.dropdown, "Zephyr Canyon"),
+        "location suggestions should query history added after UI initialization"
+    )
+end
+
+local function testAutocompleteMergesHistoryWithDefaultsWithoutDuplicates()
     local context = createUIContext(Fixtures.addonDatabase({
-        learnedZones = {
-            "Westfall",
-            "Ashenvale",
-            "Westfall",
+        deathHistory = {
+            Fixtures.storedDeath({
+                sourceName = "Hogger",
+                zone = "Uldaman",
+            }),
         },
     }))
     local DeathpoolUI = context.DeathpoolUI
+    local sourceSuggestions = DeathpoolUI.GetSourceSuggestions(DeathpoolCharacterState)
+    local zoneSuggestions = DeathpoolUI.GetZoneSuggestions(DeathpoolCharacterState)
+    local hoggerCount = 0
+    local uldamanCount = 0
 
-    DeathpoolUI.InitializeSuggestionLists(DeathpoolCharacterState)
-
-    local westfallCount = 0
-    for _, zone in ipairs(DeathpoolUI.ZoneList) do
-        if zone == "Westfall" then
-            westfallCount = westfallCount + 1
+    for _, source in ipairs(sourceSuggestions) do
+        if source == "Hogger" then
+            hoggerCount = hoggerCount + 1
+        end
+    end
+    for _, zone in ipairs(zoneSuggestions) do
+        if zone == "Uldaman" then
+            uldamanCount = uldamanCount + 1
         end
     end
 
-    assertEquals(westfallCount, 1, "suggestion list initialization should dedupe learned zones")
-    assertTruthy(DeathpoolCharacterState.learnedZones ~= nil, "suggestion list initialization should preserve learned zone storage")
-end
-
-local function testRegisterObservedZoneTrimsAndIgnoresBlankInput()
-    local context = createUIContext(Fixtures.addonDatabase({
-        learnedZones = {},
-    }))
-    local DeathpoolUI = context.DeathpoolUI
-
-    DeathpoolUI.InitializeSuggestionLists(DeathpoolCharacterState)
-    DeathpoolUI.RegisterObservedZone("  Westfall  ", DeathpoolCharacterState)
-    DeathpoolUI.RegisterObservedZone(" ", DeathpoolCharacterState)
-    DeathpoolUI.RegisterObservedZone(nil, DeathpoolCharacterState)
-
-    assertEquals(DeathpoolCharacterState.learnedZones[1], "Westfall", "register observed zone should trim surrounding whitespace")
-    assertEquals(#DeathpoolCharacterState.learnedZones, 1, "register observed zone should ignore blank or nil zones")
+    assertEquals(hoggerCount, 1, "historical sources should not duplicate curated defaults")
+    assertEquals(uldamanCount, 1, "historical locations should not duplicate curated defaults")
 end
 
 local function testAutocompleteHidesDropdownForBlankAndNoMatches()
@@ -78,6 +97,23 @@ local function testAutocompleteDropdownCapsVisibleResultsAtTen()
     end
 
     assertEquals(visibleCount, 10, "autocomplete dropdown should cap visible matches at ten rows")
+end
+
+local function testDynamicSourceSuggestionsPreserveCuratedHighlighting()
+    local context = createUIContext()
+    local Deathpool = context.Deathpool
+    local findDropdownButtonByText = context.findDropdownButtonByText
+
+    Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:SetText("vag")
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+
+    local vagashButton = findDropdownButtonByText(Deathpool.dropdown, "Vagash")
+    assertTruthy(vagashButton, "highlighted curated sources should remain in the dynamic list")
+    assertTruthy(
+        vagashButton and vagashButton.highlight:IsShown(),
+        "dynamic source suggestions should preserve curated highlighting"
+    )
 end
 
 local function testAutocompleteEscapeAndFocusLostHideDropdown()
@@ -119,10 +155,11 @@ local function testAutocompleteSelectionSuppressesRecursiveUpdates()
     assertEquals(Deathpool.sourceEditBox:GetText(), "Hogger", "selecting an autocomplete suggestion should still apply the chosen value")
 end
 
-testAutocompleteLearnsAndDedupesZones()
-testRegisterObservedZoneTrimsAndIgnoresBlankInput()
+testAutocompleteBuildsBothListsFromCurrentDeathHistory()
+testAutocompleteMergesHistoryWithDefaultsWithoutDuplicates()
 testAutocompleteHidesDropdownForBlankAndNoMatches()
 testAutocompleteDropdownCapsVisibleResultsAtTen()
+testDynamicSourceSuggestionsPreserveCuratedHighlighting()
 testAutocompleteEscapeAndFocusLostHideDropdown()
 testAutocompleteSelectionSuppressesRecursiveUpdates()
 

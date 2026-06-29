@@ -86,6 +86,41 @@ return function(context)
         )
     end
 
+    local function testDeathHistorySuggestionValuesAreUniqueAndSorted()
+        local database = Fixtures.database({
+            deathHistory = {
+                Fixtures.storedDeath({
+                    sourceName = "Zebra Beast",
+                    zone = "Zed Canyon",
+                }),
+                Fixtures.storedDeath({
+                    sourceName = "Alpha Beast",
+                    zone = "Westfall",
+                }),
+                Fixtures.storedDeath({
+                    sourceName = "Zebra Beast",
+                    zone = "Ashenvale",
+                }),
+                {
+                    sourceName = 17,
+                    zone = 17,
+                },
+                "corrupt death entry",
+            },
+        })
+
+        local sources = _G.DeathpoolDatabase.GetDeathHistorySourceNames(database)
+        local zones = _G.DeathpoolDatabase.GetDeathHistoryZones(database)
+
+        assertTableLength(sources, 2, "history sources should contain each normalized value once")
+        assertEquals(sources[1], "Alpha Beast", "history sources should be sorted alphabetically")
+        assertEquals(sources[2], "Zebra Beast", "history sources should preserve parsed values")
+        assertTableLength(zones, 3, "history zones should ignore invalid values and retain unique names")
+        assertEquals(zones[1], "Ashenvale", "history zones should be sorted alphabetically")
+        assertEquals(zones[2], "Westfall", "history zones should preserve stored display text")
+        assertEquals(zones[3], "Zed Canyon", "history zones should preserve parsed values")
+    end
+
     local function testDatabaseResetGameplayState()
         local database = Fixtures.database({
             lockedPrediction = Fixtures.prediction(),
@@ -115,9 +150,6 @@ return function(context)
             totalPoints = 17,
             correctPredictionStreak = 3,
             longestPredictionStreak = 5,
-            learnedZones = {
-                "Westfall",
-            },
             hidden = false,
         })
         local recentDeaths = database.recentDeaths
@@ -146,7 +178,6 @@ return function(context)
             0,
             "reset gameplay state should clear successful prediction history"
         )
-        assertTableLength(database.learnedZones, 1, "reset gameplay state should keep unrelated learned zones")
         assertEquals(database.hidden, false, "reset gameplay state should keep unrelated window state")
     end
 
@@ -694,6 +725,7 @@ return function(context)
     testDatabaseInitRepairsCorruptTopLevelValue()
     testDatabaseInitNormalizesStoredState()
     testDatabaseInitDefaultsFirstRunFlag()
+    testDeathHistorySuggestionValuesAreUniqueAndSorted()
     testDatabaseResetGameplayState()
     testLockedPredictionStateTransitions()
     testDraftPredictionStateTransitions()

@@ -165,28 +165,47 @@ end
 ---@type string[]
 DeathpoolUI.ZoneList = BuildDefaultZoneSuggestions()
 
----@param database DeathpoolCharacterState
-function DeathpoolUI.InitializeSuggestionLists(database)
-    DeathpoolUI.ZoneList = BuildDefaultZoneSuggestions()
-    local learnedZones = database and DeathpoolDatabase.GetLearnedZones(database) or {}
-    for _, zone in ipairs(learnedZones) do
-        DeathpoolUI.EnsureUniqueValue(DeathpoolUI.ZoneList, zone)
+---@param defaultValues string[]
+---@param historyValues string[]
+---@return string[]
+local function MergeSuggestionValues(defaultValues, historyValues)
+    local values = {}
+    local seenValues = {}
+
+    for _, value in ipairs(defaultValues) do
+        if not seenValues[value] then
+            seenValues[value] = true
+            values[#values + 1] = value
+        end
     end
+    for _, value in ipairs(historyValues) do
+        if not seenValues[value] then
+            seenValues[value] = true
+            values[#values + 1] = value
+        end
+    end
+
+    table.sort(values)
+
+    return values
 end
 
----@param zoneName string|nil
 ---@param database DeathpoolCharacterState
-function DeathpoolUI.RegisterObservedZone(zoneName, database)
-    local trimmedZone = DeathpoolUI.TrimText(zoneName)
-    if not trimmedZone then
-        return
-    end
+---@return string[]
+function DeathpoolUI.GetSourceSuggestions(database)
+    return MergeSuggestionValues(
+        DeathpoolUI.SourceList,
+        DeathpoolDatabase.GetDeathHistorySourceNames(database)
+    )
+end
 
-    DeathpoolUI.EnsureUniqueValue(DeathpoolUI.ZoneList, trimmedZone)
-
-    if database then
-        DeathpoolUI.EnsureUniqueValue(DeathpoolDatabase.GetLearnedZones(database), trimmedZone)
-    end
+---@param database DeathpoolCharacterState
+---@return string[]
+function DeathpoolUI.GetZoneSuggestions(database)
+    return MergeSuggestionValues(
+        DeathpoolUI.ZoneList,
+        DeathpoolDatabase.GetDeathHistoryZones(database)
+    )
 end
 
 ---@param parent table
@@ -288,7 +307,7 @@ local function ShowDropdown(frame, matches)
 
         button.text:SetText(value)
         button.text:SetTextColor(1.0, 1.0, 1.0)
-        if frame.SuggestionSourceList == DeathpoolUI.SourceList
+        if frame.suggestionKind == "source"
             and HighlightedSourceSuggestions[string.lower(value)]
         then
             button.highlight:Show()
@@ -341,13 +360,13 @@ function DeathpoolUI.UpdateSuggestions(frame, input)
         return
     end
 
-    if not input or input == "" or not frame or not frame.SuggestionSourceList then
+    if not input or input == "" or not frame or not frame.suggestionList then
         DeathpoolUI.HideDropdown(frame)
         return
     end
 
     local lowerInput = string.lower(input)
-    for _, value in ipairs(frame.SuggestionSourceList) do
+    for _, value in ipairs(frame.suggestionList) do
         if string.find(string.lower(value), lowerInput, 1, true) then
             table.insert(matches, value)
         end

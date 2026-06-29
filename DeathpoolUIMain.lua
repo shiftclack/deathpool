@@ -72,7 +72,8 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstD
 ---@field introDemoController DeathpoolIntroDemoController|nil
 ---@field isCollapsed boolean|nil
 ---@field activeEditBox DeathpoolEditBox|nil
----@field SuggestionSourceList string[]|nil
+---@field suggestionList string[]|nil
+---@field suggestionKind string|nil
 ---@field collapsedWindowStates table<string, boolean>|nil
 
 ---@class DeathpoolMainFrame: DeathpoolMainFrameShell
@@ -1022,16 +1023,26 @@ end
 
 ---@param ctx DeathpoolMainContext
 ---@param editBox DeathpoolEditBox
----@param suggestionList string[]
-local function AttachPredictionEditBoxHandlers(ctx, editBox, suggestionList)
+---@param suggestionKind string
+local function AttachPredictionEditBoxHandlers(ctx, editBox, suggestionKind)
     local frame = ctx.frame
+
+    ---@param activeEditBox DeathpoolEditBox
+    local function SetActiveSuggestionInput(activeEditBox)
+        frame.activeEditBox = activeEditBox
+        frame.suggestionKind = suggestionKind
+        if suggestionKind == "source" then
+            frame.suggestionList = DeathpoolUI.GetSourceSuggestions(GetState(frame))
+        else
+            frame.suggestionList = DeathpoolUI.GetZoneSuggestions(GetState(frame))
+        end
+    end
 
     editBox:SetScript("OnTextChanged", function(self)
         if frame.predictionInputsLocked then
             return
         end
-        frame.activeEditBox = self
-        frame.SuggestionSourceList = suggestionList
+        SetActiveSuggestionInput(self)
         DeathpoolUI.UpdateSuggestions(frame, self:GetText())
         UpdateDraftPrediction(ctx)
         if frame.RefreshRecentDeathLogState then
@@ -1044,8 +1055,7 @@ local function AttachPredictionEditBoxHandlers(ctx, editBox, suggestionList)
         if frame.predictionInputsLocked then
             return
         end
-        frame.activeEditBox = self
-        frame.SuggestionSourceList = suggestionList
+        SetActiveSuggestionInput(self)
     end)
 
     editBox:SetScript("OnEditFocusLost", function()
@@ -1177,8 +1187,6 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
     local layout = DeathpoolUI.LAYOUT
     maxRecentDeaths = maxRecentDeaths or 5
 
-    DeathpoolUI.InitializeSuggestionLists(state)
-
     local frame = CreateFrame("Frame", "DeathpoolFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast frame DeathpoolMainFrameShell
     frame.state = state
@@ -1230,8 +1238,8 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
 
     ---@cast frame DeathpoolMainFrame
     ---@cast ctx DeathpoolMainContext
-    AttachPredictionEditBoxHandlers(ctx, frame.sourceEditBox, DeathpoolUI.SourceList)
-    AttachPredictionEditBoxHandlers(ctx, frame.zoneEditBox, DeathpoolUI.ZoneList)
+    AttachPredictionEditBoxHandlers(ctx, frame.sourceEditBox, "source")
+    AttachPredictionEditBoxHandlers(ctx, frame.zoneEditBox, "zone")
     InitializeMainFrameState(ctx)
     DeathpoolUI.ApplyDesiredLogWindowState(frame, state)
 
