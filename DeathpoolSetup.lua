@@ -61,7 +61,7 @@ function DeathpoolSetup.EnableDeathAnnouncements()
 end
 
 function DeathpoolSetup.JoinHardcoreDeathsChannel()
-    JoinChannelByName(HARDCORE_DEATHS_CHANNEL_NAME)
+    JoinPermanentChannel(HARDCORE_DEATHS_CHANNEL_NAME)
     sessionState.hasJoinedHardcoreDeathsChannel = true
 end
 

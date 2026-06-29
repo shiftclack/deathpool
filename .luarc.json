@@ -46,7 +46,7 @@
       "GetZoneText",
       "HARDCORE_CAUSEOFDEATH_CREATURE",
       "InputBoxTemplate",
-      "JoinChannelByName",
+      "JoinPermanentChannel",
       "LibStub",
       "RaidWarningFrame",
       "SendChatMessage",

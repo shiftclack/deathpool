@@ -76,7 +76,7 @@ read_globals = {
    "GetChannelName",
    "HARDCORE_CAUSEOFDEATH_CREATURE",
    "InputBoxTemplate",
-   "JoinChannelByName",
+   "JoinPermanentChannel",
    "SendChatMessage",
    "SetCVar",
    "UIDropDownMenu_AddButton",

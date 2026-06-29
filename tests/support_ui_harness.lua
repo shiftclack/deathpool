@@ -633,7 +633,7 @@ local function initializeGlobals(options)
 
         return 0, nil
     end)
-    rawset(_G, "JoinChannelByName", function(name)
+    rawset(_G, "JoinPermanentChannel", function(name)
         _G.__joinedChannelNames[#_G.__joinedChannelNames + 1] = name
         _G.__joinedChannels[name] = true
     end)
