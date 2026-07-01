@@ -7,6 +7,11 @@
 ---@class DeathpoolMinimapSettings
 ---@field hide boolean
 
+---@class DeathpoolAnnouncementSettings
+---@field enabled boolean
+---@field announceScoreOnDeath boolean
+---@field announceScoreOnLevelUp boolean
+
 ---@class DeathpoolPredictionElements
 ---@field levelRange string|nil
 ---@field source string|nil
@@ -40,7 +45,7 @@
 ---@field hasSeenFirstRun boolean
 ---@field logWindowShown boolean
 ---@field historySuccessfulOnly boolean
----@field announceDeathToGuild boolean
+---@field announcements DeathpoolAnnouncementSettings
 ---@field showInCombat boolean
 ---@field collapsed boolean
 ---@field collapsedWindowHeight integer|nil
@@ -64,7 +69,11 @@ DeathpoolDatabase.DEFAULTS = {
     hasSeenFirstRun = false,
     logWindowShown = false,
     historySuccessfulOnly = true,
-    announceDeathToGuild = true,
+    announcements = {
+        enabled = true,
+        announceScoreOnDeath = true,
+        announceScoreOnLevelUp = true,
+    },
     showInCombat = false,
     collapsed = false,
     recentDeaths = {},
@@ -102,6 +111,23 @@ local function CloneValue(value)
     return copy
 end
 
+---@param database table
+---@return DeathpoolAnnouncementSettings
+local function EnsureAnnouncements(database)
+    local announcements = EnsureTableField(database, "announcements")
+
+    if announcements.enabled == nil then
+        announcements.enabled = DeathpoolDatabase.DEFAULTS.announcements.enabled
+    else
+        announcements.enabled = announcements.enabled == true
+    end
+    announcements.announceScoreOnDeath = announcements.announceScoreOnDeath ~= false
+    announcements.announceScoreOnLevelUp = announcements.announceScoreOnLevelUp ~= false
+    announcements.levelUpFrequency = nil
+
+    return announcements
+end
+
 --- if database is nil one will be returned with default values
 --- also try to fix any corrupt or missing fields
 --- any state initialization that needs to happen before migrations should go here
@@ -112,8 +138,8 @@ local function EnsureDatabase(database)
         ---@diagnostic disable-next-line: missing-fields
         database = {}
     end
-    -- This mutates the provided table in place and preserves identity.
 
+    -- This mutates the provided table in place and preserves identity.
     for fieldName, defaultValue in pairs(DeathpoolDatabase.DEFAULTS) do
         if database[fieldName] == nil then
             database[fieldName] = CloneValue(defaultValue)
@@ -123,20 +149,15 @@ local function EnsureDatabase(database)
     EnsureTableField(database, "recentDeaths")
     EnsureTableField(database, "deathHistory")
     EnsureTableField(database, "successfullyPredictedDeaths")
-    local minimap = EnsureTableField(database, "minimap")
-    if minimap.hide == nil then
-        minimap.hide = false
-    end
+    EnsureTableField(database, "minimap")
+    EnsureAnnouncements(database)
 
     -- Debug mode is session-only and should not remain in SavedVariables.
     database.debugEnabled = nil
 
     database.totalPoints = tonumber(database.totalPoints) or 0
     database.correctPredictionStreak = tonumber(database.correctPredictionStreak) or 0
-    database.longestPredictionStreak = math.max(
-        tonumber(database.longestPredictionStreak) or 0,
-        database.correctPredictionStreak
-    )
+    database.longestPredictionStreak = tonumber(database.longestPredictionStreak) or 0
 
     return database
 end
@@ -223,15 +244,43 @@ end
 ---@param database DeathpoolCharacterState
 ---@return boolean
 function DeathpoolDatabase.GetAnnounceDeathToGuild(database)
-    return database.announceDeathToGuild ~= false
+    return database.announcements.announceScoreOnDeath == true
 end
 
 ---@param database DeathpoolCharacterState
 ---@param enabled boolean
 ---@return boolean
 function DeathpoolDatabase.SetAnnounceDeathToGuild(database, enabled)
-    database.announceDeathToGuild = enabled == true
-    return database.announceDeathToGuild
+    database.announcements.announceScoreOnDeath = enabled == true
+    return database.announcements.announceScoreOnDeath
+end
+
+---@param database DeathpoolCharacterState
+---@return boolean
+function DeathpoolDatabase.GetAnnounceScoreOnLevelUp(database)
+    return database.announcements.announceScoreOnLevelUp == true
+end
+
+---@param database DeathpoolCharacterState
+---@param enabled boolean
+---@return boolean
+function DeathpoolDatabase.SetAnnounceScoreOnLevelUp(database, enabled)
+    database.announcements.announceScoreOnLevelUp = enabled == true
+    return database.announcements.announceScoreOnLevelUp
+end
+
+---@param database DeathpoolCharacterState
+---@return boolean
+function DeathpoolDatabase.GetGuildAnnouncementsEnabled(database)
+    return database.announcements.enabled == true
+end
+
+---@param database DeathpoolCharacterState
+---@param enabled boolean
+---@return boolean
+function DeathpoolDatabase.SetGuildAnnouncementsEnabled(database, enabled)
+    database.announcements.enabled = enabled == true
+    return database.announcements.enabled
 end
 
 ---@param database DeathpoolCharacterState

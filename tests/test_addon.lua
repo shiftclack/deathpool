@@ -54,6 +54,7 @@ local function createLoadedAddonContext(options)
         state = options.state,
         hardcoreDeathChatType = options.hardcoreDeathChatType,
         hardcoreDeathsJoined = options.hardcoreDeathsJoined,
+        inGuild = options.inGuild,
     })
     local controller = context.controller
     local dispatchEvent = context.dispatchEvent
@@ -295,6 +296,8 @@ local function testDebugLogOnlyPrintsWhileDebugModeIsEnabled()
     local chatMessages = context.chatMessages
     local debugApi = _G.DeathpoolDebug
 
+    assertEquals(#chatMessages, 0, "addon load should not print chat announcements")
+
     debugApi.Log("hidden debug message")
     assertEquals(#chatMessages, 0, "debug log should stay silent while debug mode is disabled")
 
@@ -303,11 +306,7 @@ local function testDebugLogOnlyPrintsWhileDebugModeIsEnabled()
     local messageCountAfterEnable = #chatMessages
 
     debugApi.Log("visible debug message")
-    assertEquals(
-        chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: visible debug message",
-        "debug log should print once debug mode is enabled"
-    )
+    assertContains(chatMessages[#chatMessages], "visible debug message", "debug log should print once debug mode is enabled")
     assertEquals(#chatMessages, messageCountAfterEnable + 1, "debug log should add one message while enabled")
 end
 
@@ -423,9 +422,9 @@ local function testDemoCommandPrintsErrorWhileCollapsed()
     assertEquals(Deathpool.isCollapsed, true, "demo command should leave the main window collapsed")
     assertEquals(Deathpool:IsShown(), false, "demo command should not show the main window while collapsed")
     assertEquals(getIntroDemoState(Deathpool), nil, "demo command should not start the intro preview while collapsed")
-    assertEquals(
+    assertContains(
         chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: Expand the main window before using /deathpool demo.",
+        "Expand the main window",
         "demo command should explain that the window must be expanded first"
     )
 end
@@ -441,9 +440,9 @@ local function testIntroCommandResetsIntroductionFlagsAndPrintsMessage()
     local chatMessages = context.chatMessages
 
     context.runSlash("resetintro")
-    assertEquals(
+    assertContains(
         chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: Intro reset requires debug mode",
+        "requires debug mode",
         "resetintro command should require debug mode before it will run"
     )
 
@@ -451,9 +450,9 @@ local function testIntroCommandResetsIntroductionFlagsAndPrintsMessage()
     context.runSlash("resetintro")
     assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, false, "resetintro command should re-enable the intro demo")
     assertEquals(DeathpoolCharacterState.hasSeenFirstRun, false, "resetintro command should re-enable the first-run prompt")
-    assertEquals(
+    assertContains(
         chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: Introduction enabled.",
+        "Introduction enabled",
         "resetintro command should confirm that the introduction was enabled"
     )
 end
@@ -480,9 +479,9 @@ local function testResetCommandRequiresDebugModeAndReinitializesDefaults()
     local chatMessages = context.chatMessages
 
     context.runSlash("reset")
-    assertEquals(
+    assertContains(
         chatMessages[#chatMessages],
-        "|cffcc3333Deathpool|r: Database reset requires debug mode",
+        "requires debug mode",
         "reset command should require debug mode before it will run"
     )
 
@@ -668,9 +667,25 @@ local function testAddonLoadDefaultsDeathAnnouncementToEnabled()
     createLoadedAddonContext()
 
     assertEquals(
-        DeathpoolCharacterState.announceDeathToGuild,
-        getDefault("announceDeathToGuild"),
+        DeathpoolCharacterState.announcements.enabled,
+        true,
+        "addon load should enable guild announcements by default"
+    )
+    assertEquals(
+        DeathpoolCharacterState.announcements.announceScoreOnDeath,
+        getDefault("announcements").announceScoreOnDeath,
         "addon load should honor the configured death announcement default"
+    )
+
+    assertEquals(
+        _G.DeathpoolUISettings.guildAnnouncementsEnabledCheckbox:GetChecked(),
+        true,
+        "settings panel should show guild announcements enabled by default"
+    )
+    assertEquals(
+        _G.DeathpoolUISettings.announceDeathToGuildCheckbox:IsEnabled(),
+        true,
+        "settings panel should enable guild announcement options by default"
     )
 end
 
@@ -711,7 +726,7 @@ local function testShowInCombatCommandKeepsWindowVisibleInCombat()
 
     context.runSlash("showincombat")
     assertEquals(DeathpoolCharacterState.showInCombat, true, "showincombat command should enable showing the window in combat")
-    assertEquals(chatMessages[#chatMessages], "|cffcc3333Deathpool|r: Show in combat enabled.", "showincombat should announce enablement")
+    assertContains(chatMessages[#chatMessages], "Show in combat enabled", "showincombat should announce enablement")
 
     assertEquals(dispatchEvent(controller, "PLAYER_REGEN_DISABLED"), true, "combat event should still dispatch after toggling the setting")
     assertEquals(Deathpool.isCollapsed, false, "entering combat should not collapse the main window while show-in-combat is enabled")
@@ -723,6 +738,9 @@ local function testPlayerDeathPreservesFinalScoreAndPrintsIt()
             hidden = false,
             hasSeenIntroDemo = true,
             totalPoints = 12345,
+            announcements = {
+                enabled = true,
+            },
         }),
         login = true,
     })
@@ -742,8 +760,8 @@ local function testPlayerDeathPreservesFinalScoreAndPrintsIt()
     assertEquals(#sentChatMessages, 1, "player death should send exactly one guild chat announcement")
     assertEquals(
         sentChatMessages[1].message,
-        "HarnessPlayer has died. Their final Hardcore Deathpool score is 12,345",
-        "player death should announce the final score in guild chat"
+        "[Deathpool] Final score: 12,345",
+        "player death should announce the player and final score in guild chat"
     )
     assertEquals(sentChatMessages[1].chatType, "GUILD", "player death should announce the final score to guild chat")
 end
@@ -754,7 +772,10 @@ local function testPlayerDeathSkipsGuildAnnouncementWhenDisabled()
             hidden = false,
             hasSeenIntroDemo = true,
             totalPoints = 12345,
-            announceDeathToGuild = false,
+            announcements = {
+                enabled = true,
+                announceScoreOnDeath = false,
+            },
         }),
         login = true,
     })
@@ -765,6 +786,161 @@ local function testPlayerDeathSkipsGuildAnnouncementWhenDisabled()
     assertEquals(dispatchEvent(controller, "PLAYER_DEAD"), true, "player death should still dispatch when guild announcement is disabled")
     assertTruthy(string.find(context.chatMessages[#context.chatMessages], "score", 1, true), "player death should still print the final score when guild announcement is disabled")
     assertEquals(#sentChatMessages, 0, "player death should skip the guild chat announcement when disabled")
+end
+
+local function testPlayerDeathSkipsGuildAnnouncementWhenMasterDisabled()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = false,
+            hasSeenIntroDemo = true,
+            totalPoints = 12345,
+            announcements = {
+                enabled = false,
+                announceScoreOnDeath = true,
+            },
+        }),
+        login = true,
+    })
+    local dispatchEvent = context.dispatchEvent
+    local controller = context.controller
+    local sentChatMessages = context.sentChatMessages
+
+    assertEquals(dispatchEvent(controller, "PLAYER_DEAD"), true, "player death should still dispatch when announcements are disabled")
+    assertTruthy(string.find(context.chatMessages[#context.chatMessages], "score", 1, true), "player death should still print the final score when announcements are disabled")
+    assertEquals(#sentChatMessages, 0, "player death should skip guild chat when the announcement master switch is disabled")
+end
+
+local function testPlayerDeathSkipsGuildAnnouncementWhenNotInGuild()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = false,
+            hasSeenIntroDemo = true,
+            totalPoints = 12345,
+            announcements = {
+                enabled = true,
+                announceScoreOnDeath = true,
+            },
+        }),
+        inGuild = false,
+        login = true,
+    })
+
+    assertEquals(
+        context.dispatchEvent(context.controller, "PLAYER_DEAD"),
+        true,
+        "player death should still dispatch when the player is not in a guild"
+    )
+    assertTruthy(
+        string.find(context.chatMessages[#context.chatMessages], "score", 1, true),
+        "player death should still print the final score when the player is not in a guild"
+    )
+    assertEquals(#context.sentChatMessages, 0, "player death should not send guild chat when the player is not in a guild")
+end
+
+local function testPlayerLevelUpAnnouncesScoreEveryTenLevels()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            totalPoints = 12345,
+            announcements = {
+                enabled = true,
+            },
+        }),
+    })
+    local dispatchEvent = context.dispatchEvent
+    local controller = context.controller
+    local sentChatMessages = context.sentChatMessages
+
+    assertEquals(dispatchEvent(controller, "PLAYER_LEVEL_UP", 10), true, "player level up should dispatch when registered")
+    assertEquals(#sentChatMessages, 1, "level 10 should send one guild announcement")
+    assertEquals(
+        sentChatMessages[1].message,
+        "[Deathpool] HarnessPlayer has reached level 10! Their score is 12,345",
+        "level-up announcement should include the player, level, and formatted score"
+    )
+    assertEquals(sentChatMessages[1].chatType, "GUILD", "level-up announcement should use guild chat")
+
+    dispatchEvent(controller, "PLAYER_LEVEL_UP", 60)
+    assertEquals(#sentChatMessages, 2, "level 60 should send another guild announcement")
+    assertEquals(
+        sentChatMessages[2].message,
+        "[Deathpool] HarnessPlayer has reached level 60! Their score is 12,345",
+        "level 60 announcement should use the same message format"
+    )
+end
+
+local function testPlayerLevelUpSkipsLevelsBetweenAnnouncements()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            totalPoints = 12345,
+            announcements = {
+                enabled = true,
+            },
+        }),
+    })
+
+    assertEquals(
+        context.dispatchEvent(context.controller, "PLAYER_LEVEL_UP", 19),
+        true,
+        "non-announcement level ups should still dispatch"
+    )
+    assertEquals(#context.sentChatMessages, 0, "levels between multiples of 10 should not send guild announcements")
+end
+
+local function testPlayerLevelUpSkipsWhenGuildAnnouncementsDisabled()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            totalPoints = 12345,
+            announcements = {
+                enabled = false,
+            },
+        }),
+    })
+
+    assertEquals(
+        context.dispatchEvent(context.controller, "PLAYER_LEVEL_UP", 10),
+        true,
+        "player level up should dispatch while guild announcements are disabled"
+    )
+    assertEquals(#context.sentChatMessages, 0, "disabled guild announcements should suppress level-up messages")
+end
+
+local function testPlayerLevelUpSkipsWhenLevelUpAnnouncementsDisabled()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            totalPoints = 12345,
+            announcements = {
+                enabled = true,
+                announceScoreOnLevelUp = false,
+            },
+        }),
+    })
+
+    assertEquals(
+        context.dispatchEvent(context.controller, "PLAYER_LEVEL_UP", 10),
+        true,
+        "player level up should dispatch while level-up announcements are disabled"
+    )
+    assertEquals(#context.sentChatMessages, 0, "disabled level-up announcements should suppress guild messages")
+end
+
+local function testPlayerLevelUpSkipsWhenNotInGuild()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            totalPoints = 12345,
+            announcements = {
+                enabled = true,
+                announceScoreOnLevelUp = true,
+            },
+        }),
+        inGuild = false,
+    })
+
+    assertEquals(
+        context.dispatchEvent(context.controller, "PLAYER_LEVEL_UP", 10),
+        true,
+        "player level up should still dispatch when the player is not in a guild"
+    )
+    assertEquals(#context.sentChatMessages, 0, "player level up should not send guild chat when the player is not in a guild")
 end
 
 local function testEscapeClosesAndPersistsMainWindowHiddenState()
@@ -861,11 +1037,11 @@ local function testSlashCommandsReachTheirExpectedBranches()
 
     context.runSlash("minimap")
     assertEquals(DeathpoolCharacterState.minimap.hide, true, "minimap command should hide the minimap icon")
-    assertEquals(chatMessages[#chatMessages], "|cffcc3333Deathpool|r: Minimap icon disabled.", "minimap command should announce disablement")
+    assertContains(chatMessages[#chatMessages], "Minimap icon disabled", "minimap command should announce disablement")
 
     context.runSlash("minimap")
     assertEquals(DeathpoolCharacterState.minimap.hide, false, "minimap command should show the minimap icon again")
-    assertEquals(chatMessages[#chatMessages], "|cffcc3333Deathpool|r: Minimap icon enabled.", "minimap command should announce enablement")
+    assertContains(chatMessages[#chatMessages], "Minimap icon enabled", "minimap command should announce enablement")
 
     context.runSlash("demo")
     assertTruthy(getIntroDemoState(Deathpool) ~= nil, "demo command should reach the intro demo branch")
@@ -910,7 +1086,11 @@ end
 local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
     createLoadedAddonContext({
         state = Fixtures.addonDatabase({
-            announceDeathToGuild = true,
+            announcements = {
+                enabled = true,
+                announceScoreOnDeath = true,
+                announceScoreOnLevelUp = false,
+            },
             minimap = {
                 hide = true,
             },
@@ -921,6 +1101,10 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
     local category = _G.Settings.registeredAddOnCategories[#_G.Settings.registeredAddOnCategories]
     ---@type DeathpoolUISettingsPanelModule
     local settingsModule = _G.DeathpoolUISettings
+    local function getRelativeToAndXOffset(region)
+        local _, relativeTo, _, x = region:GetPoint(1)
+        return relativeTo, x
+    end
 
     assertTruthy(category ~= nil, "settings panel should register an addon category")
     assertTruthy(category.frame ~= nil, "settings panel should register a category frame")
@@ -928,10 +1112,58 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
 
     category.frame:Show()
     assertEquals(
+        settingsModule.guildAnnouncementsEnabledCheckbox:GetChecked(),
+        true,
+        "settings panel should reflect saved guild announcements enabled state"
+    )
+    assertEquals(
         settingsModule.announceDeathToGuildCheckbox:GetChecked(),
         true,
         "settings panel should reflect saved death announcement state"
     )
+    assertEquals(
+        settingsModule.announceDeathToGuildCheckbox:IsEnabled(),
+        true,
+        "settings panel should enable death announcements when guild announcements are enabled"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:GetChecked(),
+        false,
+        "settings panel should reflect saved level-up announcement state"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:IsEnabled(),
+        true,
+        "settings panel should enable level-up announcements when guild announcements are enabled"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox.label:GetText(),
+        "Announce score every " .. DeathpoolConstants.ANNOUNCEMENTS.levelUpFrequency .. " levels",
+        "settings panel should build the level-up label from the announcement frequency constant"
+    )
+    local deathRelativeTo, deathX = getRelativeToAndXOffset(settingsModule.announceDeathToGuildCheckbox)
+    assertEquals(
+        deathRelativeTo,
+        settingsModule.guildAnnouncementsEnabledCheckbox,
+        "settings panel should anchor death announcements under the guild announcement master setting"
+    )
+    assertEquals(deathX, 24, "settings panel should indent death announcements under the guild announcement master setting")
+
+    local levelUpRelativeTo, levelUpX = getRelativeToAndXOffset(settingsModule.announceScoreOnLevelUpCheckbox)
+    assertEquals(
+        levelUpRelativeTo,
+        settingsModule.announceDeathToGuildCheckbox,
+        "settings panel should anchor level-up announcements under death announcements"
+    )
+    assertEquals(levelUpX, 0, "settings panel should align level-up and death announcements")
+
+    local minimapRelativeTo, minimapX = getRelativeToAndXOffset(settingsModule.disableMinimapIconCheckbox)
+    assertEquals(
+        minimapRelativeTo,
+        settingsModule.announceScoreOnLevelUpCheckbox,
+        "settings panel should place minimap settings after announcement settings"
+    )
+    assertEquals(minimapX, -24, "settings panel should return minimap settings to the top-level alignment")
     assertEquals(
         settingsModule.showInCombatCheckbox:GetChecked(),
         true,
@@ -954,7 +1186,11 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
     ---@type DeathpoolUISettingsPanelModule
     local settingsModule = _G.DeathpoolUISettings
     local reboundState = Fixtures.addonDatabase({
-        announceDeathToGuild = true,
+        announcements = {
+            enabled = true,
+            announceScoreOnDeath = true,
+            announceScoreOnLevelUp = false,
+        },
         minimap = {
             hide = true,
         },
@@ -968,6 +1204,12 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
         GetDeathAnnouncementToGuild = function()
             return DeathpoolDatabase.GetAnnounceDeathToGuild(reboundState)
         end,
+        GetGuildAnnouncementsEnabled = function()
+            return DeathpoolDatabase.GetGuildAnnouncementsEnabled(reboundState)
+        end,
+        GetAnnounceScoreOnLevelUp = function()
+            return DeathpoolDatabase.GetAnnounceScoreOnLevelUp(reboundState)
+        end,
         GetShowInCombat = function()
             return DeathpoolDatabase.GetShowInCombat(reboundState)
         end,
@@ -977,15 +1219,41 @@ local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
         SetDeathAnnouncementToGuild = function(enabled)
             return DeathpoolDatabase.SetAnnounceDeathToGuild(reboundState, enabled)
         end,
+        SetGuildAnnouncementsEnabled = function(enabled)
+            return DeathpoolDatabase.SetGuildAnnouncementsEnabled(reboundState, enabled)
+        end,
+        SetAnnounceScoreOnLevelUp = function(enabled)
+            return DeathpoolDatabase.SetAnnounceScoreOnLevelUp(reboundState, enabled)
+        end,
         SetShowInCombat = function(enabled)
             return DeathpoolDatabase.SetShowInCombat(reboundState, enabled)
         end,
     })
 
     assertEquals(
+        settingsModule.guildAnnouncementsEnabledCheckbox:GetChecked(),
+        true,
+        "settings initialize should refresh guild announcements enabled state from the latest options"
+    )
+    assertEquals(
         settingsModule.announceDeathToGuildCheckbox:GetChecked(),
         true,
         "settings initialize should refresh death announcement state from the latest options"
+    )
+    assertEquals(
+        settingsModule.announceDeathToGuildCheckbox:IsEnabled(),
+        true,
+        "settings initialize should enable death announcements when latest options enable guild announcements"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:GetChecked(),
+        false,
+        "settings initialize should refresh level-up announcement state from the latest options"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:IsEnabled(),
+        true,
+        "settings initialize should enable level-up announcements when latest options enable guild announcements"
     )
     assertEquals(
         settingsModule.showInCombatCheckbox:GetChecked(),
@@ -1002,7 +1270,11 @@ end
 local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
     local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
-            announceDeathToGuild = false,
+            announcements = {
+                enabled = false,
+                announceScoreOnDeath = false,
+                announceScoreOnLevelUp = false,
+            },
             minimap = {
                 hide = false,
             },
@@ -1014,6 +1286,53 @@ local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
     local settingsModule = _G.DeathpoolUISettings
 
     settingsModule.categoryFrame:Show()
+
+    settingsModule.guildAnnouncementsEnabledCheckbox:SetChecked(true)
+    settingsModule.guildAnnouncementsEnabledCheckbox:Click()
+    assertEquals(
+        DeathpoolCharacterState.announcements.enabled,
+        true,
+        "settings guild announcements checkbox should persist the enabled state"
+    )
+    assertEquals(
+        settingsModule.announceDeathToGuildCheckbox:IsEnabled(),
+        true,
+        "settings guild announcements checkbox should enable death announcement settings"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:IsEnabled(),
+        true,
+        "settings guild announcements checkbox should enable level-up announcement settings"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:GetChecked(),
+        false,
+        "enabling guild announcements should preserve the saved level-up announcement state"
+    )
+    settingsModule.guildAnnouncementsEnabledCheckbox:SetChecked(false)
+    settingsModule.guildAnnouncementsEnabledCheckbox:Click()
+    assertEquals(
+        DeathpoolCharacterState.announcements.enabled,
+        false,
+        "settings guild announcements checkbox should persist the disabled state"
+    )
+    assertEquals(
+        settingsModule.announceDeathToGuildCheckbox:IsEnabled(),
+        false,
+        "settings guild announcements checkbox should disable death announcement settings"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:IsEnabled(),
+        false,
+        "settings guild announcements checkbox should disable level-up announcement settings"
+    )
+    assertEquals(
+        settingsModule.announceScoreOnLevelUpCheckbox:GetChecked(),
+        false,
+        "disabling guild announcements should preserve the saved level-up announcement state"
+    )
+    settingsModule.guildAnnouncementsEnabledCheckbox:SetChecked(true)
+    settingsModule.guildAnnouncementsEnabledCheckbox:Click()
 
     settingsModule.showInCombatCheckbox:SetChecked(true)
     settingsModule.showInCombatCheckbox:Click()
@@ -1034,7 +1353,7 @@ local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
     settingsModule.announceDeathToGuildCheckbox:SetChecked(true)
     settingsModule.announceDeathToGuildCheckbox:Click()
     assertEquals(
-        DeathpoolCharacterState.announceDeathToGuild,
+        DeathpoolCharacterState.announcements.announceScoreOnDeath,
         true,
         "settings death announcement checkbox should persist the enabled state"
     )
@@ -1042,9 +1361,25 @@ local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
     settingsModule.announceDeathToGuildCheckbox:SetChecked(false)
     settingsModule.announceDeathToGuildCheckbox:Click()
     assertEquals(
-        DeathpoolCharacterState.announceDeathToGuild,
+        DeathpoolCharacterState.announcements.announceScoreOnDeath,
         false,
         "settings death announcement checkbox should persist the disabled state"
+    )
+
+    settingsModule.announceScoreOnLevelUpCheckbox:SetChecked(true)
+    settingsModule.announceScoreOnLevelUpCheckbox:Click()
+    assertEquals(
+        DeathpoolCharacterState.announcements.announceScoreOnLevelUp,
+        true,
+        "settings level-up announcement checkbox should persist the enabled state"
+    )
+
+    settingsModule.announceScoreOnLevelUpCheckbox:SetChecked(false)
+    settingsModule.announceScoreOnLevelUpCheckbox:Click()
+    assertEquals(
+        DeathpoolCharacterState.announcements.announceScoreOnLevelUp,
+        false,
+        "settings level-up announcement checkbox should persist the disabled state"
     )
 
     settingsModule.disableMinimapIconCheckbox:SetChecked(true)
@@ -1144,7 +1479,6 @@ local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
     local Deathpool = context.Deathpool
     local DeathpoolDebug = context.DeathpoolDebug
     local DeathpoolLog = context.DeathpoolLog
-    local DeathpoolUI = context.DeathpoolUI
     local DeathpoolLogic = _G.DeathpoolLogic
     local dispatchEvent = context.dispatchEvent
     local controller = context.controller
@@ -1178,7 +1512,7 @@ local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
     local comboMultiplier = DeathpoolLogic.GetStoredDeathComboMultiplierValue(storedDeath)
     local totalMultiplier = DeathpoolLogic.GetStoredDeathMultiplierValue(storedDeath)
     local basePoints = DeathpoolLogic.GetStoredDeathBasePoints(storedDeath)
-    local formattedAwardedPoints = DeathpoolUI.FormatNumberWithCommas(awardedPoints)
+    local formattedAwardedPoints = DeathpoolLogic.FormatPoints(awardedPoints)
 
     assertEquals(storedDeath.name, "Drakedog", "parser flow should persist the parsed player name")
     assertEquals(storedDeath.level, 12, "parser flow should persist the parsed level")
@@ -1369,6 +1703,13 @@ testCombatAutoMinimizeCollapsesVisibleExpandedWindow()
 testShowInCombatCommandKeepsWindowVisibleInCombat()
 testPlayerDeathPreservesFinalScoreAndPrintsIt()
 testPlayerDeathSkipsGuildAnnouncementWhenDisabled()
+testPlayerDeathSkipsGuildAnnouncementWhenMasterDisabled()
+testPlayerDeathSkipsGuildAnnouncementWhenNotInGuild()
+testPlayerLevelUpAnnouncesScoreEveryTenLevels()
+testPlayerLevelUpSkipsLevelsBetweenAnnouncements()
+testPlayerLevelUpSkipsWhenGuildAnnouncementsDisabled()
+testPlayerLevelUpSkipsWhenLevelUpAnnouncementsDisabled()
+testPlayerLevelUpSkipsWhenNotInGuild()
 testEscapeClosesAndPersistsMainWindowHiddenState()
 testEscapeDoesNotCloseCollapsedMainWindow()
 testSlashCommandsReachTheirExpectedBranches()

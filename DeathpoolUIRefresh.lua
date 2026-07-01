@@ -9,6 +9,7 @@ local DeathpoolUISetup = _G.DeathpoolUISetup
 ---@field GetDisplayState fun(database: DeathpoolCharacterState): DeathpoolDisplayState
 ---@field FormatLockedPrediction fun(prediction: DeathpoolPrediction|DeathpoolPredictionElements|nil): string
 ---@field FormatMultiplier fun(multiplierValue: number|string|nil): string
+---@field FormatPoints fun(points: number|string|nil): string
 ---@field GetStoredDeathTime fun(death: DeathpoolDeath): string|nil
 ---@field GetComboDetails fun(prediction: DeathpoolPrediction|DeathpoolPredictionElements|nil, death: DeathpoolDeath|nil, streak: integer|nil): DeathpoolComboDetails
 ---@field GetStoredDeathComboDetails fun(death: DeathpoolDeath): DeathpoolComboDetails
@@ -348,7 +349,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     ---@param frame DeathpoolRefreshReadyControllerFrame
     ---@param state DeathpoolDisplayState
     local function RefreshScoreSummary(frame, state)
-        frame.totalPointsValue:SetText(DeathpoolUI.FormatNumberWithCommas(state.totalPoints))
+        frame.totalPointsValue:SetText(logic.FormatPoints(state.totalPoints))
         frame.currentStreakValue:SetText(tostring(state.currentPredictionStreak))
         frame.longestStreakValue:SetText(tostring(state.longestPredictionStreak))
         if DeathpoolUIMinimap and DeathpoolUIMinimap.RefreshLauncherText then
@@ -613,7 +614,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
             maxRows = visibleRowCount,
         })
 
-        self.collapsedPointsValue:SetText(DeathpoolUI.FormatNumberWithCommas(state.totalPoints))
+        self.collapsedPointsValue:SetText(logic.FormatPoints(state.totalPoints))
     end
 
     ---@param self DeathpoolRefreshReadyDebugFrame

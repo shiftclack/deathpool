@@ -606,6 +606,9 @@ local function initializeGlobals(options)
             target = target,
         }
     end)
+    rawset(_G, "IsInGuild", function()
+        return options.inGuild ~= false
+    end)
 
     _G.__cvars = {
         hardcoreDeathChatType = options.hardcoreDeathChatType or "1",
@@ -730,7 +733,7 @@ local function initializeGlobals(options)
         return "HarnessPlayer"
     end
 
-    UnitLevel = function()
+    UnitLevel = function(_)
         return 17
     end
 
@@ -801,6 +804,7 @@ local function loadUiModules()
     package.loaded.DeathpoolUILog = nil
     package.loaded.DeathpoolSettings = nil
     package.loaded.DeathpoolUISettings = nil
+    package.loaded.DeathpoolAnnouncements = nil
     package.loaded.DeathpoolUIDemo = nil
     package.loaded.DeathpoolDemo = nil
     package.loaded.DeathpoolUIDebug = nil
@@ -823,6 +827,7 @@ local function loadUiModules()
     require("DeathpoolUILog")
     require("DeathpoolSettings")
     require("DeathpoolUISettings")
+    require("DeathpoolAnnouncements")
     require("DeathpoolUIDemo")
     require("DeathpoolDemo")
     require("DeathpoolUIDebug")

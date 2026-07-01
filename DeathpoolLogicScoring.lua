@@ -608,6 +608,30 @@ function DeathpoolLogic.FormatMultiplier(multiplier)
     return "x" .. tostring(multiplier or 0)
 end
 
+---@param points number|string|nil
+---@return string
+function DeathpoolLogic.FormatPoints(points)
+    local pointValue = tonumber(points) or 0
+    local sign = ""
+    local digits = tostring(pointValue)
+
+    if pointValue < 0 then
+        sign = "-"
+        digits = string.sub(digits, 2)
+    end
+
+    local formatted = digits
+    while true do
+        local updatedValue, replacements = string.gsub(formatted, "^(%d+)(%d%d%d)", "%1,%2")
+        formatted = updatedValue
+        if replacements == 0 then
+            break
+        end
+    end
+
+    return sign .. formatted
+end
+
 function DeathpoolLogic.GetPointColorQuality(points)
     local awardedPoints = tonumber(points) or 0
 

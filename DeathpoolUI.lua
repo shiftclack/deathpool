@@ -291,30 +291,6 @@ function DeathpoolUI.GetDeathFieldValue(value)
     return tostring(value)
 end
 
----@param value number|string|nil
----@return string
-function DeathpoolUI.FormatNumberWithCommas(value)
-    local numberValue = tonumber(value) or 0
-    local sign = ""
-    local digits = tostring(numberValue)
-
-    if numberValue < 0 then
-        sign = "-"
-        digits = string.sub(digits, 2)
-    end
-
-    local formatted = digits
-    while true do
-        local updatedValue, replacements = string.gsub(formatted, "^(%d+)(%d%d%d)", "%1,%2")
-        formatted = updatedValue
-        if replacements == 0 then
-            break
-        end
-    end
-
-    return sign .. formatted
-end
-
 ---@param value any
 ---@param allowEmptyValue boolean|nil
 ---@return string

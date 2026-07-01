@@ -22,6 +22,10 @@ return function(context)
         assertEquals(returnedDatabase, database, "database init should return the same table instance")
         assertTruthy(type(database.recentDeaths) == "table", "database init should populate default recent death storage")
         assertTruthy(type(database.minimap) == "table", "database init should populate minimap settings")
+        assertTruthy(
+            type(database.announcements) == "table",
+            "database init should populate guild announcement settings"
+        )
     end
 
     local function testDatabaseInitRepairsCorruptTopLevelValue()
@@ -30,6 +34,10 @@ return function(context)
         assertTruthy(type(returnedDatabase) == "table", "database init should repair a corrupt top-level savedvariables value")
         assertTruthy(type(returnedDatabase.recentDeaths) == "table", "database init should still populate default recent death storage after repair")
         assertTruthy(type(returnedDatabase.minimap) == "table", "database init should still populate minimap settings after repair")
+        assertTruthy(
+            type(returnedDatabase.announcements) == "table",
+            "database init should still populate guild announcement settings after repair"
+        )
     end
 
     local function testDatabaseInitNormalizesStoredState()
@@ -37,9 +45,18 @@ return function(context)
             recentDeaths = false,
             deathHistory = false,
             successfullyPredictedDeaths = false,
+            announcements = {
+                enabled = "yes",
+                announceScoreOnDeath = false,
+                announceScoreOnLevelUp = false,
+                levelUpFrequency = "-4",
+            },
+            guildAnnouncements = {
+                enabled = true,
+            },
             totalPoints = "17",
             correctPredictionStreak = "4",
-            longestPredictionStreak = "2",
+            longestPredictionStreak = "10",
         }
 
         _G.DeathpoolDatabase.Init(database)
@@ -50,6 +67,24 @@ return function(context)
             type(database.successfullyPredictedDeaths) == "table",
             "database init should repair successful prediction storage"
         )
+        assertTruthy(type(database.announcements) == "table", "database init should repair guild announcement settings")
+        assertEquals(
+            database.announcements.enabled,
+            false,
+            "database init should normalize guild announcement enablement to a boolean"
+        )
+        assertEquals(
+            database.announcements.announceScoreOnDeath,
+            false,
+            "database init should preserve disabled death score announcements"
+        )
+        assertEquals(
+            database.announcements.announceScoreOnLevelUp,
+            false,
+            "database init should preserve disabled level-up score announcements"
+        )
+        assertEquals(database.announcements.levelUpFrequency, nil, "database init should remove the old level-up frequency")
+        assertEquals(database.guildAnnouncements, nil, "database init should clear the old guild announcement settings field")
         assertEquals(database.totalPoints, 17, "database init should normalize total points to a number")
         assertEquals(
             database.correctPredictionStreak,
@@ -58,9 +93,131 @@ return function(context)
         )
         assertEquals(
             database.longestPredictionStreak,
-            4,
+            10,
             "database init should keep the longest streak at least as large as the current streak"
         )
+    end
+
+    local function testDatabaseInitDefaultsGuildAnnouncements()
+        local database = {}
+
+        _G.DeathpoolDatabase.Init(database)
+
+        assertEquals(database.announcements.enabled, true, "database init should enable guild announcements by default")
+        assertEquals(
+            database.announcements.announceScoreOnDeath,
+            true,
+            "database init should enable death score announcements by default"
+        )
+        assertEquals(
+            database.announcements.announceScoreOnLevelUp,
+            true,
+            "database init should enable level-up score announcements by default"
+        )
+    end
+
+    local function testDatabaseInitAddsGuildAnnouncementsWithoutResettingGameplayState()
+        local database = {
+            recentDeaths = {
+                Fixtures.storedDeath({
+                    name = "Recent",
+                }),
+            },
+            deathHistory = {
+                Fixtures.storedDeath({
+                    name = "History",
+                }),
+            },
+            successfullyPredictedDeaths = {
+                Fixtures.storedDeath({
+                    name = "Success",
+                }),
+            },
+            totalPoints = 12345,
+            correctPredictionStreak = 4,
+            longestPredictionStreak = 7,
+        }
+        local recentDeaths = database.recentDeaths
+        local deathHistory = database.deathHistory
+        local successfulDeaths = database.successfullyPredictedDeaths
+
+        _G.DeathpoolDatabase.Init(database)
+
+        assertEquals(database.recentDeaths, recentDeaths, "database init should preserve recent death table identity")
+        assertEquals(database.deathHistory, deathHistory, "database init should preserve death history table identity")
+        assertEquals(
+            database.successfullyPredictedDeaths,
+            successfulDeaths,
+            "database init should preserve successful prediction table identity"
+        )
+        assertEquals(database.recentDeaths[1].name, "Recent", "database init should preserve recent deaths")
+        assertEquals(database.deathHistory[1].name, "History", "database init should preserve death history")
+        assertEquals(
+            database.successfullyPredictedDeaths[1].name,
+            "Success",
+            "database init should preserve successful predictions"
+        )
+        assertEquals(database.totalPoints, 12345, "database init should preserve total points")
+        assertEquals(database.correctPredictionStreak, 4, "database init should preserve the current streak")
+        assertEquals(database.longestPredictionStreak, 7, "database init should preserve the longest streak")
+        assertTruthy(type(database.announcements) == "table", "database init should add guild announcement settings")
+    end
+
+    local function testGuildAnnouncementAccessors()
+        local corruptDatabase = {
+            announcements = false,
+        }
+        ---@cast corruptDatabase table
+        local database = _G.DeathpoolDatabase.Init(corruptDatabase)
+
+        assertEquals(
+            _G.DeathpoolDatabase.GetGuildAnnouncementsEnabled(database),
+            true,
+            "guild announcements should be enabled by default"
+        )
+        assertEquals(
+            _G.DeathpoolDatabase.SetGuildAnnouncementsEnabled(database, true),
+            true,
+            "guild announcement setter should persist enabled state"
+        )
+        assertEquals(
+            database.announcements.enabled,
+            true,
+            "guild announcement setter should update the nested settings table"
+        )
+
+        assertEquals(
+            _G.DeathpoolDatabase.GetAnnounceDeathToGuild(database),
+            true,
+            "death score announcement getter should use the nested default"
+        )
+        assertEquals(
+            _G.DeathpoolDatabase.SetAnnounceDeathToGuild(database, false),
+            false,
+            "death score announcement setter should persist disabled state"
+        )
+        assertEquals(
+            database.announcements.announceScoreOnDeath,
+            false,
+            "death score announcement setter should update the nested settings table"
+        )
+
+        assertEquals(
+            _G.DeathpoolDatabase.GetAnnounceScoreOnLevelUp(database),
+            true,
+            "level-up score announcement getter should use the nested default"
+        )
+        assertEquals(
+            _G.DeathpoolDatabase.SetAnnounceScoreOnLevelUp(database, false),
+            false,
+            "level-up score announcement setter should persist disabled state"
+        )
+        assertEquals(
+            database.announcements.announceScoreOnLevelUp,
+            false,
+            "level-up score announcement setter should update the nested settings table"
+        )
+
     end
 
     local function testDatabaseInitDefaultsFirstRunFlag()
@@ -724,6 +881,9 @@ return function(context)
     testDatabaseInitPreservesIdentity()
     testDatabaseInitRepairsCorruptTopLevelValue()
     testDatabaseInitNormalizesStoredState()
+    testDatabaseInitDefaultsGuildAnnouncements()
+    testDatabaseInitAddsGuildAnnouncementsWithoutResettingGameplayState()
+    testGuildAnnouncementAccessors()
     testDatabaseInitDefaultsFirstRunFlag()
     testDeathHistorySuggestionValuesAreUniqueAndSorted()
     testDatabaseResetGameplayState()

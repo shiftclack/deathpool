@@ -82,6 +82,7 @@ Top-level addon files:
 - `DeathpoolMigration.lua` should contain code for migrating SavedVariables on startup
 - `DeathpoolSettings.lua` should contain settings actions and controller-owned Blizzard settings side effects
 - `DeathpoolSetup.lua` should contain setup state, setup actions, and controller-owned Blizzard setup side effects
+- `DeathpoolAnnouncements.lua` should contain controller-owned guild and local announcement behavior
 - `DeathpoolDemo.lua` should contain controller-owned intro demo session lifecycle, playback, and dismissal orchestration
 - `DeathpoolUI.lua` should contain shared UI constants, layout values, common widget helpers, and top-level frame creation
 - `DeathpoolUITooltip.lua` should contain standardized tooltip building for death rows and prediction previews

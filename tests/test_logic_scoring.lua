@@ -716,6 +716,20 @@ return function(context)
         end
     end
 
+    local function testPointFormatting()
+        local cases = {
+            { points = nil, expected = "0", label = "missing points should format as zero" },
+            { points = 999, expected = "999", label = "three-digit points should not gain a separator" },
+            { points = 1234, expected = "1,234", label = "four-digit points should gain a separator" },
+            { points = 1234567, expected = "1,234,567", label = "large point totals should gain multiple separators" },
+            { points = -1234, expected = "-1,234", label = "negative points should preserve their sign" },
+        }
+
+        for _, case in ipairs(cases) do
+            assertEquals(DeathpoolLogic.FormatPoints(case.points), case.expected, case.label)
+        end
+    end
+
     testPredictionEvaluation()
     testSameZoneBonusPoints()
     testComboDetails()
@@ -723,4 +737,5 @@ return function(context)
     testPredictionPreviewHelpers()
     testPredictionPayoutPreviewRows()
     testPointColorQuality()
+    testPointFormatting()
 end

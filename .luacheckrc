@@ -76,6 +76,7 @@ read_globals = {
    "GetChannelName",
    "HARDCORE_CAUSEOFDEATH_CREATURE",
    "InputBoxTemplate",
+   "IsInGuild",
    "JoinPermanentChannel",
    "SendChatMessage",
    "SetCVar",

@@ -3,6 +3,9 @@ local DeathpoolConstants = {
         -- url displayed in help
         downloadUrl = "https://github.com/shiftclack/deathpool/releases",
     },
+    ANNOUNCEMENTS = {
+        levelUpFrequency = 10,
+    },
     STORAGE = {
         -- Number of recent death entries kept for the short "latest deaths" style views.
         maxRecentDeaths = 5,

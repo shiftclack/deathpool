@@ -94,4 +94,4 @@ The goal of the game is to accumulate as many points as possible from the deaths
 
 ### Bonuses
 
-- The `same-zone bonus` grants additional points for a matched prediction in the player's current location
+- The `same-zone bonus` grants additional points if the zone of the death is the same as the user's current zone.

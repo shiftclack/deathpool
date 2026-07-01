@@ -4,6 +4,7 @@ local DeathpoolDatabase = _G.DeathpoolDatabase
 local DeathpoolDebug = _G.DeathpoolDebug
 local DeathpoolParser = _G.DeathpoolParser
 local DeathpoolLogic = _G.DeathpoolLogic
+local DeathpoolAnnouncements = _G.DeathpoolAnnouncements
 local DeathpoolCommands = _G.DeathpoolCommands
 local DeathpoolSettings = _G.DeathpoolSettings
 local DeathpoolUI = _G.DeathpoolUI
@@ -18,6 +19,7 @@ local STARTUP_EVENTS = {
     "PLAYER_LOGIN",
     "PLAYER_LOGOUT",
     "PLAYER_DEAD",
+    "PLAYER_LEVEL_UP",
     "PLAYER_REGEN_DISABLED",
     "CHAT_MSG_CHANNEL",
 }
@@ -26,7 +28,7 @@ local Deathpool = CreateFrame("Frame", "DeathpoolAddonFrame")
 
 ---@param message string|number
 local function Print(message)
-    DEFAULT_CHAT_FRAME:AddMessage("|cffcc3333Deathpool|r: " .. tostring(message))
+    DEFAULT_CHAT_FRAME:AddMessage("|cffcc3333[Deathpool]|r " .. tostring(message))
 end
 
 ---@return DeathpoolCharacterState
@@ -265,21 +267,13 @@ end
 
 -- luacheck: ignore self
 function Deathpool:PLAYER_DEAD()
-    local state = GetState()
-    local formattedScore = DeathpoolUI.FormatNumberWithCommas(DeathpoolDatabase.GetTotalPoints(state))
+    DeathpoolAnnouncements.AnnouncePlayerDeath(GetState(), Print)
+end
 
-    Print("Your final score is " .. formattedScore .. ".")
-
-    if DeathpoolDatabase.GetAnnounceDeathToGuild(state) then
-        SendChatMessage(
-            string.format(
-                "%s has died. Their final Hardcore Deathpool score is %s",
-                UnitName("player"),
-                formattedScore
-            ),
-            "GUILD"
-        )
-    end
+-- luacheck: ignore self
+---@param level integer
+function Deathpool:PLAYER_LEVEL_UP(level)
+    DeathpoolAnnouncements.AnnouncePlayerLevelUp(GetState(), level)
 end
 
 -- automatically minimize the main ui in combat

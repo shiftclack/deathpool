@@ -7,7 +7,6 @@
 local DeathpoolUIMinimap = _G.DeathpoolUIMinimap or {}
 local DeathpoolDatabase = _G.DeathpoolDatabase
 local DeathpoolLogic = _G.DeathpoolLogic
-local DeathpoolUI = _G.DeathpoolUI
 local LibStub = _G.LibStub
 
 DeathpoolUIMinimap.ENABLED = true
@@ -24,16 +23,6 @@ local activeFrame = nil
 ---@type DeathpoolCharacterState|nil
 local activeDatabase = nil
 
----@param value number|string|nil
----@return string
-local function FormatScoreText(value)
-    if DeathpoolUI and DeathpoolUI.FormatNumberWithCommas then
-        return DeathpoolUI.FormatNumberWithCommas(value)
-    end
-
-    return tostring(tonumber(value) or 0)
-end
-
 ---@param database DeathpoolCharacterState
 ---@return string
 local function GetTooltipPredictionText(database)
@@ -43,7 +32,7 @@ end
 ---@param database DeathpoolCharacterState
 ---@return string
 local function GetTooltipScoreText(database)
-    return FormatScoreText(DeathpoolDatabase.GetTotalPoints(database))
+    return DeathpoolLogic.FormatPoints(DeathpoolDatabase.GetTotalPoints(database))
 end
 
 ---@return boolean

@@ -1,8 +1,12 @@
 ---@class DeathpoolSettingsDatabaseApi
 ---@field GetShowInCombat fun(database: DeathpoolCharacterState): boolean
 ---@field SetShowInCombat fun(database: DeathpoolCharacterState, enabled: boolean): boolean
+---@field GetGuildAnnouncementsEnabled fun(database: DeathpoolCharacterState): boolean
+---@field SetGuildAnnouncementsEnabled fun(database: DeathpoolCharacterState, enabled: boolean): boolean
 ---@field GetAnnounceDeathToGuild fun(database: DeathpoolCharacterState): boolean
 ---@field SetAnnounceDeathToGuild fun(database: DeathpoolCharacterState, enabled: boolean): boolean
+---@field GetAnnounceScoreOnLevelUp fun(database: DeathpoolCharacterState): boolean
+---@field SetAnnounceScoreOnLevelUp fun(database: DeathpoolCharacterState, enabled: boolean): boolean
 ---@field GetMinimapHidden fun(database: DeathpoolCharacterState): boolean
 
 local DeathpoolSettings = _G.DeathpoolSettings or {}
@@ -34,8 +38,18 @@ function DeathpoolSettings.GetShowInCombat()
 end
 
 ---@return boolean
+function DeathpoolSettings.GetGuildAnnouncementsEnabled()
+    return GetDatabaseApi().GetGuildAnnouncementsEnabled(GetDatabase())
+end
+
+---@return boolean
 function DeathpoolSettings.GetDeathAnnouncementToGuild()
     return GetDatabaseApi().GetAnnounceDeathToGuild(GetDatabase())
+end
+
+---@return boolean
+function DeathpoolSettings.GetAnnounceScoreOnLevelUp()
+    return GetDatabaseApi().GetAnnounceScoreOnLevelUp(GetDatabase())
 end
 
 ---@return boolean
@@ -58,8 +72,20 @@ end
 
 ---@param enabled boolean
 ---@return boolean
+function DeathpoolSettings.SetGuildAnnouncementsEnabled(enabled)
+    return GetDatabaseApi().SetGuildAnnouncementsEnabled(GetDatabase(), enabled)
+end
+
+---@param enabled boolean
+---@return boolean
 function DeathpoolSettings.SetDeathAnnouncementToGuild(enabled)
     return GetDatabaseApi().SetAnnounceDeathToGuild(GetDatabase(), enabled)
+end
+
+---@param enabled boolean
+---@return boolean
+function DeathpoolSettings.SetAnnounceScoreOnLevelUp(enabled)
+    return GetDatabaseApi().SetAnnounceScoreOnLevelUp(GetDatabase(), enabled)
 end
 
 ---@param disabled boolean

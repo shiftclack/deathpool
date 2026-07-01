@@ -177,7 +177,6 @@ end
 
 function Fixtures.database(overrides)
     return normalizeFalseAsNil(buildDatabaseFixture(overrides), {
-        announceDeathToGuild = true,
         hidden = true,
         hasSeenIntroDemo = true,
         hasSeenFirstRun = true,
@@ -235,7 +234,6 @@ function Fixtures.uiDatabase(overrides)
     })
 
     return normalizeFalseAsNil(merge(database, overrides), {
-        announceDeathToGuild = true,
         hidden = true,
         hasSeenIntroDemo = true,
         hasSeenFirstRun = true,
@@ -248,7 +246,6 @@ end
 
 function Fixtures.addonDatabase(overrides)
     return normalizeFalseAsNil(merge(buildDatabaseFixture(), overrides), {
-        announceDeathToGuild = true,
         hidden = true,
         hasSeenIntroDemo = true,
         hasSeenFirstRun = true,
