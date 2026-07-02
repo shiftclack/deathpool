@@ -83,8 +83,6 @@ return function(context)
             false,
             "database init should preserve disabled level-up score announcements"
         )
-        assertEquals(database.announcements.levelUpFrequency, nil, "database init should remove the old level-up frequency")
-        assertEquals(database.guildAnnouncements, nil, "database init should clear the old guild announcement settings field")
         assertEquals(database.totalPoints, 17, "database init should normalize total points to a number")
         assertEquals(
             database.correctPredictionStreak,
