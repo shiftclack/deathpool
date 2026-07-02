@@ -1,8 +1,18 @@
 # Hardcore Deathpool
 
-Hardcore Deathpool is a World of Warcraft addon minigame to predict player deaths. Recent deaths are listed and the player can guess who will die next.
+Hardcore Deathpool is a Hardcore World of Warcraft addon minigame to predict player deaths. Recent deaths are listed, and the player can guess how and where the next deaths will happen.
+
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/shiftclack/deathpool/workflow.yaml) ![GitHub Release Date](https://img.shields.io/github/release-date/shiftclack/deathpool) ![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool)
 
 ![Demo](./docs/demo.png)
+
+## Features
+
+* Watch player deaths in real time
+* Try to predict the next death's zone, level bracket, or death source
+* Earn points if your prediction matches
+* Earn bonus points for streaks and combos
+* Play in the background while you quest or afk in town
 
 ## Download
 
