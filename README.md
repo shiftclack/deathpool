@@ -4,7 +4,7 @@ Hardcore Deathpool is a Hardcore World of Warcraft addon minigame to predict pla
 
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/shiftclack/deathpool/workflow.yaml)](https://github.com/shiftclack/deathpool/actions) [![GitHub Release Date](https://img.shields.io/github/release-date/shiftclack/deathpool)](https://github.com/shiftclack/deathpool/releases) [![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool)](https://github.com/shiftclack/deathpool/releases)
 
-![Demo](./docs/demo.png)
+![Demo](https://raw.githubusercontent.com/shiftclack/deathpool/main/docs/demo.png)
 
 ## Features
 
