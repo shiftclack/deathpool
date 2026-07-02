@@ -100,6 +100,10 @@ function DeathpoolDemo.Initialize(database, refreshMainFrame)
     end
 
     function controller:Show()
+        if self.mainFrame and self.mainFrame.setupFrame and self.mainFrame.setupFrame:IsShown() then
+            self.mainFrame.setupFrame:Hide()
+        end
+
         self:Reset()
         RefreshIntroDemoVisibility()
 

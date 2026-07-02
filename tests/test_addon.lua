@@ -156,7 +156,7 @@ local function testIncompleteSetupReopensUntilComplete()
     assertTruthy(Deathpool.setupFrame:IsShown(), "incomplete setup should show again when the main window reopens")
 end
 
-local function testCompletingSetupStartsIntroDemoOnFirstOpen()
+local function testStartGameOpensSetupBeforeNormalGameplay()
     local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             hidden = true,
@@ -169,21 +169,26 @@ local function testCompletingSetupStartsIntroDemoOnFirstOpen()
     local Deathpool = context.Deathpool
 
     context.runSlash("show")
-    assertTruthy(Deathpool.setupFrame:IsShown(), "first main-window open should show setup before intro demo")
-    assertEquals(getIntroDemoState(Deathpool), nil, "setup should defer intro demo while it is visible")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "first main-window open should keep setup hidden during intro demo")
+    assertEquals(getIntroDemoState(Deathpool) ~= nil, true, "first main-window open should start intro demo before setup")
+    assertEquals(Deathpool.lockButton:GetText(), "START GAME", "intro demo should relabel the lock button")
+
+    Deathpool.lockButton:GetScript("OnClick")()
+    assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, true, "starting the game should persist intro demo completion")
+    assertEquals(getIntroDemoState(Deathpool), nil, "starting the game should end intro demo mode")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "starting the game should show incomplete setup")
 
     Deathpool.setupFrame.enableDeathAnnouncementsButton:Click()
     assertTruthy(Deathpool.setupFrame:IsShown(), "partially complete setup should stay visible")
-    assertEquals(getIntroDemoState(Deathpool), nil, "partially complete setup should not start the intro demo")
+    assertEquals(getIntroDemoState(Deathpool), nil, "partially complete setup should not restart the intro demo")
 
     Deathpool.setupFrame.joinHardcoreDeathsButton:Click()
     assertEquals(Deathpool.setupFrame:IsShown(), false, "completed setup should hide the setup window")
-    assertEquals(getIntroDemoState(Deathpool) ~= nil, true, "completed setup should start the intro demo")
-    assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "completed setup should not show the first-run prompt before demo")
-    assertEquals(Deathpool.lockButton:GetText(), "START GAME", "intro demo should relabel the lock button")
+    assertEquals(getIntroDemoState(Deathpool), nil, "completed setup should reveal normal gameplay without restarting the demo")
+    assertEquals(Deathpool.lockButton:GetText(), "LOCK IN", "completed setup should leave the normal lock action visible")
 end
 
-local function testHidingMainWindowClosesSetupWithoutStartingDeferredIntroDemo()
+local function testHidingIntroDemoResumesBeforeIncompleteSetup()
     local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             hidden = true,
@@ -196,20 +201,21 @@ local function testHidingMainWindowClosesSetupWithoutStartingDeferredIntroDemo()
     local Deathpool = context.Deathpool
 
     context.runSlash("show")
-    assertTruthy(Deathpool.setupFrame:IsShown(), "first main-window open should show setup before hiding")
-    assertTruthy(Deathpool.setupFrame.backdropOverlay:IsShown(), "setup backdrop should show before hiding")
-    assertEquals(getIntroDemoState(Deathpool), nil, "setup should defer intro demo before hiding")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "intro demo should keep setup hidden before hiding")
+    assertEquals(getIntroDemoState(Deathpool) ~= nil, true, "first main-window open should start intro demo before hiding")
+    local demoState = getIntroDemoState(Deathpool)
 
     Deathpool:Hide()
     assertEquals(Deathpool:IsShown(), false, "hiding the main window should hide the main frame")
-    assertEquals(Deathpool.setupFrame:IsShown(), false, "hiding the main window should close setup")
-    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "hiding the main window should clear setup backdrop")
-    assertEquals(getIntroDemoState(Deathpool), nil, "hiding the main window should not start intro demo")
-    assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, false, "hiding during setup should not mark intro demo as seen")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "hiding the main window should not open setup")
+    assertEquals(Deathpool.setupFrame.backdropOverlay:IsShown(), false, "hiding the main window should keep the setup backdrop hidden")
+    assertEquals(getIntroDemoState(Deathpool), demoState, "hiding the main window should suspend the active intro demo")
+    assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, false, "hiding during intro demo should not mark it as seen")
 
     context.runSlash("show")
-    assertTruthy(Deathpool.setupFrame:IsShown(), "incomplete setup should reopen after hiding the main window")
-    assertEquals(getIntroDemoState(Deathpool), nil, "reopened incomplete setup should still block intro demo")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "incomplete setup should remain hidden while the resumed demo is active")
+    assertEquals(getIntroDemoState(Deathpool), demoState, "reopening the main window should resume the same intro demo")
+    assertEquals(Deathpool.introDemoAttractPanel:IsShown(), true, "reopening the main window should restore the demo callout")
 end
 
 local function testAddonLoadRebindsUiToSavedVariablesTable()
@@ -378,6 +384,7 @@ local function testFirstShowStartsAndDismissesIntroDemo()
     Deathpool.lockButton:GetScript("OnClick")()
     assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, true, "dismissing the intro demo should persist completion")
     assertEquals(getIntroDemoState(Deathpool), nil, "dismissing the intro demo should restore live data")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "starting the game should skip setup when it is already complete")
     assertEquals(Deathpool.lockButton:GetText(), "LOCK IN", "dismissing the intro demo should restore the lock button label")
     assertEquals(context.DeathpoolLog:IsShown(), false, "dismissing the intro demo should keep the default hidden log window closed")
     assertEquals(Deathpool.totalPointsValue:GetText(), "0", "dismissing the intro demo should return to the empty live score")
@@ -402,6 +409,26 @@ local function testDemoCommandReopensIntroPreview()
     assertEquals(Deathpool.lockButton:GetText(), "START GAME", "demo command should relabel the lock button to start game")
     assertEquals(Deathpool.totalPointsValue:GetText(), "0", "demo command should restart the scripted demo from zero score")
     assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, true, "demo command should not reset the completion flag")
+end
+
+local function testReplayedDemoStartGameOpensIncompleteSetup()
+    local context = createLoadedAddonContext({
+        state = Fixtures.addonDatabase({
+            hidden = true,
+            hasSeenIntroDemo = true,
+        }),
+        hardcoreDeathChatType = "0",
+        hardcoreDeathsJoined = false,
+    })
+    local Deathpool = context.Deathpool
+
+    context.runSlash("demo")
+    assertEquals(getIntroDemoState(Deathpool) ~= nil, true, "demo command should start the replayed intro demo")
+    assertEquals(Deathpool.setupFrame:IsShown(), false, "replayed demo should hide incomplete setup while active")
+
+    Deathpool.lockButton:GetScript("OnClick")()
+    assertEquals(getIntroDemoState(Deathpool), nil, "starting the game should end the replayed demo")
+    assertTruthy(Deathpool.setupFrame:IsShown(), "starting the game from a replayed demo should show incomplete setup")
 end
 
 local function testDemoCommandPrintsErrorWhileCollapsed()
@@ -544,7 +571,7 @@ local function testSetupWindowClosesLogWindowWithoutRememberingLogState()
     assertEquals(DeathpoolLog:IsShown(), false, "setup should keep the log hidden when log is toggled open")
 end
 
-local function testHidingMainWindowEndsIntroDemo()
+local function testHidingMainWindowDoesNotCompleteIntroDemo()
     local context = createLoadedAddonContext()
     local Deathpool = context.Deathpool
 
@@ -553,9 +580,9 @@ local function testHidingMainWindowEndsIntroDemo()
 
     Deathpool:Hide()
 
-    assertEquals(Deathpool.lockButton:GetText(), "LOCK IN", "hiding the main window should restore the normal lock button label")
-    assertEquals(getIntroDemoState(Deathpool), nil, "hiding the main window should end the intro demo")
-    assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, true, "hiding the main window should mark the intro demo as seen")
+    assertEquals(Deathpool.lockButton:GetText(), "START GAME", "hiding the main window should preserve the demo action")
+    assertEquals(getIntroDemoState(Deathpool) ~= nil, true, "hiding the main window should preserve the intro demo")
+    assertEquals(DeathpoolCharacterState.hasSeenIntroDemo, false, "hiding the main window should not mark the intro demo as seen")
 end
 
 local function testAddonRestoresOpenLogWindowAfterReload()
@@ -1678,8 +1705,8 @@ end
 testAddonDefersUiCreationUntilAddonLoaded()
 testMainWindowVisibilityPersistsThroughStartup()
 testIncompleteSetupReopensUntilComplete()
-testCompletingSetupStartsIntroDemoOnFirstOpen()
-testHidingMainWindowClosesSetupWithoutStartingDeferredIntroDemo()
+testStartGameOpensSetupBeforeNormalGameplay()
+testHidingIntroDemoResumesBeforeIncompleteSetup()
 testAddonLoadRebindsUiToSavedVariablesTable()
 testReloadDoesNotPersistVisibleMainWindowAsHidden()
 testDebugLogOnlyPrintsWhileDebugModeIsEnabled()
@@ -1687,12 +1714,13 @@ testDebugToggleControlsWindowAndPrinting()
 testReloadClearsLegacySavedDebugFlagAndSessionDebugMode()
 testFirstShowStartsAndDismissesIntroDemo()
 testDemoCommandReopensIntroPreview()
+testReplayedDemoStartGameOpensIncompleteSetup()
 testDemoCommandPrintsErrorWhileCollapsed()
 testIntroCommandResetsIntroductionFlagsAndPrintsMessage()
 testResetCommandRequiresDebugModeAndReinitializesDefaults()
 testHidingMainWindowClosesLogWindow()
 testSetupWindowClosesLogWindowWithoutRememberingLogState()
-testHidingMainWindowEndsIntroDemo()
+testHidingMainWindowDoesNotCompleteIntroDemo()
 testAddonRestoresOpenLogWindowAfterReload()
 testAddonRestoresSavedHistoryFilterAfterReload()
 testAddonLoadRestoresSavedCollapsedWindowPosition()

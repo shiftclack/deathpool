@@ -54,17 +54,16 @@ local function AttachMainFrameScripts(frame, addonFrame)
 
     frame:SetScript("OnShow", function(self)
         local state = addonFrame.state
-        local didShowSetup = false
 
         DeathpoolDatabase.SetHidden(state, false)
         DeathpoolUI.ApplyDesiredLogWindowState(self, state)
 
-        if self.setupFrame then
-            didShowSetup = DeathpoolUISetup.ShowOnMainWindowOpen(self.setupFrame, self)
-        end
-
-        if not didShowSetup and ShouldAutoStartIntroDemo(self, state) then
+        if self.introDemoController:IsActive() then
+            self:RefreshIntroDemoVisibility()
+        elseif ShouldAutoStartIntroDemo(self, state) then
             self.introDemoController:Show()
+        elseif self.setupFrame then
+            DeathpoolUISetup.ShowOnMainWindowOpen(self.setupFrame, self)
         end
     end)
 
@@ -79,10 +78,6 @@ local function AttachMainFrameScripts(frame, addonFrame)
 
         if self.setupFrame and self.setupFrame:IsShown() then
             self.setupFrame:Hide()
-        end
-
-        if self.introDemoController and self.introDemoController:IsActive() then
-            addonFrame:DismissIntroDemo()
         end
 
         if self.logFrame then
@@ -103,12 +98,6 @@ function Deathpool:RefreshMainFrame()
     self.mainFrame:RefreshDeaths()
     self.mainFrame:RefreshLockedPrediction()
     self.mainFrame:RefreshCollapsedSummary()
-end
-
-function Deathpool:DismissIntroDemo()
-    if self.demoController then
-        self.demoController:Dismiss()
-    end
 end
 
 function Deathpool:ADDON_LOADED(addonName)

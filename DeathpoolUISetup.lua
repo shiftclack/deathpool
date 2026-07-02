@@ -103,19 +103,6 @@ end
 
 ---@param ownerFrame table
 ---@return boolean
-local function ShouldStartIntroDemoAfterSetupClose(ownerFrame)
-    local database = DeathpoolUI.GetState(ownerFrame)
-    local introDemoController = ownerFrame.introDemoController
-
-    return ownerFrame:IsShown()
-        and DeathpoolSetup.IsComplete()
-        and not DeathpoolDatabase.GetHasSeenIntroDemo(database)
-        and introDemoController ~= nil
-        and introDemoController:IsActive() ~= true
-end
-
----@param ownerFrame table
----@return boolean
 local function CanCloseSetupWindow(ownerFrame)
     local database = DeathpoolUI.GetState(ownerFrame)
     return DeathpoolDatabase.GetHasSeenIntroDemo(database)
@@ -218,14 +205,8 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
         HideOwnerLogWindow(ownerFrame)
     end)
     setupFrame:SetScript("OnHide", function(self)
-        local shouldStartIntroDemo = ShouldStartIntroDemoAfterSetupClose(ownerFrame)
-
         self.backdropOverlay:Hide()
         DeathpoolUISetup.ApplyMainWindowState(ownerFrame, false)
-
-        if shouldStartIntroDemo then
-            ownerFrame.introDemoController:Show()
-        end
     end)
 
     if setupFrame.CloseButton then

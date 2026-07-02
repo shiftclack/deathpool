@@ -911,6 +911,9 @@ local function OnLockButtonClicked(ctx)
         if frame.introDemoController and frame.introDemoController.Dismiss then
             frame.introDemoController:Dismiss()
         end
+        if frame.setupFrame then
+            DeathpoolUISetup.ShowOnMainWindowOpen(frame.setupFrame, frame)
+        end
         return
     end
 
