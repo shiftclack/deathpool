@@ -2,7 +2,7 @@
 ## Title: Hardcore Deathpool
 ## Notes: Hardcore death prediction game.
 ## Author: shiftclack
-## Version: 0.8.0
+## Version: 0.9.0
 ## SavedVariablesPerCharacter: DeathpoolCharacterState
 
 libs\LibStub\LibStub.lua
