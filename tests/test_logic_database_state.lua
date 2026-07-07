@@ -462,6 +462,7 @@ return function(context)
         local expectedTotals = {}
         local expectedMultipliers = {}
         local runningTotal = 0
+        local failedInsertIndex
 
         for index = 1, 6 do
             local expectedMultiplier = Helpers.getDisplayMultiplier(1, index)
@@ -479,40 +480,47 @@ return function(context)
                 maxRecentDeaths = 10,
             }))
 
-            assertTruthy(added, "streak match " .. tostring(index) .. " should be inserted")
-            assertTruthy(evaluation.matched, "streak match " .. tostring(index) .. " should evaluate as matched")
-            assertEquals(
-                evaluation.basePoints,
-                sourcePoints,
-                "streak match " .. tostring(index) .. " should keep the same base points"
-            )
-            assertEquals(
-                database.correctPredictionStreak,
-                index,
-                "streak match " .. tostring(index) .. " should update the stored streak"
-            )
-            assertEquals(
-                database.longestPredictionStreak,
-                index,
-                "streak match " .. tostring(index) .. " should update the stored longest streak"
-            )
-            assertEquals(
-                DeathpoolLogic.GetStoredDeathMultiplierValue(database.recentDeaths[index]),
-                expectedMultiplier,
-                "streak match " .. tostring(index) .. " should use the right multiplier"
-            )
-            assertEquals(
-                database.recentDeaths[index].multiplier,
-                nil,
-                "streak match " .. tostring(index) .. " should not persist a formatted multiplier string"
-            )
-            assertEquals(
-                DeathpoolLogic.GetStoredDeathAwardedPoints(database.recentDeaths[index]),
-                sourcePoints * expectedMultiplier,
-                "streak match " .. tostring(index) .. " should award multiplied points"
-            )
-            assertEquals(database.totalPoints, expectedTotals[index], "streak match " .. tostring(index) .. " should roll into the running total")
+            if not added and failedInsertIndex == nil then
+                failedInsertIndex = index
+            end
+
+            if failedInsertIndex == nil then
+                assertTruthy(evaluation.matched, "streak match " .. tostring(index) .. " should evaluate as matched")
+                assertEquals(
+                    evaluation.basePoints,
+                    sourcePoints,
+                    "streak match " .. tostring(index) .. " should keep the same base points"
+                )
+                assertEquals(
+                    database.correctPredictionStreak,
+                    index,
+                    "streak match " .. tostring(index) .. " should update the stored streak"
+                )
+                assertEquals(
+                    database.longestPredictionStreak,
+                    index,
+                    "streak match " .. tostring(index) .. " should update the stored longest streak"
+                )
+                assertEquals(
+                    DeathpoolLogic.GetStoredDeathMultiplierValue(database.recentDeaths[index]),
+                    expectedMultiplier,
+                    "streak match " .. tostring(index) .. " should use the right multiplier"
+                )
+                assertEquals(
+                    database.recentDeaths[index].multiplier,
+                    nil,
+                    "streak match " .. tostring(index) .. " should not persist a formatted multiplier string"
+                )
+                assertEquals(
+                    DeathpoolLogic.GetStoredDeathAwardedPoints(database.recentDeaths[index]),
+                    sourcePoints * expectedMultiplier,
+                    "streak match " .. tostring(index) .. " should award multiplied points"
+                )
+                assertEquals(database.totalPoints, expectedTotals[index], "streak match " .. tostring(index) .. " should roll into the running total")
+            end
         end
+
+        assertEquals(failedInsertIndex, nil, "all streak matches should be inserted")
     end
 
     local function testFullPointFormula()
@@ -527,6 +535,7 @@ return function(context)
             zone = true,
         })
         local runningTotal = 0
+        local failedInsertIndex
 
         for index = 1, 10 do
             local added, evaluation = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
@@ -541,24 +550,31 @@ return function(context)
 
             runningTotal = runningTotal + expectedAward
 
-            assertTruthy(added, "formula test death " .. tostring(index) .. " should be inserted")
-            assertEquals(evaluation.basePoints, fullMatchBasePoints, "full formula should use the configured full-match base points")
-            assertEquals(
-                DeathpoolLogic.GetStoredDeathMultiplierValue(database.recentDeaths[index]),
-                expectedMultiplier,
-                "full formula should use the summed display multiplier for streak " .. tostring(index)
-            )
-            assertEquals(
-                DeathpoolLogic.GetStoredDeathAwardedPoints(database.recentDeaths[index]),
-                expectedAward,
-                "full formula should award the correct total for streak " .. tostring(index)
-            )
-            assertEquals(
-                database.totalPoints,
-                runningTotal,
-                "full formula should roll each awarded total into the running score"
-            )
+            if not added and failedInsertIndex == nil then
+                failedInsertIndex = index
+            end
+
+            if failedInsertIndex == nil then
+                assertEquals(evaluation.basePoints, fullMatchBasePoints, "full formula should use the configured full-match base points")
+                assertEquals(
+                    DeathpoolLogic.GetStoredDeathMultiplierValue(database.recentDeaths[index]),
+                    expectedMultiplier,
+                    "full formula should use the summed display multiplier for streak " .. tostring(index)
+                )
+                assertEquals(
+                    DeathpoolLogic.GetStoredDeathAwardedPoints(database.recentDeaths[index]),
+                    expectedAward,
+                    "full formula should award the correct total for streak " .. tostring(index)
+                )
+                assertEquals(
+                    database.totalPoints,
+                    runningTotal,
+                    "full formula should roll each awarded total into the running score"
+                )
+            end
         end
+
+        assertEquals(failedInsertIndex, nil, "all formula test deaths should be inserted")
     end
 
     local function testMultiplierResetAfterMiss()

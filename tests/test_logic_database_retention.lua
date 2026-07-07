@@ -144,6 +144,7 @@ return function(context)
         local maxDeathHistory = 100
         local sourceOnlyBasePoints = Helpers.getExpectedBasePoints({ source = true })
         local runningTotal = 0
+        local failedInsertIndex
 
         for index = 1, maxDeathHistory + 5 do
             local expectedAward = sourceOnlyBasePoints * Helpers.getDisplayMultiplier(1, index)
@@ -156,10 +157,13 @@ return function(context)
                 maxDeathHistory = maxDeathHistory,
             }))
 
-            assertTruthy(added, "history cap test death " .. tostring(index) .. " should be inserted")
+            if not added and failedInsertIndex == nil then
+                failedInsertIndex = index
+            end
             runningTotal = runningTotal + expectedAward
         end
 
+        assertEquals(failedInsertIndex, nil, "all history cap test deaths should be inserted")
         assertEquals(#database.deathHistory, maxDeathHistory, "historical log should retain at most the configured number of deaths")
         assertEquals(database.deathHistory[1].name, "History6", "historical log should trim the oldest deaths first")
         assertEquals(database.deathHistory[maxDeathHistory].name, "History" .. tostring(maxDeathHistory + 5), "historical log should keep the newest death")
@@ -182,6 +186,7 @@ return function(context)
         local recentDeathKeys = {}
 
         local maxSuccessfullyPredictedDeaths = STORAGE_RULES.maxSuccessfullyPredictedDeaths
+        local failedInsertIndex
 
         for index = 1, maxSuccessfullyPredictedDeaths + 5 do
             local added = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
@@ -193,9 +198,12 @@ return function(context)
                 maxSuccessfullyPredictedDeaths = maxSuccessfullyPredictedDeaths,
             }))
 
-            assertTruthy(added, "successful prediction retention test death " .. tostring(index) .. " should be inserted")
+            if not added and failedInsertIndex == nil then
+                failedInsertIndex = index
+            end
         end
 
+        assertEquals(failedInsertIndex, nil, "all successful prediction retention test deaths should be inserted")
         assertEquals(
             #database.successfullyPredictedDeaths,
             maxSuccessfullyPredictedDeaths,
