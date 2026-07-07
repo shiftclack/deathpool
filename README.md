@@ -1,18 +1,23 @@
-# Hardcore Deathpool
+# Hardcore Death Pool
 
-Hardcore Deathpool is a Hardcore World of Warcraft addon minigame to predict player deaths. Recent deaths are listed, and the player can guess how and where the next deaths will happen.
+Hardcore Deathpool is a [World of Warcraft](https://worldofwarcraft.blizzard.com) mini-game addon. Players score points by predicting where and how other players will die.
 
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/shiftclack/deathpool/workflow.yaml)](https://github.com/shiftclack/deathpool/actions) [![GitHub Release Date](https://img.shields.io/github/release-date/shiftclack/deathpool)](https://github.com/shiftclack/deathpool/releases) [![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool)](https://github.com/shiftclack/deathpool/releases)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/shiftclack/deathpool/workflow.yaml)](https://github.com/shiftclack/deathpool/actions) [![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool)](https://github.com/shiftclack/deathpool/releases)
 
 ![Demo](https://raw.githubusercontent.com/shiftclack/deathpool/main/docs/demo.png)
 
-## Features
+## Overview
 
 * Watch player deaths in real time
 * Try to predict the next death's zone, level bracket, or death source
 * Earn points if your prediction matches
 * Earn bonus points for streaks and combos
 * Play in the background while you quest or afk in town
+
+## Commands
+
+- `/deathpool` to show/hide the window
+- `/deathpool help` shows the help message
 
 ## Download
 
@@ -21,11 +26,6 @@ Download the latest release from [https://github.com/shiftclack/deathpool/releas
 ## Install
 
 Copy this folder into `World of Warcraft\_classic_era_\Interface\AddOns`.
-
-## Commands
-
-- `/deathpool` to show/hide the window
-- `/deathpool help` shows the help message
 
 ## Compatibility
 
