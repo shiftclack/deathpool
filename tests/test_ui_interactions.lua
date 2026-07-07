@@ -1142,7 +1142,7 @@ local function testPredictionButtons()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("hog")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "typing in source should show the suggestion dropdown")
     assertEquals(Deathpool.dropdown.buttons[1].text:GetText(), "Hogger", "source dropdown should show the matching source")
     Deathpool.dropdown.buttons[1]:GetScript("OnClick")()
@@ -1150,10 +1150,10 @@ local function testPredictionButtons()
     assertEquals(Deathpool.dropdown:IsShown(), false, "clicking a source suggestion should hide the dropdown")
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("a")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "broad source input should still show suggestions")
     Deathpool.sourceEditBox:SetText("def")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     local defiasButton = findDropdownButtonByText(Deathpool.dropdown, "Defias Trapper")
     assertTruthy(defiasButton, "Defias Trapper suggestion should be present in the source dropdown")
 ---@diagnostic disable-next-line: need-check-nil
@@ -1162,7 +1162,7 @@ local function testPredictionButtons()
 
     Deathpool.zoneEditBox:GetScript("OnEditFocusGained")(Deathpool.zoneEditBox)
     Deathpool.zoneEditBox:SetText(targetZoneInput)
-    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox)
+    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "typing in zone should show the suggestion dropdown")
     local zoneButton = findDropdownButtonByText(Deathpool.dropdown, targetZone)
     assertTruthy(zoneButton, "zone dropdown should include the matching zone")
@@ -1236,7 +1236,7 @@ local function testPredictionButtons()
     assertEquals(Deathpool.lockButton:GetText(), "LOCK IN", "pause should restore the lock button label")
     DeathpoolCharacterState.correctPredictionStreak = 4
     Deathpool.sourceEditBox:SetText("Hogger")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     Deathpool.lockButton:GetScript("OnClick")()
     assertEquals(DeathpoolCharacterState.correctPredictionStreak, 0, "locking in a different prediction should reset the streak")
 end
@@ -1365,9 +1365,9 @@ local function testCurrentPredictionHoverPayoutPreviewUsesDraftAndLockedPredicti
 
     Deathpool.levelRangeButtons[2]:GetScript("OnClick")(Deathpool.levelRangeButtons[2])
     Deathpool.sourceEditBox:SetText("Benny")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     Deathpool.zoneEditBox:SetText("Westfall")
-    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox)
+    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox, true)
     local expectedDraftRows = DeathpoolLogic.GetPredictionPayoutPreviewRows(Fixtures.prediction({
         levelRange = "10-19",
         source = "benny",
@@ -1439,9 +1439,9 @@ local function testUnlockedDraftPredictionPersistsAcrossRefreshes()
 
     Deathpool.levelRangeButtons[4]:GetScript("OnClick")(Deathpool.levelRangeButtons[4])
     Deathpool.sourceEditBox:SetText("defias")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     Deathpool.zoneEditBox:SetText("westfall")
-    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox)
+    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox, true)
 
     assertEquals(DeathpoolCharacterState.draftPrediction.elements.levelRange, "30-39", "editing a draft should store the selected level range")
     assertEquals(DeathpoolCharacterState.draftPrediction.elements.source, "defias", "editing a draft should store the normalized source")
@@ -1455,9 +1455,9 @@ local function testUnlockedDraftPredictionPersistsAcrossRefreshes()
 
     Deathpool.levelRangeButtons[1]:GetScript("OnClick")(Deathpool.levelRangeButtons[1])
     Deathpool.sourceEditBox:SetText("")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     Deathpool.zoneEditBox:SetText("")
-    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox)
+    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox, true)
 
     assertEquals(DeathpoolCharacterState.draftPrediction, nil, "clearing every draft input should clear the stored draft")
 

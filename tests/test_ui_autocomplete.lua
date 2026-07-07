@@ -18,7 +18,7 @@ local function testAutocompleteBuildsBothListsFromCurrentDeathHistory()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("zealous")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(
         findDropdownButtonByText(Deathpool.dropdown, "Zealous History Beast"),
         "source suggestions should query history added after UI initialization"
@@ -26,7 +26,7 @@ local function testAutocompleteBuildsBothListsFromCurrentDeathHistory()
 
     Deathpool.zoneEditBox:GetScript("OnEditFocusGained")(Deathpool.zoneEditBox)
     Deathpool.zoneEditBox:SetText("zephyr")
-    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox)
+    Deathpool.zoneEditBox:GetScript("OnTextChanged")(Deathpool.zoneEditBox, true)
     assertTruthy(
         findDropdownButtonByText(Deathpool.dropdown, "Zephyr Canyon"),
         "location suggestions should query history added after UI initialization"
@@ -69,15 +69,15 @@ local function testAutocompleteHidesDropdownForBlankAndNoMatches()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("hog")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "typing a matching source should show the dropdown")
 
     Deathpool.sourceEditBox:SetText("")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertEquals(Deathpool.dropdown:IsShown(), false, "blank autocomplete input should hide the dropdown")
 
     Deathpool.sourceEditBox:SetText("zzzz-no-match")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertEquals(Deathpool.dropdown:IsShown(), false, "unmatched autocomplete input should hide the dropdown")
 end
 
@@ -87,7 +87,7 @@ local function testAutocompleteDropdownCapsVisibleResultsAtTen()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("r")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
 
     local visibleCount = 0
     for _, button in ipairs(Deathpool.dropdown.buttons or {}) do
@@ -106,7 +106,7 @@ local function testDynamicSourceSuggestionsPreserveCuratedHighlighting()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("vag")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
 
     local vagashButton = findDropdownButtonByText(Deathpool.dropdown, "Vagash")
     assertTruthy(vagashButton, "highlighted curated sources should remain in the dynamic list")
@@ -122,7 +122,7 @@ local function testAutocompleteEscapeAndFocusLostHideDropdown()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("hog")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "matching autocomplete input should show the dropdown before escape")
 
     Deathpool.sourceEditBox.hasFocus = true
@@ -132,27 +132,27 @@ local function testAutocompleteEscapeAndFocusLostHideDropdown()
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("hog")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "matching autocomplete input should show the dropdown before focus loss")
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusLost")(Deathpool.sourceEditBox)
     assertEquals(Deathpool.dropdown:IsShown(), false, "focus loss should hide the autocomplete dropdown")
 end
 
-local function testAutocompleteSelectionSuppressesRecursiveUpdates()
+local function testAutocompleteSelectionStaysClosedAfterProgrammaticTextChange()
     local context = createUIContext()
     local Deathpool = context.Deathpool
 
     Deathpool.sourceEditBox:GetScript("OnEditFocusGained")(Deathpool.sourceEditBox)
     Deathpool.sourceEditBox:SetText("hog")
-    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox)
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, true)
     assertTruthy(Deathpool.dropdown:IsShown(), "matching autocomplete input should show the dropdown before selection")
 
     Deathpool.dropdown.buttons[1]:GetScript("OnClick")()
+    Deathpool.sourceEditBox:GetScript("OnTextChanged")(Deathpool.sourceEditBox, false)
 
-    assertEquals(Deathpool.dropdown:IsShown(), false, "selecting an autocomplete suggestion should end with the dropdown hidden")
-    assertEquals(Deathpool.isSelectingSuggestion, false, "autocomplete suggestion clicks should clear the temporary selection guard")
-    assertEquals(Deathpool.sourceEditBox:GetText(), "Hogger", "selecting an autocomplete suggestion should still apply the chosen value")
+    assertEquals(Deathpool.sourceEditBox:GetText(), "Hogger", "one click should apply the chosen autocomplete value")
+    assertEquals(Deathpool.dropdown:IsShown(), false, "programmatic selection text changes should not reopen a single-result dropdown")
 end
 
 testAutocompleteBuildsBothListsFromCurrentDeathHistory()
@@ -161,6 +161,6 @@ testAutocompleteHidesDropdownForBlankAndNoMatches()
 testAutocompleteDropdownCapsVisibleResultsAtTen()
 testDynamicSourceSuggestionsPreserveCuratedHighlighting()
 testAutocompleteEscapeAndFocusLostHideDropdown()
-testAutocompleteSelectionSuppressesRecursiveUpdates()
+testAutocompleteSelectionStaysClosedAfterProgrammaticTextChange()
 
 suite:finish()

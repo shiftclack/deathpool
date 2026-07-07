@@ -1041,12 +1041,18 @@ local function AttachPredictionEditBoxHandlers(ctx, editBox, suggestionKind)
         end
     end
 
-    editBox:SetScript("OnTextChanged", function(self)
+    ---@param self DeathpoolEditBox
+    ---@param userInput boolean
+    editBox:SetScript("OnTextChanged", function(self, userInput)
         if frame.predictionInputsLocked then
             return
         end
         SetActiveSuggestionInput(self)
-        DeathpoolUI.UpdateSuggestions(frame, self:GetText())
+        if userInput then
+            DeathpoolUI.UpdateSuggestions(frame, self:GetText())
+        else
+            DeathpoolUI.HideDropdown(frame)
+        end
         UpdateDraftPrediction(ctx)
         if frame.RefreshRecentDeathLogState then
             frame:RefreshRecentDeathLogState()

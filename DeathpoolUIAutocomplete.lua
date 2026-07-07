@@ -327,9 +327,7 @@ local function ShowDropdown(frame, matches)
         end)
         button:SetScript("OnClick", function()
             if frame.activeEditBox then
-                frame.isSelectingSuggestion = true
                 frame.activeEditBox:SetText(value)
-                frame.isSelectingSuggestion = false
             end
             DeathpoolUI.HideDropdown(frame)
             if frame.RefreshPredictionActionButtonState then
@@ -354,11 +352,6 @@ end
 function DeathpoolUI.UpdateSuggestions(frame, input)
     ---@type string[]
     local matches = {}
-
-    if frame and frame.isSelectingSuggestion then
-        DeathpoolUI.HideDropdown(frame)
-        return
-    end
 
     if not input or input == "" or not frame or not frame.suggestionList then
         DeathpoolUI.HideDropdown(frame)
