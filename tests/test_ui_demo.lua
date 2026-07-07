@@ -78,7 +78,7 @@ local function testIntroDemoRefreshUsesMainWindowOnlyState()
     assertEquals(Deathpool.deathRows[1].awardedPoints:GetText(), "0", "intro demo should keep the opening miss at zero total points")
     assertContains(
         Deathpool.lockedPredictionValue:GetText(),
-        "Level 10-19, source Defias Trapper, zone Westfall",
+        "Level 10-19, source Defias Trapper, or zone Westfall",
         "intro demo should show the example locked prediction"
     )
     assertEquals(Deathpool.introDemoAttractPanel:IsShown(), true, "intro demo should show the arcade marquee panel")
@@ -111,7 +111,7 @@ local function testIntroDemoUsesHordeDemoData()
     assertEquals(Deathpool.deathRows[1].awardedPoints:GetText(), "0", "horde intro demo should open on a miss before the later streak")
     assertContains(
         Deathpool.lockedPredictionValue:GetText(),
-        "Level 10-19, source Kolkar Wrangler, zone The Barrens",
+        "Level 10-19, source Kolkar Wrangler, or zone The Barrens",
         "horde intro demo should use the selected horde prediction"
     )
     assertEquals(Deathpool.introDemoAttractPanel:IsShown(), true, "horde intro demo should still show the marquee panel")

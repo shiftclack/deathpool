@@ -99,7 +99,7 @@ return function(context)
             DeathpoolLogic.FormatLockedPrediction(Fixtures.prediction({
                 levelRange = "20-29",
             })),
-            "Level 20-29, source Hogger, zone Elwynn Forest.",
+            "Level 20-29, source Hogger, or zone Elwynn Forest.",
             "locked prediction should render labels directly"
         )
 
@@ -109,7 +109,7 @@ return function(context)
                 source = false,
                 zone = false,
             })),
-            "Level none, source none, zone none.",
+            "Level none, source none, or zone none.",
             "locked prediction should show that level can be intentionally unset"
         )
     end

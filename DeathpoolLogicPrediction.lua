@@ -210,7 +210,7 @@ function DeathpoolLogic.FormatLockedPrediction(prediction)
     local zone = DeathpoolLogic.ToDisplayText(elements.zone) or "none"
 
     return string.format(
-        "Level %s, source %s, zone %s.",
+        "Level %s, source %s, or zone %s.",
         tostring(levelRange),
         tostring(source),
         tostring(zone)
