@@ -104,7 +104,8 @@ have the following columns:
 - The help window provides information to the user
 - It should summarize the game rules at a high level
 - It should also include information on how to configure the game to work with the addon
-- It should include a download link to the Github releases
+- It should include a download link to the GitHub releases
+- The GitHub link opens a centered modal dialog with a selectable, editable URL field for copy/paste in the WoW UI
 - Do not update the help text automatically without specific instructions
 
 ## Minimap Icon

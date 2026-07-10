@@ -84,6 +84,10 @@ local function AttachMainFrameScripts(frame, addonFrame)
             self.logFrame:Hide()
         end
 
+        if self.githubLinkFrame then
+            self.githubLinkFrame:Hide()
+        end
+
         if self.helpFrame then
             self.helpFrame:Hide()
         end

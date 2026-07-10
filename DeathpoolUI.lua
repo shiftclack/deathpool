@@ -659,6 +659,9 @@ end
 ---@param frame table
 local function ApplyCollapsedChildWindowState(frame)
     if frame.isCollapsed then
+        if frame.githubLinkFrame then
+            frame.githubLinkFrame:Hide()
+        end
         RememberAndHideWindow(frame, "logFrame")
         RememberAndHideWindow(frame, "helpFrame")
         return
@@ -695,8 +698,20 @@ local function IsHelpWindowShown(frame)
 end
 
 ---@param frame table
+---@return boolean
+local function IsGitHubLinkDialogShown(frame)
+    return frame.githubLinkFrame ~= nil and frame.githubLinkFrame:IsShown() == true
+end
+
+---@param frame table
+---@return boolean
+local function IsHelpModalShown(frame)
+    return IsHelpWindowShown(frame) or IsGitHubLinkDialogShown(frame)
+end
+
+---@param frame table
 local function ReapplyHelpModalPredictionState(frame)
-    if not IsHelpWindowShown(frame) then
+    if not IsHelpModalShown(frame) then
         return
     end
 

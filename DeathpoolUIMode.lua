@@ -61,8 +61,20 @@ end
 
 ---@param frame table
 ---@return boolean
-local function IsHelpVisible(frame)
+local function IsHelpWindowVisible(frame)
     return frame.helpFrame ~= nil and frame.helpFrame:IsShown() == true
+end
+
+---@param frame table
+---@return boolean
+local function IsGitHubLinkDialogVisible(frame)
+    return frame.githubLinkFrame ~= nil and frame.githubLinkFrame:IsShown() == true
+end
+
+---@param frame table
+---@return boolean
+local function IsHelpModalVisible(frame)
+    return IsHelpWindowVisible(frame) or IsGitHubLinkDialogVisible(frame)
 end
 
 ---@param frame table
@@ -99,7 +111,7 @@ local function ResolveModal(frame)
         return "setup"
     end
 
-    if IsHelpVisible(frame) then
+    if IsHelpModalVisible(frame) then
         return "help"
     end
 

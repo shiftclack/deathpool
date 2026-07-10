@@ -2,15 +2,26 @@ local DeathpoolUI = _G.DeathpoolUI
 local DeathpoolConstants = _G.DeathpoolConstants
 local HELP_RULES = DeathpoolConstants.HELP
 local DOWNLOAD_AREA_WIDTH = 204
+local GITHUB_LINK_DIALOG_WIDTH = 430
+local GITHUB_LINK_DIALOG_HEIGHT = 112
+local GITHUB_LINK_FIELD_WIDTH = 340
 
 ---@class DeathpoolHelpOwnerFrame: DeathpoolMainFrameShell
 ---@field [string] any
+
+---@class DeathpoolGitHubLinkFrame
+---@field [string] any
+---@field title table
+---@field urlBox table
+---@field okButton table
+---@field backdropOverlay DeathpoolModalBackdropOverlay
+---@field titlebarDragHandle DeathpoolModalTitlebarDragHandle
 
 ---@class DeathpoolHelpFrame
 ---@field [string] any
 ---@field downloadArea table
 ---@field downloadLink table
----@field downloadUrlBox table
+---@field githubLinkFrame DeathpoolGitHubLinkFrame
 ---@field closeButton table
 ---@field demoButton table
 ---@field backdropOverlay DeathpoolModalBackdropOverlay
@@ -67,10 +78,70 @@ local function RefreshOwnerFrameForHelpModal(ownerFrame, active)
 end
 
 ---@param ownerFrame DeathpoolHelpOwnerFrame
+---@return DeathpoolGitHubLinkFrame
+local function CreateGitHubLinkDialog(ownerFrame)
+    local githubLinkFrame = CreateFrame("Frame", "DeathpoolGitHubLinkFrame", UIParent, "BasicFrameTemplateWithInset")
+    ---@cast githubLinkFrame DeathpoolGitHubLinkFrame
+    githubLinkFrame:SetSize(GITHUB_LINK_DIALOG_WIDTH, GITHUB_LINK_DIALOG_HEIGHT)
+    githubLinkFrame:SetPoint("CENTER", ownerFrame, "CENTER", 0, 0)
+    githubLinkFrame:SetFrameStrata("DIALOG")
+    githubLinkFrame:SetToplevel(true)
+    githubLinkFrame:SetMovable(false)
+    githubLinkFrame:EnableMouse(true)
+    githubLinkFrame:Hide()
+    githubLinkFrame.backdropOverlay = DeathpoolUI.CreateModalBackdropOverlay(ownerFrame)
+
+    githubLinkFrame:SetScript("OnShow", function(self)
+        DeathpoolUI.ShowExpandedOwnerFrame(ownerFrame)
+        self.backdropOverlay:Show()
+        RefreshOwnerFrameForHelpModal(ownerFrame, true)
+    end)
+    githubLinkFrame:SetScript("OnHide", function(self)
+        self.backdropOverlay:Hide()
+        RefreshOwnerFrameForHelpModal(ownerFrame, false)
+    end)
+
+    local title = githubLinkFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    title:SetPoint("TOP", githubLinkFrame, "TOP", 0, -6)
+    title:SetText("GitHub Link")
+    githubLinkFrame.title = title
+
+    githubLinkFrame.titlebarDragHandle = DeathpoolUI.CreateModalTitlebarDragHandle(githubLinkFrame, ownerFrame)
+
+    local urlBox = CreateFrame("EditBox", nil, githubLinkFrame, "InputBoxTemplate")
+    urlBox:SetAutoFocus(false)
+    urlBox:SetSize(GITHUB_LINK_FIELD_WIDTH, 20)
+    urlBox:SetPoint("TOP", githubLinkFrame, "TOP", 0, -42)
+    urlBox:SetFontObject("GameFontHighlightSmall")
+    urlBox:SetText(DeathpoolUI.GetDownloadUrl())
+    urlBox:SetCursorPosition(0)
+    ---@param self table
+    urlBox:SetScript("OnEditFocusGained", function(self)
+        self:HighlightText()
+    end)
+    ---@param self table
+    urlBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+        self:HighlightText(0, 0)
+    end)
+
+    local okButton = CreateFrame("Button", "DeathpoolGitHubLinkOKButton", githubLinkFrame, "GameMenuButtonTemplate")
+    okButton:SetSize(120, 28)
+    okButton:SetPoint("BOTTOM", githubLinkFrame, "BOTTOM", 0, 14)
+    okButton:SetText("OK")
+    okButton:SetScript("OnClick", function()
+        githubLinkFrame:Hide()
+    end)
+
+    githubLinkFrame.urlBox = urlBox
+    githubLinkFrame.okButton = okButton
+
+    return githubLinkFrame
+end
+
+---@param ownerFrame DeathpoolHelpOwnerFrame
 ---@return DeathpoolHelpFrame
 function DeathpoolUI.CreateHelpWindow(ownerFrame)
-    local downloadUrl = DeathpoolUI.GetDownloadUrl()
-
     local helpFrame = CreateFrame("Frame", "DeathpoolHelpFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast helpFrame DeathpoolHelpFrame
     helpFrame:SetSize(500, 369)
@@ -135,32 +206,6 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
     downloadLink:GetFontString():SetWidth(DOWNLOAD_AREA_WIDTH)
     downloadLink:GetFontString():SetTextColor(0.25, 0.6, 1.0)
 
-    local downloadUrlBox = CreateFrame("EditBox", nil, downloadArea, "InputBoxTemplate")
-    downloadUrlBox:SetAutoFocus(false)
-    downloadUrlBox:SetSize(DOWNLOAD_AREA_WIDTH, 20)
-    downloadUrlBox:SetPoint("TOPLEFT", downloadArea, "TOPLEFT", 0, 0)
-    downloadUrlBox:SetFontObject("GameFontHighlightSmall")
-    downloadUrlBox:SetText(downloadUrl)
-    downloadUrlBox:SetCursorPosition(0)
-    ---@param self table
-    downloadUrlBox:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus()
-        self:HighlightText(0, 0)
-    end)
-    ---@param self table
-    downloadUrlBox:SetScript("OnEditFocusGained", function(self)
-        self:HighlightText()
-    end)
-    ---@param self table
-    ---@param userInput boolean
-    downloadUrlBox:SetScript("OnTextChanged", function(self, userInput)
-        if userInput then
-            self:SetText(downloadUrl)
-            self:HighlightText()
-        end
-    end)
-    downloadUrlBox:Hide()
-
     ---@param self table
     downloadLink:SetScript("OnEnter", function(self)
         self:GetFontString():SetTextColor(0.45, 0.75, 1.0)
@@ -169,10 +214,16 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
     downloadLink:SetScript("OnLeave", function(self)
         self:GetFontString():SetTextColor(0.25, 0.6, 1.0)
     end)
+
+    local githubLinkFrame = CreateGitHubLinkDialog(ownerFrame)
     downloadLink:SetScript("OnClick", function()
-        downloadUrlBox:Show()
-        downloadUrlBox:SetFocus()
-        downloadUrlBox:HighlightText()
+        helpFrame:Hide()
+        githubLinkFrame.urlBox:SetText(DeathpoolUI.GetDownloadUrl())
+        githubLinkFrame.urlBox:SetCursorPosition(0)
+        githubLinkFrame:Show()
+        githubLinkFrame:Raise()
+        githubLinkFrame.urlBox:SetFocus()
+        githubLinkFrame.urlBox:HighlightText()
     end)
 
     local closeButton = CreateFrame("Button", "DeathpoolHelpCloseButton", helpFrame, "GameMenuButtonTemplate")
@@ -196,7 +247,7 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
 
     helpFrame.downloadArea = downloadArea
     helpFrame.downloadLink = downloadLink
-    helpFrame.downloadUrlBox = downloadUrlBox
+    helpFrame.githubLinkFrame = githubLinkFrame
     helpFrame.closeButton = closeButton
     helpFrame.demoButton = demoButton
 

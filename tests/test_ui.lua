@@ -193,6 +193,21 @@ local function testUIModeResolverHandlesHelpModal()
     assertEquals(mode.mainBlocked, true, "help modal should block the main window")
     assertEquals(mode.showRecentDeathRows, true, "help modal should keep expanded death row data visible-ready")
     assertEquals(mode.showWaitingHelp, false, "help modal should hide waiting help")
+
+    Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
+
+    local githubMode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
+
+    assertEquals(Deathpool.helpFrame:IsShown(), false, "GitHub link dialog should replace help while it is open")
+    assertEquals(githubMode.mode, "normal", "GitHub link dialog should preserve the underlying normal mode")
+    assertEquals(githubMode.modal, "help", "GitHub link dialog should reuse the help modal state")
+    assertEquals(
+        DeathpoolUIMode.IsHelpModal(githubMode),
+        true,
+        "GitHub link dialog should report through the help modal predicate"
+    )
+    assertEquals(githubMode.inputsLocked, true, "GitHub link dialog should lock prediction inputs")
+    assertEquals(githubMode.mainBlocked, true, "GitHub link dialog should block the main window")
 end
 
 local function testInitializeReturnsFrames()
@@ -221,9 +236,12 @@ local function testInitializeReturnsFrames()
         "history log points header should align with the points column"
     )
     assertTruthy(Deathpool.helpFrame, "main frame should keep a reference to the help frame")
+    assertTruthy(Deathpool.githubLinkFrame, "main frame should keep a reference to the GitHub link dialog")
     assertTruthy(Deathpool.helpButton, "main frame should keep a reference to the help button")
     assertTruthy(Deathpool.helpFrame.backdropOverlay, "help window should create a main-window backdrop overlay")
     assertTruthy(Deathpool.helpFrame.titlebarDragHandle, "help window should create a titlebar drag handle")
+    assertTruthy(Deathpool.githubLinkFrame.backdropOverlay, "GitHub link dialog should create a main-window backdrop overlay")
+    assertTruthy(Deathpool.githubLinkFrame.titlebarDragHandle, "GitHub link dialog should create a titlebar drag handle")
     assertTruthy(Deathpool.introDemoController, "main frame should keep a reference to the intro demo controller")
     assertTruthy(Deathpool.lockButton, "main frame should keep a reference to the lock button")
     assertTruthy(Deathpool.pauseButton, "main frame should keep a reference to the pause button")
@@ -330,6 +348,57 @@ local function testInitializeReturnsFrames()
         "help backdrop should sit above main window contents"
     )
     assertEquals(Deathpool.helpFrame.backdropOverlay.texture.colorTexture[4], 0.58, "help backdrop should obscure the main window")
+    assertEquals(Deathpool.githubLinkFrame:GetWidth(), 430, "GitHub link dialog should use the setup-style modal width")
+    assertEquals(Deathpool.githubLinkFrame:GetHeight(), 112, "GitHub link dialog should be compact")
+    assertEquals(Deathpool.githubLinkFrame.title:GetText(), "GitHub Link", "GitHub link dialog should use the requested title")
+    assertEquals(
+        select(2, Deathpool.githubLinkFrame:GetPoint(1)),
+        Deathpool,
+        "GitHub link dialog should be centered on the main window"
+    )
+    assertEquals(select(4, Deathpool.githubLinkFrame:GetPoint(1)), 0, "GitHub link dialog should not offset horizontally")
+    assertEquals(select(5, Deathpool.githubLinkFrame:GetPoint(1)), 0, "GitHub link dialog should not offset vertically")
+    assertEquals(Deathpool.githubLinkFrame.movable, false, "GitHub link dialog should not be movable")
+    assertEquals(Deathpool.githubLinkFrame.dragButton, nil, "GitHub link dialog should not register itself for dragging")
+    assertEquals(Deathpool.githubLinkFrame.backdropOverlay:IsShown(), false, "GitHub link backdrop should start hidden")
+    assertEquals(Deathpool.githubLinkFrame.backdropOverlay.allPoints, true, "GitHub link backdrop should cover the main window")
+    assertEquals(Deathpool.githubLinkFrame.backdropOverlay.mouseEnabled, true, "GitHub link backdrop should block main window clicks")
+    assertEquals(
+        Deathpool.githubLinkFrame.backdropOverlay.dragButton,
+        "LeftButton",
+        "GitHub link backdrop should preserve main-window dragging"
+    )
+    assertTruthy(
+        Deathpool.githubLinkFrame.backdropOverlay:GetScript("OnDragStart"),
+        "GitHub link backdrop should start main-window dragging"
+    )
+    assertTruthy(
+        Deathpool.githubLinkFrame.backdropOverlay:GetScript("OnDragStop"),
+        "GitHub link backdrop should stop main-window dragging"
+    )
+    assertEquals(
+        Deathpool.githubLinkFrame.titlebarDragHandle.dragButton,
+        "LeftButton",
+        "GitHub link titlebar should preserve main-window dragging"
+    )
+    assertTruthy(
+        Deathpool.githubLinkFrame.titlebarDragHandle:GetScript("OnDragStart"),
+        "GitHub link titlebar should start main-window dragging"
+    )
+    assertTruthy(
+        Deathpool.githubLinkFrame.titlebarDragHandle:GetScript("OnDragStop"),
+        "GitHub link titlebar should stop main-window dragging"
+    )
+    assertEquals(
+        Deathpool.githubLinkFrame.backdropOverlay:GetFrameLevel() > Deathpool:GetFrameLevel(),
+        true,
+        "GitHub link backdrop should sit above main window contents"
+    )
+    assertEquals(
+        Deathpool.githubLinkFrame.backdropOverlay.texture.colorTexture[4],
+        0.58,
+        "GitHub link backdrop should obscure the main window"
+    )
     assertEquals(Deathpool.setupFrame.title:GetText(), "SETUP", "setup window should use the setup title")
     assertEquals(Deathpool.setupFrame.subtitle:GetText(), "Let's make sure you're set up!", "setup window should introduce setup")
     assertEquals(Deathpool.setupFrame.subtitle.template, "GameFontNormal", "setup subtitle should match row text size")
@@ -408,15 +477,51 @@ end
 
 local function testHelpWindowText()
     local context = createUIContext()
+    local DeathpoolUI = context.DeathpoolUI
     local Deathpool = context.Deathpool
     local findRegionText = context.findRegionText
 
     local helpText = findRegionText(Deathpool.helpFrame, "Hardcore Deathpool is a")
     assertTruthy(helpText, "help frame should contain the main help text")
-    assertEquals(Deathpool.helpFrame.downloadUrlBox:IsShown(), false, "download url box should start hidden")
+    assertEquals(Deathpool.githubLinkFrame:IsShown(), false, "GitHub link dialog should start hidden")
+    assertEquals(
+        Deathpool.githubLinkFrame.urlBox.template,
+        "InputBoxTemplate",
+        "GitHub link dialog should use the WoW input box template"
+    )
+    assertEquals(
+        Deathpool.githubLinkFrame.urlBox:GetText(),
+        DeathpoolUI.GetDownloadUrl(),
+        "GitHub link field should contain the releases URL"
+    )
+    assertEquals(Deathpool.githubLinkFrame.okButton:GetText(), "OK", "GitHub link dialog should have an OK button")
+    Deathpool.helpFrame:Show()
     Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
-    assertTruthy(Deathpool.helpFrame.downloadUrlBox:IsShown(), "clicking the download link should reveal the copy box")
-    assertTruthy(Deathpool.helpFrame.downloadUrlBox.hasFocus, "clicking the download link should focus the copy box")
+    assertEquals(Deathpool.helpFrame:IsShown(), false, "clicking the download link should replace the help window")
+    assertTruthy(Deathpool.githubLinkFrame:IsShown(), "clicking the download link should open the GitHub link dialog")
+    assertTruthy(
+        Deathpool.githubLinkFrame.backdropOverlay:IsShown(),
+        "GitHub link dialog should show the main-window backdrop"
+    )
+    assertTruthy(Deathpool.githubLinkFrame.urlBox.hasFocus, "clicking the download link should focus the URL field")
+    assertTruthy(Deathpool.githubLinkFrame.urlBox.highlightRange, "clicking the download link should select the URL text")
+
+    Deathpool.githubLinkFrame.urlBox:SetText("temporary user edit")
+    assertEquals(Deathpool.githubLinkFrame.urlBox:GetText(), "temporary user edit", "GitHub link field should allow user edits")
+    Deathpool.githubLinkFrame.okButton:GetScript("OnClick")()
+    assertEquals(Deathpool.githubLinkFrame:IsShown(), false, "OK should close the GitHub link dialog")
+    assertEquals(Deathpool.githubLinkFrame.backdropOverlay:IsShown(), false, "OK should hide the GitHub link backdrop")
+    assertEquals(Deathpool.helpFrame:IsShown(), false, "OK should leave the help window closed")
+
+    Deathpool.helpFrame:Show()
+    Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
+    assertEquals(
+        Deathpool.githubLinkFrame.urlBox:GetText(),
+        DeathpoolUI.GetDownloadUrl(),
+        "GitHub link field should reset to the canonical URL each open"
+    )
+    Deathpool.githubLinkFrame.CloseButton:GetScript("OnClick")()
+    assertEquals(Deathpool.helpFrame:IsShown(), false, "titlebar close should leave the help window closed")
 end
 
 local function testHelpModalBehavior()
@@ -515,6 +620,23 @@ local function testCollapseBehavior()
     assertEquals(Deathpool.lockButton:GetText(), "LOCK IN", "closing restored help should restore the normal lock button label")
 
     DeathpoolLog:Hide()
+    Deathpool.helpFrame:Show()
+    Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
+    assertTruthy(Deathpool.githubLinkFrame:IsShown(), "test should start with the GitHub link dialog open")
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+    assertEquals(Deathpool.githubLinkFrame:IsShown(), false, "collapsed mode should close the GitHub link dialog")
+    assertEquals(
+        Deathpool.helpFrame:IsShown(),
+        false,
+        "collapsed mode should leave help closed after closing the GitHub link dialog"
+    )
+    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
+    assertEquals(
+        Deathpool.helpFrame:IsShown(),
+        false,
+        "expanded mode should not reopen help after collapsing from the GitHub link dialog"
+    )
+
     DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
     DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
     assertEquals(
@@ -663,6 +785,7 @@ local function testAuxiliaryWindowRefreshUsesResolvedDemoMode()
     Deathpool:Show()
     DeathpoolLog:Show()
     Deathpool.helpFrame:Show()
+    Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
 
     Deathpool.introDemoController:Show()
     Deathpool:RefreshAuxiliaryWindowState()
@@ -671,6 +794,7 @@ local function testAuxiliaryWindowRefreshUsesResolvedDemoMode()
     assertEquals(Deathpool.helpButton:IsEnabled(), false, "demo mode should disable the help button through auxiliary refresh")
     assertEquals(DeathpoolLog:IsShown(), false, "demo mode should close the log window through auxiliary refresh")
     assertEquals(Deathpool.helpFrame:IsShown(), false, "demo mode should close the help window through auxiliary refresh")
+    assertEquals(Deathpool.githubLinkFrame:IsShown(), false, "demo mode should close the GitHub link dialog")
     assertEquals(Deathpool.collapsedWindowStates.logFrame, false, "demo mode should clear remembered log state")
     assertEquals(Deathpool.collapsedWindowStates.helpFrame, false, "demo mode should clear remembered help state")
 
@@ -846,6 +970,24 @@ local function testHelpModalDragMovesMainWindow()
     )
 end
 
+local function testGitHubLinkDialogClosesWithMainWindow()
+    local context = createUIContext(Fixtures.uiDatabase({
+        hasSeenFirstRun = true,
+    }))
+    local Deathpool = context.Deathpool
+
+    Deathpool:Show()
+    Deathpool.helpFrame:Show()
+    Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
+
+    assertTruthy(Deathpool.githubLinkFrame:IsShown(), "test should start with the GitHub link dialog open")
+
+    Deathpool:Hide()
+
+    assertEquals(Deathpool.githubLinkFrame:IsShown(), false, "hiding the main window should close the GitHub link dialog")
+    assertEquals(Deathpool.helpFrame:IsShown(), false, "hiding the main window should leave help closed")
+end
+
 local function testSetupTintFollowsSetupWindowVisibility()
     local context = createUIContext({})
     local Deathpool = context.Deathpool
@@ -887,6 +1029,7 @@ testCollapsedWindowPositionIsRemembered()
 testLogTitlebarDragMovesMainWindow()
 testSetupTitlebarDragMovesMainWindow()
 testHelpModalDragMovesMainWindow()
+testGitHubLinkDialogClosesWithMainWindow()
 testSetupTintFollowsSetupWindowVisibility()
 testCollapsedWindowHeightCanBeResizedAndRestored()
 

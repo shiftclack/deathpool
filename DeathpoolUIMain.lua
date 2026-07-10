@@ -79,6 +79,7 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstD
 ---@class DeathpoolMainFrame: DeathpoolMainFrameShell
 ---@field logFrame DeathpoolWidget
 ---@field helpFrame DeathpoolWidget
+---@field githubLinkFrame DeathpoolGitHubLinkFrame
 ---@field dropdown DeathpoolWidget
 ---@field gameInfoCallout DeathpoolWidget
 ---@field sourceEditBox DeathpoolEditBox
@@ -375,6 +376,9 @@ local function AttachMainFrameScripts(frame, ctx)
         end
     end)
     frame:SetScript("OnHide", function(self)
+        if self.githubLinkFrame then
+            self.githubLinkFrame:Hide()
+        end
         DeathpoolUI.HideGameInfoCallout(self.gameInfoCallout)
         if self.RefreshIntroDemoVisibility then
             self:RefreshIntroDemoVisibility()
@@ -1099,6 +1103,9 @@ local function RefreshAuxiliaryWindowState(ctx, uiMode)
     if isDemoShown then
         frame.logFrame:Hide()
         frame.helpFrame:Hide()
+        if frame.githubLinkFrame then
+            frame.githubLinkFrame:Hide()
+        end
 
         frame.collapsedWindowStates.logFrame = false
         -- Starting the demo intentionally closes Help instead of restoring it afterward.
@@ -1229,6 +1236,7 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
     local helpWindow = DeathpoolUI.CreateHelpWindow(frame)
     local setupWindow = DeathpoolUISetup.CreateWindow(frame)
     frame.helpFrame = helpWindow
+    frame.githubLinkFrame = helpWindow.githubLinkFrame
     frame.logFrame = logWindow
     frame.setupFrame = setupWindow
     frame.dropdown = DeathpoolUI.CreateSuggestionDropdown(frame)
