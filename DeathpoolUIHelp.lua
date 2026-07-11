@@ -34,7 +34,7 @@ local function BuildHelpWindowText()
     return table.concat({"",
         diamond .. " Game Overview " .. diamond,
         "",
-        "Hardcore Deathpool is a |cFFFFFF00death prediction minigame|r for your faction.",
+        "Hardcore Death Pool is a |cFFFFFF00death prediction minigame|r for your faction.",
         "",
         skull .. " Predict the |cFFFFFF00level|r, |cFFFFFF00location|r and |cFFFFFF00source|r of incoming deaths\n",
         skull .. " View deaths in |cFFFFFF00real time|r\n",

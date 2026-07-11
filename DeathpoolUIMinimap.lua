@@ -138,7 +138,7 @@ function DeathpoolUIMinimap.Initialize(frame, database)
                     return
                 end
 
-                tooltip:AddLine("Deathpool")
+                tooltip:AddLine("Hardcore Death Pool")
                 tooltip:AddLine(GetTooltipPredictionText(activeDatabase), 1, 1, 1, true)
                 tooltip:AddLine("Score: " .. GetTooltipScoreText(activeDatabase), 1, 0.82, 0)
             end,

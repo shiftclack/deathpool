@@ -787,7 +787,7 @@ local function testPlayerDeathPreservesFinalScoreAndPrintsIt()
     assertEquals(#sentChatMessages, 1, "player death should send exactly one guild chat announcement")
     assertEquals(
         sentChatMessages[1].message,
-        "[Deathpool] Final score: 12,345",
+        "[Hardcore Death Pool] Final score: 12,345",
         "player death should announce the player and final score in guild chat"
     )
     assertEquals(sentChatMessages[1].chatType, "GUILD", "player death should announce the final score to guild chat")
@@ -881,7 +881,7 @@ local function testPlayerLevelUpAnnouncesScoreEveryTenLevels()
     assertEquals(#sentChatMessages, 1, "level 10 should send one guild announcement")
     assertEquals(
         sentChatMessages[1].message,
-        "[Deathpool] HarnessPlayer has reached level 10! Their score is 12,345",
+        "[Hardcore Death Pool] HarnessPlayer has reached level 10! Their score is 12,345",
         "level-up announcement should include the player, level, and formatted score"
     )
     assertEquals(sentChatMessages[1].chatType, "GUILD", "level-up announcement should use guild chat")
@@ -890,7 +890,7 @@ local function testPlayerLevelUpAnnouncesScoreEveryTenLevels()
     assertEquals(#sentChatMessages, 2, "level 60 should send another guild announcement")
     assertEquals(
         sentChatMessages[2].message,
-        "[Deathpool] HarnessPlayer has reached level 60! Their score is 12,345",
+        "[Hardcore Death Pool] HarnessPlayer has reached level 60! Their score is 12,345",
         "level 60 announcement should use the same message format"
     )
 end
@@ -1136,6 +1136,7 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
     assertTruthy(category ~= nil, "settings panel should register an addon category")
     assertTruthy(category.frame ~= nil, "settings panel should register a category frame")
     assertEquals(category.frame.name, "Deathpool", "settings panel should register the Deathpool category")
+    assertEquals(category.name, "Hardcore Death Pool", "settings panel should register the full addon display name")
 
     category.frame:Show()
     assertEquals(

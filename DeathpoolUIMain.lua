@@ -424,7 +424,7 @@ local function CreateHeaderSection(ctx)
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     title:SetPoint("TOP", frame, "TOP", 0, -5)
-    title:SetText("HARDCORE DEATHPOOL")
+    title:SetText("HARDCORE DEATH POOL")
 
     local minimizeButton = CreateFrame("Button", "DeathpoolMinimizeButton", frame)
     minimizeButton:SetSize(25, 25)

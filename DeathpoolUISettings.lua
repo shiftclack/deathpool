@@ -116,7 +116,7 @@ local function CreateCategoryFrame()
     local title = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
     title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -16)
     title:SetJustifyH("LEFT")
-    title:SetText("Hardcore Deathpool")
+    title:SetText("Hardcore Death Pool")
 
     -- local description = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     -- description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
@@ -188,7 +188,7 @@ function DeathpoolUISettings.Initialize(settingsApi)
 
     if categoryRegistered ~= true then
         categoryFrame = CreateCategoryFrame()
-        local category = Settings.RegisterCanvasLayoutCategory(categoryFrame, "Hardcore Deathpool")
+        local category = Settings.RegisterCanvasLayoutCategory(categoryFrame, "Hardcore Death Pool")
         Settings.RegisterAddOnCategory(category)
         categoryRegistered = true
 

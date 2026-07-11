@@ -18,7 +18,7 @@ to the item colors in wow: orange, purple, blue, green, white, gray.
 
 ## Prediction UI Window
 
-The main window is how the user primarily interacts with the addon. It's a draggable UI window with a title of HARDCORE DEATHPOOL. The top pane displays a list of the most recent deaths, including various elements about the death. The lower pane of the window can be used by the user to perform input for predictions.
+The main window is how the user primarily interacts with the addon. It's a draggable UI window with a title of HARDCORE DEATH POOL. The top pane displays a list of the most recent deaths, including various elements about the death. The lower pane of the window can be used by the user to perform input for predictions.
 
 - Top part of window is a list of recent deaths sorted by time, newest at the bottom
     - Show the last 5 deaths
@@ -32,7 +32,7 @@ The main window is how the user primarily interacts with the addon. It's a dragg
 
 It looks like this:
 ```
-+-- DEATHPOOL -----------------------------------------------------+
++-- HARDCORE DEATH POOL -------------------------------------------+
 | 		Name		Level	Source	        Location        Points |
 +------------------------------------------------------------------+
 | 10:05 Drakedog    6	    Kobold 	        Elwynn Forest	0	   |

@@ -29,7 +29,7 @@ function DeathpoolAnnouncements.AnnouncePlayerLevelUp(state, level)
 
     SendChatMessage(
         string.format(
-            "[Deathpool] %s has reached level %d! Their score is %s",
+            "[Hardcore Death Pool] %s has reached level %d! Their score is %s",
             UnitName("player"),
             level,
             DeathpoolLogic.FormatPoints(DeathpoolDatabase.GetTotalPoints(state))
@@ -53,7 +53,7 @@ function DeathpoolAnnouncements.AnnouncePlayerDeath(state, printMessage)
     then
         SendChatMessage(
             string.format(
-                "[Deathpool] Final score: %s",
+                "[Hardcore Death Pool] Final score: %s",
                 formattedScore
             ),
             "GUILD"

@@ -1,5 +1,5 @@
 ## Interface: 11508
-## Title: Hardcore Deathpool
+## Title: Hardcore Death Pool
 ## Notes: Hardcore death prediction game.
 ## Author: shiftclack
 ## Version: 0.9.0

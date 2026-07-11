@@ -481,7 +481,7 @@ local function testHelpWindowText()
     local Deathpool = context.Deathpool
     local findRegionText = context.findRegionText
 
-    local helpText = findRegionText(Deathpool.helpFrame, "Hardcore Deathpool is a")
+    local helpText = findRegionText(Deathpool.helpFrame, "Hardcore Death Pool is a")
     assertTruthy(helpText, "help frame should contain the main help text")
     assertEquals(Deathpool.githubLinkFrame:IsShown(), false, "GitHub link dialog should start hidden")
     assertEquals(

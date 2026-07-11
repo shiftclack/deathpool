@@ -3,7 +3,7 @@
 ## Overview of the Deathpool project
 
 - This is an addon for _World of Warcraft Classic Hardcore_
-- The addon's short name is "Deathpool", and its full name is "Hardcore Deathpool"
+- The addon's short name is "Deathpool", and its full name is "Hardcore Death Pool"
 - Developed in WoW Lua 5.1
 
 ### Source of truth

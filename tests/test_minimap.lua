@@ -384,7 +384,7 @@ local function testTooltipShowsCurrentPredictionAndScore()
     minimap.Initialize(frame, database)
     state.lastDataObject.OnTooltipShow(tooltip)
 
-    assertEquals(tooltip.lines[1], "Deathpool", "tooltip should start with the addon name")
+    assertEquals(tooltip.lines[1], "Hardcore Death Pool", "tooltip should start with the addon name")
     assertEquals(tooltip.lines[2], "Level 20-29, source Hogger, or zone Elwynn Forest.", "tooltip should show the current locked prediction text")
     assertEquals(tooltip.lines[3], "Score: 1,234", "tooltip should show the current running score")
 end

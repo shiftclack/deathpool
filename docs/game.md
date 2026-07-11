@@ -1,6 +1,6 @@
 # game.md
 
-Documentation for the HARDCORE DEATHPOOL game rules.
+Documentation for the HARDCORE DEATH POOL game rules.
 
 ## Goal
 
