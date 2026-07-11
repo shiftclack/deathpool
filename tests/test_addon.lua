@@ -695,8 +695,8 @@ local function testAddonLoadDefaultsDeathAnnouncementToEnabled()
 
     assertEquals(
         DeathpoolCharacterState.announcements.enabled,
-        true,
-        "addon load should enable guild announcements by default"
+        getDefault("announcements").enabled,
+        "addon load should honor the configured guild announcement default"
     )
     assertEquals(
         DeathpoolCharacterState.announcements.announceScoreOnDeath,
@@ -706,13 +706,13 @@ local function testAddonLoadDefaultsDeathAnnouncementToEnabled()
 
     assertEquals(
         _G.DeathpoolUISettings.guildAnnouncementsEnabledCheckbox:GetChecked(),
-        true,
-        "settings panel should show guild announcements enabled by default"
+        getDefault("announcements").enabled,
+        "settings panel should show the configured guild announcement default"
     )
     assertEquals(
         _G.DeathpoolUISettings.announceDeathToGuildCheckbox:IsEnabled(),
-        true,
-        "settings panel should enable guild announcement options by default"
+        getDefault("announcements").enabled,
+        "settings panel should enable guild announcement options from the configured default"
     )
 end
 

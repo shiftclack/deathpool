@@ -70,9 +70,9 @@ DeathpoolDatabase.DEFAULTS = {
     logWindowShown = false,
     historySuccessfulOnly = true,
     announcements = {
-        enabled = true,
+        enabled = false,
         announceScoreOnDeath = true,
-        announceScoreOnLevelUp = true,
+        announceScoreOnLevelUp = false,
     },
     showInCombat = false,
     collapsed = false,

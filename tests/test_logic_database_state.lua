@@ -101,7 +101,7 @@ return function(context)
 
         _G.DeathpoolDatabase.Init(database)
 
-        assertEquals(database.announcements.enabled, true, "database init should enable guild announcements by default")
+        assertEquals(database.announcements.enabled, false, "database init should disable guild announcements by default")
         assertEquals(
             database.announcements.announceScoreOnDeath,
             true,
@@ -109,8 +109,8 @@ return function(context)
         )
         assertEquals(
             database.announcements.announceScoreOnLevelUp,
-            true,
-            "database init should enable level-up score announcements by default"
+            false,
+            "database init should disable level-up score announcements by default"
         )
     end
 
@@ -162,16 +162,14 @@ return function(context)
     end
 
     local function testGuildAnnouncementAccessors()
-        local corruptDatabase = {
-            announcements = false,
-        }
-        ---@cast corruptDatabase table
-        local database = _G.DeathpoolDatabase.Init(corruptDatabase)
+        local emptyDatabase = {}
+        ---@cast emptyDatabase table
+        local database = _G.DeathpoolDatabase.Init(emptyDatabase)
 
         assertEquals(
             _G.DeathpoolDatabase.GetGuildAnnouncementsEnabled(database),
-            true,
-            "guild announcements should be enabled by default"
+            false,
+            "guild announcements should be disabled by default"
         )
         assertEquals(
             _G.DeathpoolDatabase.SetGuildAnnouncementsEnabled(database, true),
@@ -202,7 +200,7 @@ return function(context)
 
         assertEquals(
             _G.DeathpoolDatabase.GetAnnounceScoreOnLevelUp(database),
-            true,
+            false,
             "level-up score announcement getter should use the nested default"
         )
         assertEquals(
