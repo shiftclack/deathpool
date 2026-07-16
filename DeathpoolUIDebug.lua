@@ -5,9 +5,10 @@ local DeathpoolUI = _G.DeathpoolUI
 ---@param pointY number
 ---@return table
 local function CreateRawMessageEditBox(parent, pointX, pointY)
+    local gutter = DeathpoolUI.LAYOUT.outsideGutter
     local editBox = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
     editBox:SetPoint("TOPLEFT", parent, "TOPLEFT", pointX, pointY)
-    editBox:SetSize(parent:GetWidth() - 44, 36)
+    editBox:SetSize(parent:GetWidth() - (gutter * 2), 36)
     editBox:SetAutoFocus(false)
     editBox:SetMultiLine(true)
     editBox:SetFontObject("GameFontHighlightSmall")
@@ -25,6 +26,7 @@ end
 
 function DeathpoolUI.CreateDebugWindow()
     local addLabel = DeathpoolUI.AddLabel
+    local gutter = DeathpoolUI.LAYOUT.outsideGutter
 
     local debugFrame = CreateFrame("Frame", "DeathpoolDebugFrame", UIParent, "BasicFrameTemplateWithInset")
     debugFrame:SetSize(560, 400)
@@ -47,15 +49,15 @@ function DeathpoolUI.CreateDebugWindow()
     debugSubtitle:SetText("Latest live values, parsed death, and score breakdown")
 
     local debugStateTitle = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    debugStateTitle:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", 22, -54)
+    debugStateTitle:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", gutter, -54)
     debugStateTitle:SetText("Latest Values")
 
     local debugDetailsTitle = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    debugDetailsTitle:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", 22, -140)
+    debugDetailsTitle:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", gutter, -140)
     debugDetailsTitle:SetText("Latest Parsed Blizzard Data")
 
     local debugScoreTitle = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    debugScoreTitle:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", 22, -230)
+    debugScoreTitle:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", gutter, -230)
     debugScoreTitle:SetText("Latest Point Calculation")
 
     debugFrame.detailLabels = {}
@@ -94,9 +96,9 @@ function DeathpoolUI.CreateDebugWindow()
         debugFrame.detailValues[field.key] = value
     end
 
-    local rawMessageLabel = addLabel(debugFrame, "Raw message:", "TOPLEFT", debugFrame, "TOPLEFT", 22, -300)
+    local rawMessageLabel = addLabel(debugFrame, "Raw message:", "TOPLEFT", debugFrame, "TOPLEFT", gutter, -300)
     debugFrame.detailLabels.sourceMessage = rawMessageLabel
-    debugFrame.detailValues.sourceMessage = CreateRawMessageEditBox(debugFrame, 22, -315)
+    debugFrame.detailValues.sourceMessage = CreateRawMessageEditBox(debugFrame, gutter, -315)
 
     return debugFrame
 end

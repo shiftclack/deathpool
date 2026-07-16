@@ -10,7 +10,6 @@ local DeathpoolUISetup = _G.DeathpoolUISetup
 ---@field FormatLockedPrediction fun(prediction: DeathpoolPrediction|DeathpoolPredictionElements|nil): string
 ---@field FormatMultiplier fun(multiplierValue: number|string|nil): string
 ---@field FormatPoints fun(points: number|string|nil): string
----@field GetStoredDeathTime fun(death: DeathpoolDeath): string|nil
 ---@field GetComboDetails fun(prediction: DeathpoolPrediction|DeathpoolPredictionElements|nil, death: DeathpoolDeath|nil, streak: integer|nil): DeathpoolComboDetails
 ---@field GetStoredDeathComboDetails fun(death: DeathpoolDeath): DeathpoolComboDetails
 ---@field GetStoredDeathBasePoints fun(death: DeathpoolDeath): integer
@@ -421,7 +420,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
         local deathFields = death or {}
 
         return {
-            time = death and logic.GetStoredDeathTime(death),
+            time = death and DeathpoolUI.GetStoredDeathTime(death),
             name = deathFields.name,
             level = deathFields.level,
             sourceName = deathFields.sourceName,
@@ -566,7 +565,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
 
         ---@type DeathpoolRefreshLatestDeathFields
         local detailFields = {
-            time = death and logic.GetStoredDeathTime(death),
+            time = death and DeathpoolUI.GetStoredDeathTime(death),
             name = death and death.name,
             level = death and death.level,
             sourceName = death and death.sourceName,
@@ -637,7 +636,12 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
         end
         local totalHistory = #history
 
-        FauxScrollFrame_Update(self.scrollFrame, totalHistory, #self.rows, 18)
+        FauxScrollFrame_Update(
+            self.scrollFrame,
+            totalHistory,
+            #self.rows,
+            DeathpoolUI.LAYOUT.deathLogRowHeight
+        )
 
         local offset = FauxScrollFrame_GetOffset(self.scrollFrame)
         DeathpoolUI.RefreshDeathLogRows(self, history, {

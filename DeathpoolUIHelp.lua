@@ -4,7 +4,6 @@ local HELP_RULES = DeathpoolConstants.HELP
 local DOWNLOAD_AREA_WIDTH = 204
 local GITHUB_LINK_DIALOG_WIDTH = 430
 local GITHUB_LINK_DIALOG_HEIGHT = 112
-local GITHUB_LINK_FIELD_WIDTH = 340
 
 ---@class DeathpoolHelpOwnerFrame: DeathpoolMainFrameShell
 ---@field [string] any
@@ -19,6 +18,9 @@ local GITHUB_LINK_FIELD_WIDTH = 340
 
 ---@class DeathpoolHelpFrame
 ---@field [string] any
+---@field scrollFrame table
+---@field scrollContent table
+---@field helpText table
 ---@field downloadArea table
 ---@field downloadLink table
 ---@field githubLinkFrame DeathpoolGitHubLinkFrame
@@ -80,6 +82,7 @@ end
 ---@param ownerFrame DeathpoolHelpOwnerFrame
 ---@return DeathpoolGitHubLinkFrame
 local function CreateGitHubLinkDialog(ownerFrame)
+    local layout = DeathpoolUI.LAYOUT
     local githubLinkFrame = CreateFrame("Frame", "DeathpoolGitHubLinkFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast githubLinkFrame DeathpoolGitHubLinkFrame
     githubLinkFrame:SetSize(GITHUB_LINK_DIALOG_WIDTH, GITHUB_LINK_DIALOG_HEIGHT)
@@ -110,8 +113,8 @@ local function CreateGitHubLinkDialog(ownerFrame)
 
     local urlBox = CreateFrame("EditBox", nil, githubLinkFrame, "InputBoxTemplate")
     urlBox:SetAutoFocus(false)
-    urlBox:SetSize(GITHUB_LINK_FIELD_WIDTH, 20)
-    urlBox:SetPoint("TOP", githubLinkFrame, "TOP", 0, -42)
+    urlBox:SetSize(GITHUB_LINK_DIALOG_WIDTH - (layout.outsideGutter * 2), 20)
+    urlBox:SetPoint("TOPLEFT", githubLinkFrame, "TOPLEFT", layout.outsideGutter, -42)
     urlBox:SetFontObject("GameFontHighlightSmall")
     urlBox:SetText(DeathpoolUI.GetDownloadUrl())
     urlBox:SetCursorPosition(0)
@@ -126,8 +129,8 @@ local function CreateGitHubLinkDialog(ownerFrame)
     end)
 
     local okButton = CreateFrame("Button", "DeathpoolGitHubLinkOKButton", githubLinkFrame, "GameMenuButtonTemplate")
-    okButton:SetSize(120, 28)
-    okButton:SetPoint("BOTTOM", githubLinkFrame, "BOTTOM", 0, 14)
+    okButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
+    okButton:SetPoint("BOTTOM", githubLinkFrame, "BOTTOM", 0, layout.outsideGutter)
     okButton:SetText("OK")
     okButton:SetScript("OnClick", function()
         githubLinkFrame:Hide()
@@ -142,6 +145,7 @@ end
 ---@param ownerFrame DeathpoolHelpOwnerFrame
 ---@return DeathpoolHelpFrame
 function DeathpoolUI.CreateHelpWindow(ownerFrame)
+    local layout = DeathpoolUI.LAYOUT
     local helpFrame = CreateFrame("Frame", "DeathpoolHelpFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast helpFrame DeathpoolHelpFrame
     helpFrame:SetSize(500, 369)
@@ -169,32 +173,37 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
     helpFrame.titlebarDragHandle = DeathpoolUI.CreateModalTitlebarDragHandle(helpFrame, ownerFrame)
 
     local scrollFrame = CreateFrame("ScrollFrame", "DeathpoolHelpScrollFrame", helpFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", helpFrame, "TOPLEFT", 18, -32)
-    scrollFrame:SetPoint("BOTTOMRIGHT", helpFrame, "BOTTOMRIGHT", -30, 84)
+    scrollFrame:SetPoint("TOPLEFT", helpFrame, "TOPLEFT", layout.outsideGutter, -32)
+    scrollFrame:SetPoint("BOTTOMRIGHT", helpFrame, "BOTTOMRIGHT", -(layout.outsideGutter + layout.scrollbarInset), 84)
+    helpFrame.scrollFrame = scrollFrame
 
     local content = CreateFrame("Frame", nil, scrollFrame)
-    content:SetWidth(404)
+    content:SetWidth(
+        helpFrame:GetWidth() - (layout.outsideGutter * 2) - layout.scrollbarWidth - layout.scrollbarInset
+    )
     scrollFrame:SetScrollChild(content)
 
     local helpText = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    helpText:SetPoint("TOPLEFT", content, "TOPLEFT", 8, 0)
+    helpText:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
     helpText:SetJustifyH("LEFT")
     helpText:SetJustifyV("TOP")
     helpText:SetWordWrap(true)
     helpText:SetNonSpaceWrap(false)
-    helpText:SetWidth(396)
+    helpText:SetWidth(content:GetWidth())
     helpText:SetText(DeathpoolUI.GetHelpWindowText())
 
     content:SetHeight(helpText:GetStringHeight() + 12)
+    helpFrame.scrollContent = content
+    helpFrame.helpText = helpText
 
     local footer = CreateFrame("Frame", nil, helpFrame)
-    footer:SetPoint("BOTTOMLEFT", helpFrame, "BOTTOMLEFT", 16, 12)
-    footer:SetPoint("BOTTOMRIGHT", helpFrame, "BOTTOMRIGHT", -16, 12)
+    footer:SetPoint("BOTTOMLEFT", helpFrame, "BOTTOMLEFT", layout.outsideGutter, layout.outsideGutter)
+    footer:SetPoint("BOTTOMRIGHT", helpFrame, "BOTTOMRIGHT", -layout.outsideGutter, layout.outsideGutter)
     footer:SetHeight(60)
 
     local downloadArea = CreateFrame("Frame", nil, footer)
     downloadArea:SetSize(DOWNLOAD_AREA_WIDTH, 40)
-    downloadArea:SetPoint("BOTTOMLEFT", footer, "BOTTOMLEFT", 8, 4)
+    downloadArea:SetPoint("BOTTOMLEFT", footer, "BOTTOMLEFT", 0, 4)
 
     local downloadLink = CreateFrame("Button", nil, downloadArea)
     downloadLink:SetSize(DOWNLOAD_AREA_WIDTH, 18)
@@ -227,16 +236,16 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
     end)
 
     local closeButton = CreateFrame("Button", "DeathpoolHelpCloseButton", helpFrame, "GameMenuButtonTemplate")
-    closeButton:SetSize(120, 28)
-    closeButton:SetPoint("BOTTOMRIGHT", helpFrame, "BOTTOMRIGHT", -18, 16)
+    closeButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
+    closeButton:SetPoint("BOTTOMRIGHT", helpFrame, "BOTTOMRIGHT", -layout.outsideGutter, layout.outsideGutter)
     closeButton:SetText("CLOSE")
     closeButton:SetScript("OnClick", function()
         helpFrame:Hide()
     end)
 
     local demoButton = CreateFrame("Button", "DeathpoolHelpDemoButton", helpFrame, "GameMenuButtonTemplate")
-    demoButton:SetSize(120, 28)
-    demoButton:SetPoint("RIGHT", closeButton, "LEFT", -12, 0)
+    demoButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
+    demoButton:SetPoint("RIGHT", closeButton, "LEFT", -layout.modalButtonGap, 0)
     demoButton:SetText("DEMO")
     demoButton:SetScript("OnClick", function()
         helpFrame:Hide()

@@ -8,22 +8,48 @@ local SCORE_RULES = DeathpoolConstants.SCORING
 local DEMO_RULES = DeathpoolConstants.DEMO
 local EMPTY_PREDICTION_PROMPT_TEXT = "Make your prediction"
 local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstDeathMinDurationSeconds
+local PREDICTION_CONTROL_HEIGHT = 24
+local PREDICTION_EDIT_CONTROL_OFFSET_X = 7
+local PREDICTION_LEVEL_CONTROL_ROW_OFFSET_Y = 8
+local PREDICTION_EDIT_CONTROL_ROW_OFFSET_Y = 11
 
 ---@class DeathpoolMainLayout
+---@field outsideGutter integer
+---@field scrollbarWidth integer
+---@field titlebarDragLeftInset integer
+---@field titlebarDragRightInset integer
+---@field titlebarDragTopInset integer
+---@field titlebarDragHeight integer
+---@field standardButtonWidth integer
+---@field standardButtonHeight integer
+---@field compactButtonHeight integer
+---@field actionButtonGap integer
+---@field modalButtonGap integer
 ---@field mainWindowHeight integer
 ---@field expandedWindowWidth integer
+---@field footerGutter integer
 ---@field logWindowHeight integer
 ---@field logWindowWidth integer
 ---@field logVisibleRows integer
+---@field deathLogRowHeight integer
 ---@field collapsedWindowWidth integer
 ---@field collapsedWindowHeight integer
 ---@field collapsedWindowMinHeight integer
 ---@field collapsedWindowMaxHeight integer
 ---@field collapsedLogVisibleRows integer
+---@field collapsedLogHeaderY integer
+---@field collapsedLogFrameY integer
 ---@field collapsedLogRowHeight integer
 ---@field deathLogHeaderY integer
 ---@field deathLogFrameY integer
 ---@field deathLogDividerY integer
+---@field logVerticalSpacing integer
+---@field historyScrollbarGap integer
+---@field scrollbarInset integer
+---@field historySubtitleY integer
+---@field historySubtitleHeaderSpacing integer
+---@field historyLogHeaderY integer
+---@field historyLogFrameY integer
 ---@field scoreSummaryY integer
 ---@field predictionLabelX integer
 ---@field predictionControlX integer
@@ -108,6 +134,7 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstD
 ---@field currentStreakValue DeathpoolWidget
 ---@field longestStreakValue DeathpoolWidget
 ---@field introDemoAttractPanel DeathpoolWidget
+---@field levelRangeLabel DeathpoolWidget
 ---@field sourceLabel DeathpoolWidget
 ---@field zoneLabel DeathpoolWidget
 ---@field currentPredictionLabel DeathpoolWidget
@@ -443,11 +470,13 @@ end
 local function CreateCollapsedSection(ctx)
     local frame = ctx.frame
     local layout = ctx.layout
+    local gutter = layout.outsideGutter
+    local footerGutter = layout.footerGutter
 
     frame.collapsedLogHeaders = {}
     for _, column in ipairs(ctx.collapsedLogColumns) do
         local header = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        header:SetPoint("TOPLEFT", frame, "TOPLEFT", 18 + column.x, -32)
+        header:SetPoint("TOPLEFT", frame, "TOPLEFT", gutter + column.x, layout.collapsedLogHeaderY)
         header:SetWidth(column.width)
         header:SetJustifyH(column.justifyH or "LEFT")
         header:SetWordWrap(false)
@@ -459,8 +488,8 @@ local function CreateCollapsedSection(ctx)
     end
 
     local collapsedLogFrame = CreateFrame("Frame", nil, frame)
-    collapsedLogFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, -48)
-    collapsedLogFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, 34)
+    collapsedLogFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", gutter, layout.collapsedLogFrameY)
+    collapsedLogFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -gutter, 34)
     collapsedLogFrame:Hide()
     frame.collapsedLogFrame = collapsedLogFrame
     DeathpoolUI.RegisterCollapsedVisibleRegion(frame, collapsedLogFrame)
@@ -486,14 +515,14 @@ local function CreateCollapsedSection(ctx)
 
     local collapsedScoreDivider = frame:CreateTexture(nil, "ARTWORK")
     collapsedScoreDivider:SetColorTexture(1, 0.82, 0, 0.45)
-    collapsedScoreDivider:SetSize(314, 1)
-    collapsedScoreDivider:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 18, 30)
+    collapsedScoreDivider:SetSize(layout.collapsedWindowWidth - (gutter * 2), 1)
+    collapsedScoreDivider:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", gutter, 30)
     collapsedScoreDivider:Hide()
     frame.collapsedScoreDivider = collapsedScoreDivider
     DeathpoolUI.RegisterCollapsedVisibleRegion(frame, collapsedScoreDivider)
 
     local collapsedPointsValue = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    collapsedPointsValue:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -22, 16)
+    collapsedPointsValue:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -gutter, footerGutter)
     collapsedPointsValue:SetWidth(60)
     collapsedPointsValue:SetJustifyH("RIGHT")
     collapsedPointsValue:Hide()
@@ -533,10 +562,12 @@ end
 local function CreateRecentDeathsSection(ctx)
     local frame = ctx.frame
     local layout = ctx.layout
+    local gutter = layout.outsideGutter
+    local promptWidth = math.floor(((layout.expandedWindowWidth - (gutter * 2)) * 2) / 3)
 
     for _, column in ipairs(ctx.deathLogColumns) do
         local header = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        header:SetPoint("TOPLEFT", frame, "TOPLEFT", column.x, layout.deathLogHeaderY)
+        header:SetPoint("TOPLEFT", frame, "TOPLEFT", gutter + column.x, layout.deathLogHeaderY)
         header:SetWidth(column.width)
         header:SetJustifyH(column.justifyH or "LEFT")
         header:SetWordWrap(false)
@@ -546,15 +577,15 @@ local function CreateRecentDeathsSection(ctx)
     end
 
     local recentDeathsFrame = CreateFrame("Frame", nil, frame)
-    recentDeathsFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, layout.deathLogFrameY)
-    recentDeathsFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, layout.deathLogFrameY)
-    recentDeathsFrame:SetHeight(ctx.maxRecentDeaths * 20)
+    recentDeathsFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", gutter, layout.deathLogFrameY)
+    recentDeathsFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -gutter, layout.deathLogFrameY)
+    recentDeathsFrame:SetHeight(ctx.maxRecentDeaths * layout.deathLogRowHeight)
     frame.recentDeathsFrame = recentDeathsFrame
     DeathpoolUI.RegisterCollapsibleRegion(frame, recentDeathsFrame)
 
     local demoModeWatermark = recentDeathsFrame:CreateFontString(nil, "BACKGROUND", "QuestTitleFont")
     demoModeWatermark:SetPoint("CENTER", recentDeathsFrame, "CENTER", 0, 20)
-    demoModeWatermark:SetWidth(math.floor(((layout.expandedWindowWidth - 14) * 2) / 3))
+    demoModeWatermark:SetWidth(promptWidth)
     demoModeWatermark:SetJustifyH("CENTER")
     demoModeWatermark:SetJustifyV("MIDDLE")
     demoModeWatermark:SetWordWrap(true)
@@ -566,7 +597,7 @@ local function CreateRecentDeathsSection(ctx)
 
     local emptyPredictionPrompt = recentDeathsFrame:CreateFontString(nil, "OVERLAY", "QuestTitleFont")
     emptyPredictionPrompt:SetPoint("CENTER", recentDeathsFrame, "CENTER", 0, 20)
-    emptyPredictionPrompt:SetWidth(math.floor(((layout.expandedWindowWidth - 14) * 2) / 3))
+    emptyPredictionPrompt:SetWidth(promptWidth)
     emptyPredictionPrompt:SetJustifyH("CENTER")
     emptyPredictionPrompt:SetJustifyV("MIDDLE")
     emptyPredictionPrompt:SetWordWrap(true)
@@ -598,7 +629,7 @@ local function CreateRecentDeathsSection(ctx)
 
     local waitingPromptHelpText = recentDeathsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     waitingPromptHelpText:SetPoint("TOP", waitingPromptText, "BOTTOM", 0, -6)
-    waitingPromptHelpText:SetWidth(math.floor(((layout.expandedWindowWidth - 14) * 2) / 3))
+    waitingPromptHelpText:SetWidth(promptWidth)
     waitingPromptHelpText:SetJustifyH("CENTER")
     waitingPromptHelpText:SetJustifyV("TOP")
     waitingPromptHelpText:SetWordWrap(true)
@@ -610,7 +641,7 @@ local function CreateRecentDeathsSection(ctx)
     DeathpoolUI.CreateDeathLogList(recentDeathsFrame, {
         columns = ctx.deathLogColumns,
         rowCount = ctx.maxRecentDeaths,
-        rowHeight = 20,
+        rowHeight = layout.deathLogRowHeight,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
@@ -624,7 +655,7 @@ end
 local function CreateScoreSummarySection(ctx)
     local frame = ctx.frame
     local scoreWidth = 60
-    local scoreX = ctx.layout.expandedWindowWidth - 22 - scoreWidth
+    local scoreX = ctx.layout.expandedWindowWidth - ctx.layout.outsideGutter - scoreWidth
 
     local totalPointsValue = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     totalPointsValue:SetPoint("TOPLEFT", frame, "TOPLEFT", scoreX, ctx.layout.scoreSummaryY)
@@ -686,13 +717,13 @@ local function CreateLevelRangeButtons(ctx)
 
     for index, levelRange in ipairs(ctx.levelRanges) do
         local button = CreateFrame("Button", "DeathpoolLevelRangeButton" .. index, frame, "GameMenuButtonTemplate")
-        button:SetSize(64, 24)
+        button:SetSize(64, layout.compactButtonHeight)
         button:SetPoint(
             "TOPLEFT",
             frame,
             "TOPLEFT",
-            layout.predictionControlX + ((index - 1) * 74),
-            layout.predictionLevelRowY + 8
+            layout.predictionControlX + ((index - 1) * 68),
+            layout.predictionLevelRowY + PREDICTION_LEVEL_CONTROL_ROW_OFFSET_Y
         )
         button:SetText(levelRange)
         button.levelRangeValue = levelRange
@@ -728,11 +759,33 @@ local function CreatePredictionEditBox(frame, name, pointX, pointY)
     local editBox = CreateFrame("EditBox", name, frame, "InputBoxTemplate")
     editBox:SetPoint("TOPLEFT", frame, "TOPLEFT", pointX, pointY)
     editBox:SetAutoFocus(false)
-    editBox:SetSize(180, 24)
+    editBox:SetSize(180, PREDICTION_CONTROL_HEIGHT)
     editBox:SetFontObject("GameFontHighlightSmall")
     editBox:SetText("")
     editBox:SetCursorPosition(0)
     return editBox
+end
+
+---@param frame DeathpoolMainFrameShell
+---@param layout DeathpoolMainLayout
+---@param text string
+---@param rowY number
+---@param controlRowOffsetY number
+---@return DeathpoolWidget
+local function CreatePredictionControlLabel(frame, layout, text, rowY, controlRowOffsetY)
+    local label = DeathpoolUI.AddLabel(
+        frame,
+        text,
+        "TOPLEFT",
+        frame,
+        "TOPLEFT",
+        layout.predictionLabelX,
+        rowY + controlRowOffsetY
+    )
+    label:SetHeight(PREDICTION_CONTROL_HEIGHT)
+    label:SetJustifyH("LEFT")
+    label:SetJustifyV("MIDDLE")
+    return label
 end
 
 ---@param ctx DeathpoolMainBuildContext
@@ -769,11 +822,9 @@ local function CreateIntroDemoAttractPanel(ctx)
 end
 
 ---@param ctx DeathpoolMainBuildContext
----@return DeathpoolWidget
 local function CreatePredictionSection(ctx)
     local frame = ctx.frame
     local layout = ctx.layout
-    local addLabel = DeathpoolUI.AddLabel
 
     local predictionTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     predictionTitle:SetPoint("TOPLEFT", frame, "TOPLEFT", layout.predictionLabelX, layout.predictionSectionTop)
@@ -782,30 +833,27 @@ local function CreatePredictionSection(ctx)
 
     local divider = frame:CreateTexture(nil, "ARTWORK")
     divider:SetColorTexture(1, 0.82, 0, 0.45)
-    divider:SetSize(layout.expandedWindowWidth - 44, 1)
-    divider:SetPoint("TOPLEFT", frame, "TOPLEFT", 22, layout.deathLogDividerY)
+    divider:SetSize(layout.expandedWindowWidth - (layout.outsideGutter * 2), 1)
+    divider:SetPoint("TOPLEFT", frame, "TOPLEFT", layout.outsideGutter, layout.deathLogDividerY)
     DeathpoolUI.RegisterCollapsibleRegion(frame, divider)
 
-    local levelRangeLabel = addLabel(
+    local levelRangeLabel = CreatePredictionControlLabel(
         frame,
+        layout,
         "Level range:",
-        "TOPLEFT",
-        frame,
-        "TOPLEFT",
-        layout.predictionLabelX,
-        layout.predictionLevelRowY
+        layout.predictionLevelRowY,
+        PREDICTION_LEVEL_CONTROL_ROW_OFFSET_Y
     )
     DeathpoolUI.RegisterCollapsibleRegion(frame, levelRangeLabel)
+    frame.levelRangeLabel = levelRangeLabel
     CreateLevelRangeButtons(ctx)
 
-    local sourceLabel = addLabel(
+    local sourceLabel = CreatePredictionControlLabel(
         frame,
+        layout,
         "Source:",
-        "TOPLEFT",
-        frame,
-        "TOPLEFT",
-        layout.predictionLabelX,
-        layout.predictionSourceRowY
+        layout.predictionSourceRowY,
+        PREDICTION_EDIT_CONTROL_ROW_OFFSET_Y
     )
     DeathpoolUI.RegisterCollapsibleRegion(frame, sourceLabel)
     frame.sourceLabel = sourceLabel
@@ -816,8 +864,8 @@ local function CreatePredictionSection(ctx)
     frame.sourceEditBox = CreatePredictionEditBox(
         frame,
         "DeathpoolSourceEditBox",
-        layout.predictionControlX + 5,
-        layout.predictionSourceRowY + 11
+        layout.predictionControlX + PREDICTION_EDIT_CONTROL_OFFSET_X,
+        layout.predictionSourceRowY + PREDICTION_EDIT_CONTROL_ROW_OFFSET_Y
     )
     DeathpoolUI.RegisterCollapsibleRegion(frame, frame.sourceEditBox)
     AttachGameInfoCallout(ctx, frame.sourceEditBox, {
@@ -825,14 +873,12 @@ local function CreatePredictionSection(ctx)
     })
     CreateIntroDemoAttractPanel(ctx)
 
-    local zoneLabel = addLabel(
+    local zoneLabel = CreatePredictionControlLabel(
         frame,
+        layout,
         "Location:",
-        "TOPLEFT",
-        frame,
-        "TOPLEFT",
-        layout.predictionLabelX,
-        layout.predictionZoneRowY
+        layout.predictionZoneRowY,
+        PREDICTION_EDIT_CONTROL_ROW_OFFSET_Y
     )
     DeathpoolUI.RegisterCollapsibleRegion(frame, zoneLabel)
     frame.zoneLabel = zoneLabel
@@ -843,15 +889,14 @@ local function CreatePredictionSection(ctx)
     frame.zoneEditBox = CreatePredictionEditBox(
         frame,
         "DeathpoolZoneEditBox",
-        layout.predictionControlX + 5,
-        layout.predictionZoneRowY + 11
+        layout.predictionControlX + PREDICTION_EDIT_CONTROL_OFFSET_X,
+        layout.predictionZoneRowY + PREDICTION_EDIT_CONTROL_ROW_OFFSET_Y
     )
     DeathpoolUI.RegisterCollapsibleRegion(frame, frame.zoneEditBox)
     AttachGameInfoCallout(ctx, frame.zoneEditBox, {
         FormatPointCallout(SCORE_RULES.fixedElementPoints.zone),
     })
 
-    return zoneLabel
 end
 
 ---@param ctx DeathpoolMainBuildContext
@@ -879,13 +924,18 @@ local function GetCurrentPredictionGameInfoCalloutLines(ctx)
 end
 
 ---@param ctx DeathpoolMainBuildContext
----@param zoneLabel DeathpoolWidget
-local function CreateCurrentPredictionSummarySection(ctx, zoneLabel)
+local function CreateCurrentPredictionSummarySection(ctx)
     local frame = ctx.frame
     local layout = ctx.layout
 
     local currentPredictionTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    currentPredictionTitle:SetPoint("TOPLEFT", zoneLabel, "TOPLEFT", 0, layout.predictionZoneRowY - layout.predictionSourceRowY)
+    currentPredictionTitle:SetPoint(
+        "TOPLEFT",
+        frame,
+        "TOPLEFT",
+        layout.predictionLabelX,
+        layout.predictionZoneRowY + (layout.predictionZoneRowY - layout.predictionSourceRowY)
+    )
     currentPredictionTitle:SetText("Current prediction:")
     frame.currentPredictionLabel = currentPredictionTitle
     DeathpoolUI.RegisterCollapsibleRegion(frame, currentPredictionTitle)
@@ -965,38 +1015,28 @@ local function CreateActionButtons(ctx)
     local frame = ctx.frame
     local layout = ctx.layout
 
-    local lockButton = CreateFrame("Button", "DeathpoolLockButton", frame, "GameMenuButtonTemplate")
-    lockButton:SetSize(120, 28)
-    lockButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -24, layout.predictionButtonY)
-    lockButton:SetText("LOCK IN")
-    lockButton:SetScript("OnClick", function()
-        ---@cast ctx DeathpoolMainContext
-        OnLockButtonClicked(ctx)
-    end)
-    frame.lockButton = lockButton
-    DeathpoolUI.RegisterCollapsibleRegion(frame, lockButton)
     frame.gameInfoCallout = DeathpoolUI.CreateGameInfoCallout("DeathpoolGameInfoCallout", frame)
-    AttachGameInfoCallout(ctx, lockButton, {
-        "Begin the game",
-    })
 
-    local pauseButton = CreateFrame("Button", "DeathpoolPauseButton", frame, "GameMenuButtonTemplate")
-    pauseButton:SetSize(120, 28)
-    pauseButton:SetPoint("RIGHT", lockButton, "LEFT", -16, 0)
-    pauseButton:SetText("PAUSE")
-    pauseButton:SetScript("OnClick", function()
-        ---@cast ctx DeathpoolMainContext
-        OnPauseButtonClicked(ctx)
+    local helpButton = CreateFrame("Button", "DeathpoolHelpButton", frame, "GameMenuButtonTemplate")
+    helpButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
+    helpButton:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", layout.predictionControlX, layout.predictionButtonY)
+    helpButton:SetText("HELP")
+    helpButton:SetScript("OnClick", function()
+        if not helpButton:IsEnabled() then
+            return
+        end
+        frame.helpFrame:Show()
+        frame.helpFrame:Raise()
     end)
-    frame.pauseButton = pauseButton
-    DeathpoolUI.RegisterCollapsibleRegion(frame, pauseButton)
-    AttachGameInfoCallout(ctx, pauseButton, {
-        "Pause to change your prediction",
+    frame.helpButton = helpButton
+    DeathpoolUI.RegisterCollapsibleRegion(frame, helpButton)
+    AttachGameInfoCallout(ctx, helpButton, {
+        "More information",
     })
 
     local bottomLogButton = CreateFrame("Button", "DeathpoolBottomLogButton", frame, "GameMenuButtonTemplate")
-    bottomLogButton:SetSize(100, 28)
-    bottomLogButton:SetPoint("RIGHT", pauseButton, "LEFT", -16, 0)
+    bottomLogButton:SetSize(100, layout.standardButtonHeight)
+    bottomLogButton:SetPoint("LEFT", helpButton, "RIGHT", layout.actionButtonGap, 0)
     bottomLogButton:SetText(DeathpoolUI.LOG_TOGGLE_BUTTON_TEXT)
     bottomLogButton:SetScript("OnClick", function()
         if not bottomLogButton:IsEnabled() then
@@ -1010,21 +1050,32 @@ local function CreateActionButtons(ctx)
         "Open the log window",
     })
 
-    local helpButton = CreateFrame("Button", "DeathpoolHelpButton", frame, "GameMenuButtonTemplate")
-    helpButton:SetSize(120, 28)
-    helpButton:SetPoint("RIGHT", bottomLogButton, "LEFT", -16, 0)
-    helpButton:SetText("HELP")
-    helpButton:SetScript("OnClick", function()
-        if not helpButton:IsEnabled() then
-            return
-        end
-        frame.helpFrame:Show()
-        frame.helpFrame:Raise()
+    local pauseButton = CreateFrame("Button", "DeathpoolPauseButton", frame, "GameMenuButtonTemplate")
+    pauseButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
+    pauseButton:SetPoint("LEFT", bottomLogButton, "RIGHT", layout.actionButtonGap, 0)
+    pauseButton:SetText("PAUSE")
+    pauseButton:SetScript("OnClick", function()
+        ---@cast ctx DeathpoolMainContext
+        OnPauseButtonClicked(ctx)
     end)
-    frame.helpButton = helpButton
-    DeathpoolUI.RegisterCollapsibleRegion(frame, helpButton)
-    AttachGameInfoCallout(ctx, helpButton, {
-        "More information",
+    frame.pauseButton = pauseButton
+    DeathpoolUI.RegisterCollapsibleRegion(frame, pauseButton)
+    AttachGameInfoCallout(ctx, pauseButton, {
+        "Pause to change your prediction",
+    })
+
+    local lockButton = CreateFrame("Button", "DeathpoolLockButton", frame, "GameMenuButtonTemplate")
+    lockButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
+    lockButton:SetPoint("LEFT", pauseButton, "RIGHT", layout.actionButtonGap, 0)
+    lockButton:SetText("LOCK IN")
+    lockButton:SetScript("OnClick", function()
+        ---@cast ctx DeathpoolMainContext
+        OnLockButtonClicked(ctx)
+    end)
+    frame.lockButton = lockButton
+    DeathpoolUI.RegisterCollapsibleRegion(frame, lockButton)
+    AttachGameInfoCallout(ctx, lockButton, {
+        "Begin the game",
     })
 end
 
@@ -1247,9 +1298,9 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
     CreateCollapsedSection(ctx)
     CreateRecentDeathsSection(ctx)
     CreateScoreSummarySection(ctx)
-    local zoneLabel = CreatePredictionSection(ctx)
+    CreatePredictionSection(ctx)
     CreateActionButtons(ctx)
-    CreateCurrentPredictionSummarySection(ctx, zoneLabel)
+    CreateCurrentPredictionSummarySection(ctx)
     AttachMainFrameMethods(ctx)
     InitializeMainFrameDefaults(frame)
 

@@ -75,11 +75,11 @@ dist-docker:
 build:
 	@powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path dist,dist\Deathpool,dist\Deathpool\libs | Out-Null"
 	@powershell -NoProfile -Command "Copy-Item -Recurse libs\LibStub,libs\CallbackHandler-1.0,libs\LibDataBroker-1.1,libs\LibDBIcon-1.0 dist\Deathpool\libs -Force"
-	@powershell -NoProfile -Command "Copy-Item -Recurse LICENSE,*.lua,*.toc dist\Deathpool -Force"
+	@powershell -NoProfile -Command "Copy-Item -Recurse LICENSE.md,*.lua,*.toc dist\Deathpool -Force"
 
 build-ci:
 	@mkdir -p dist/Deathpool
-	@cp LICENSE README.md *.lua *.toc dist/Deathpool/
+	@cp LICENSE.md README.md *.lua *.toc dist/Deathpool/
 	@mkdir -p dist/Deathpool/libs
 	@cp -r libs/LibStub libs/CallbackHandler-1.0 libs/LibDataBroker-1.1 libs/LibDBIcon-1.0 dist/Deathpool/libs/
 

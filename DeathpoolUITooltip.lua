@@ -52,7 +52,7 @@ DeathpoolUI.COLLAPSED_LOG_TOOLTIP_OPTIONS = {
     showIdentity = false,
     showFullCombos = true,
     hoverColumns = {
-        name = true,
+        awardedPoints = true,
     },
 }
 
@@ -183,12 +183,12 @@ end
 ---@param death DeathpoolDeath
 local function AddDeathIdentityDetails(details, death)
     details[#details + 1] = {
-        label = "Name",
-        value = death.name,
-    }
-    details[#details + 1] = {
         label = "Level",
         value = death.level,
+    }
+    details[#details + 1] = {
+        label = "Date",
+        value = DeathpoolUI.GetStoredDeathDateTime(death),
     }
     details[#details + 1] = {
         label = "Source",
@@ -298,12 +298,12 @@ local function BuildStandardizedTooltipDetails(context, showPredictionString, sh
     local displayStreakMultiplier = DeathpoolUI.GetMultiplierDisplay(summary.streakMultiplier)
     local displayTotalMultiplier = DeathpoolUI.GetMultiplierDisplay(summary.comboSum)
 
-    if death ~= nil and showIdentity == true then
-        AddDeathIdentityDetails(details, death)
+    if showPredictionString == true then
+        AddPredictionTextDetails(details, false, summary.predictionText)
     end
 
-    if showPredictionString == true then
-        AddPredictionTextDetails(details, death ~= nil and showIdentity == true, summary.predictionText)
+    if death ~= nil and showIdentity == true then
+        AddDeathIdentityDetails(details, death)
     end
 
     details[#details + 1] = {

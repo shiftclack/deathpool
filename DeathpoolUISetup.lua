@@ -186,6 +186,7 @@ end
 ---@param ownerFrame table
 ---@return DeathpoolSetupFrame
 function DeathpoolUISetup.CreateWindow(ownerFrame)
+    local layout = DeathpoolUI.LAYOUT
     local setupFrame = CreateFrame("Frame", "DeathpoolSetupFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast setupFrame DeathpoolSetupFrame
     setupFrame.ownerFrame = ownerFrame
@@ -234,7 +235,7 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
 
     local enableDeathAnnouncementsButton = CreateFrame("Button", nil, setupFrame, "GameMenuButtonTemplate")
     ---@cast enableDeathAnnouncementsButton DeathpoolSetupButton
-    enableDeathAnnouncementsButton:SetSize(96, 24)
+    enableDeathAnnouncementsButton:SetSize(96, layout.compactButtonHeight)
     enableDeathAnnouncementsButton:SetPoint("TOPLEFT", setupFrame, "TOPLEFT", 70, -64)
     enableDeathAnnouncementsButton:GetFontString():ClearAllPoints()
     enableDeathAnnouncementsButton:GetFontString():SetPoint("CENTER", enableDeathAnnouncementsButton, "CENTER", 0, -1)
@@ -260,7 +261,7 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
 
     local joinHardcoreDeathsButton = CreateFrame("Button", nil, setupFrame, "GameMenuButtonTemplate")
     ---@cast joinHardcoreDeathsButton DeathpoolSetupButton
-    joinHardcoreDeathsButton:SetSize(96, 24)
+    joinHardcoreDeathsButton:SetSize(96, layout.compactButtonHeight)
     joinHardcoreDeathsButton:SetPoint("TOPLEFT", enableDeathAnnouncementsButton, "BOTTOMLEFT", 0, -8)
     joinHardcoreDeathsButton:GetFontString():ClearAllPoints()
     joinHardcoreDeathsButton:GetFontString():SetPoint("CENTER", joinHardcoreDeathsButton, "CENTER", 0, -1)

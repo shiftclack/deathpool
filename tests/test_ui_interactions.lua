@@ -162,6 +162,7 @@ local function testRefreshMethods()
             Fixtures.storedDeath({
                 timestamp = 99,
                 name = "Leeroy",
+                sourceName = "Drowning",
                 points = 2,
                 multiplierValue = 1,
                 awardedPoints = 2,
@@ -178,6 +179,7 @@ local function testRefreshMethods()
     local Deathpool = context.Deathpool
     local DeathpoolDebug = context.DeathpoolDebug
     local DeathpoolLog = context.DeathpoolLog
+    local historySourceWidth = context.DeathpoolUI.HISTORY_LOG_COLUMNS[2].width
 
     Deathpool:RefreshDeaths()
     Deathpool:RefreshLockedPrediction()
@@ -188,7 +190,10 @@ local function testRefreshMethods()
     )
     DeathpoolLog:RefreshHistory()
 
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Drakedog", "recent death rows should display the latest death name")
+    assertEquals(Deathpool.deathRows[1].name, nil, "recent death rows should not create the removed name column")
+    assertEquals(Deathpool.deathRows[1].level:GetText(), "12", "recent death rows should display the latest death level")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Hogger", "recent death rows should display the latest death source")
+    assertEquals(Deathpool.deathRows[1].zone:GetText(), "Elwynn Forest", "recent death rows should display the latest death location")
     assertEquals(Deathpool.deathRows[1].pointsTooltipTarget, nil, "recent death rows should not create the removed base points hover target")
     assertEquals(Deathpool.deathRows[1].multiplier, nil, "recent death rows should not create the removed combo column")
     assertEquals(Deathpool.deathRows[1].streakMultiplier, nil, "recent death rows should not create the removed streak column")
@@ -201,10 +206,12 @@ local function testRefreshMethods()
         "Level 20-29, source Hogger, or zone Elwynn Forest",
         "locked prediction summary should reflect the stored prediction"
     )
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].name:GetText(), "Drakedog", "collapsed death log should still show the newest death when only one entry exists")
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].level:GetText(), "12", "collapsed death log should show the latest level")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].name, nil, "collapsed death log should not create the removed name column")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].time:GetText(), DeathpoolUI.GetStoredDeathTime(fullPredictionDeath), "collapsed death log should show the latest time")
     assertEquals(Deathpool.collapsedLogFrame.rows[1].sourceName:GetText(), "Hogger", "collapsed death log should show the latest source")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].level:GetText(), "12", "collapsed death log should show the latest level")
     assertEquals(Deathpool.collapsedLogFrame.rows[1].zone:GetText(), "Elwynn Forest", "collapsed death log should show the latest zone")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].awardedPoints:GetText(), fullPredictionScore.awardedPoints, "collapsed death log should show the latest points")
     assertEquals(Deathpool.collapsedPointsValue:GetText(), "1,234", "collapsed score should show the running total with comma separators")
     assertEquals(Deathpool.deathRows[1]:GetScript("OnEnter"), nil, "recent death rows should not show tooltips from whole-row hover")
     hoverDeathLogCell(Deathpool.deathRows[1], "awardedPoints")
@@ -228,17 +235,19 @@ local function testRefreshMethods()
     leaveDeathLogCell(Deathpool.deathRows[1], "awardedPoints")
     assertEquals(GameTooltip.visible, false, "leaving a recent death score cell should hide the tooltip")
     assertEquals(Deathpool.collapsedLogFrame.rows[1]:GetScript("OnEnter"), nil, "collapsed death log rows should not show tooltips from whole-row hover")
+    assertNoDeathLogCellTooltipTarget(Deathpool.collapsedLogFrame.rows[1], "time", "collapsed death log should not create a time-column tooltip target")
     assertNoDeathLogCellTooltipTarget(Deathpool.collapsedLogFrame.rows[1], "level", "collapsed death log should not create a level-column tooltip target")
+    assertNoDeathLogCellTooltipTarget(Deathpool.collapsedLogFrame.rows[1], "name", "collapsed death log should not create a name-column tooltip target")
     assertNoDeathLogCellTooltipTarget(Deathpool.collapsedLogFrame.rows[1], "sourceName", "collapsed death log should not create a source-column tooltip target")
     assertNoDeathLogCellTooltipTarget(Deathpool.collapsedLogFrame.rows[1], "zone", "collapsed death log should not create a location-column tooltip target")
-    hoverDeathLogCell(Deathpool.collapsedLogFrame.rows[1], "name")
-    assertEquals(GameTooltip.lines[1].left, "Base points:", "collapsed death log name hover should start with scoring in compact mode")
-    assertTruthy(findTooltipLineIndex("Name:") == nil, "collapsed death log name hover should omit identity rows in compact mode")
-    assertTruthy(findTooltipLineIndex("Location:") == nil, "collapsed death log name hover should omit location rows in compact mode")
-    assertTruthy(findTooltipLineIndex("Level 10-19, source Hogger, or zone Elwynn Forest.") == nil, "collapsed death log name hover should omit the prediction text in compact mode")
-    assertTooltipLineOrder("Base points:", "Same zone:", "collapsed death log name hover should place same-zone bonus after base points")
-    leaveDeathLogCell(Deathpool.collapsedLogFrame.rows[1], "name")
-    assertEquals(GameTooltip.visible, false, "leaving a collapsed death log name cell should hide the tooltip")
+    hoverDeathLogCell(Deathpool.collapsedLogFrame.rows[1], "awardedPoints")
+    assertEquals(GameTooltip.lines[1].left, "Base points:", "collapsed death log points hover should start with scoring in compact mode")
+    assertTruthy(findTooltipLineIndex("Name:") == nil, "collapsed death log points hover should omit identity rows in compact mode")
+    assertTruthy(findTooltipLineIndex("Location:") == nil, "collapsed death log points hover should omit location rows in compact mode")
+    assertTruthy(findTooltipLineIndex("Level 10-19, source Hogger, or zone Elwynn Forest.") == nil, "collapsed death log points hover should omit the prediction text in compact mode")
+    assertTooltipLineOrder("Base points:", "Same zone:", "collapsed death log points hover should place same-zone bonus after base points")
+    leaveDeathLogCell(Deathpool.collapsedLogFrame.rows[1], "awardedPoints")
+    assertEquals(GameTooltip.visible, false, "leaving a collapsed death log points cell should hide the tooltip")
     assertEquals(Deathpool.sourceEditBox:GetText(), "Hogger", "refresh should populate the source edit box from locked prediction")
     assertEquals(Deathpool.zoneEditBox:GetText(), "Elwynn Forest", "refresh should populate the zone edit box from locked prediction")
     assertEquals(DeathpoolDebug.detailValues.name:GetText(), "Drakedog", "debug window should show the latest name")
@@ -265,19 +274,26 @@ local function testRefreshMethods()
     assertEquals(DeathpoolDebug.detailValues.awardedPoints:GetText(), fullPredictionScore.awardedPoints, "debug window should show awarded points")
     assertEquals(DeathpoolDebug.detailValues.timestamp, nil, "debug window should remove the old timestamp field")
     assertEquals(DeathpoolDebug.detailValues.causeType, nil, "debug window should remove the old cause type field")
-    assertEquals(DeathpoolLog.rows[1].name:GetText(), "Drakedog", "history log should show newest entries first")
+    assertEquals(DeathpoolLog.columnHeaders.sourceName:GetText(), "Source", "successful history should show the source column label")
+    assertEquals(DeathpoolLog.columnHeaders.level, nil, "successful history should omit the level column header")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetWidth(), historySourceWidth, "successful history should give the source column the scrollbar-aware width")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetText(), "Hogger", "successful history should show the death source")
+    assertEquals(DeathpoolLog.rows[1].level, nil, "successful history should not create death level cells")
     assertEquals(DeathpoolLog.rows[1].awardedPoints:GetText(), fullPredictionScore.awardedPoints, "history log should recalculate stale persisted totals from the saved prediction")
     assertEquals(DeathpoolLog.rows[1]:GetScript("OnEnter"), nil, "history log rows should not show tooltips from whole-row hover")
     assertNoDeathLogCellTooltipTarget(DeathpoolLog.rows[1], "time", "history log should not create a time-column tooltip target")
-    assertNoDeathLogCellTooltipTarget(DeathpoolLog.rows[1], "name", "history log should not create a name-column tooltip target")
+    assertNoDeathLogCellTooltipTarget(DeathpoolLog.rows[1], "sourceName", "history log should not create a source-column tooltip target")
     assertNoDeathLogCellTooltipTarget(DeathpoolLog.rows[1], "level", "history log should not create a level-column tooltip target")
     hoverDeathLogCell(DeathpoolLog.rows[1], "awardedPoints")
-    assertEquals(GameTooltip.lines[1].left, "Name:", "history log points hover should still start with the stored death details")
+    assertEquals(GameTooltip.lines[1].left, "Level 10-19, source Hogger, or zone Elwynn Forest.", "history log points hover should start with the prediction text")
+    assertEquals(GameTooltip.lines[1].right, "", "history log points hover prediction text should keep the right column blank")
+    assertTruthy(findTooltipLineIndex("Name:") == nil, "history log points hover should omit the dead player name")
+    assertTruthy(findTooltipLineIndex("---------") == nil, "history log points hover should omit the old prediction divider")
     assertEquals(GameTooltip.lines[2].left, "Level:", "history log points hover should show identity rows when requested")
-    assertEquals(GameTooltip.lines[5].left, "---------", "history log points hover should include a divider before the prediction text")
-    assertEquals(GameTooltip.lines[5].right, "", "history log points hover divider should keep the right column blank")
-    assertEquals(GameTooltip.lines[6].left, "Level 10-19, source Hogger, or zone Elwynn Forest.", "history log points hover should show the prediction text after the divider")
-    assertEquals(GameTooltip.lines[6].right, "", "history log points hover prediction text should keep the right column blank")
+    assertEquals(GameTooltip.lines[3].left, "Date:", "history log points hover should show the death date below level")
+    assertEquals(GameTooltip.lines[3].right, "January 01, 1970 10:05", "history log points hover should show the full death date and time")
+    assertTooltipLineOrder("Level:", "Date:", "history log points hover should place the death date below level")
+    assertTooltipLineOrder("Date:", "Source:", "history log points hover should place the source below the death date")
     assertTooltipLineExists("Base points:", "history log points hover should show the base points after the identity rows")
     assertTooltipLineOrder("Location:", "Base points:", "history log points hover should place base points after the identity rows")
     assertTooltipLineExists("Same zone:", "history log points hover should include the same-zone row for real deaths")
@@ -346,7 +362,7 @@ local function testRefreshMethods()
     end
     leaveDeathLogCell(DeathpoolLog.rows[1], "awardedPoints")
     assertEquals(GameTooltip.visible, false, "leaving a history log points cell should hide the tooltip")
-    assertEquals(DeathpoolLog.rows[2].name:GetText(), "Leeroy", "history log should default to the successful prediction list")
+    assertEquals(DeathpoolLog.rows[2].sourceName:GetText(), "Drowning", "history log should default to the successful prediction source list")
     assertEquals(DeathpoolLog.filterButton:GetText(), "SHOW ALL", "history log should default the filter button to the alternate view action")
 
     DeathpoolLog.filterButton:GetScript("OnClick")()
@@ -355,8 +371,12 @@ local function testRefreshMethods()
     assertEquals(DeathpoolLog.logSubtitle:GetText(), "All Predictions", "history filter should restore the all-deaths subtitle")
     assertEquals(DeathpoolLog.filterButton:GetText(), "SHOW SUCCESS ONLY", "history filter should offer the success-only action while unfiltered")
     assertEquals(DeathpoolLog.columnHeaders.time:GetText(), "Time", "all-history mode should restore the time column label")
-    assertEquals(DeathpoolLog.rows[1].name:GetText(), "Drakedog", "all-history mode should keep the newest history entry first")
-    assertEquals(DeathpoolLog.rows[2].name:GetText(), "Alamo", "all-history mode should include older entries underneath")
+    assertEquals(DeathpoolLog.columnHeaders.sourceName:GetText(), "Source", "all-history mode should use the source column label")
+    assertEquals(DeathpoolLog.columnHeaders.level, nil, "all-history mode should omit the level column header")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetWidth(), historySourceWidth, "all-history mode should keep the scrollbar-aware source column width")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetText(), "Hogger", "all-history mode should show the newest history source first")
+    assertEquals(DeathpoolLog.rows[1].level, nil, "all-history mode should not create level cells")
+    assertEquals(DeathpoolLog.rows[2].sourceName:GetText(), "Defias", "all-history mode should include older sources underneath")
 
     DeathpoolLog.filterButton:GetScript("OnClick")()
 
@@ -364,10 +384,14 @@ local function testRefreshMethods()
     assertEquals(DeathpoolLog.logSubtitle:GetText(), "Successful Predictions", "history filter should relabel the window for success-only mode")
     assertEquals(DeathpoolLog.filterButton:GetText(), "SHOW ALL", "history filter should restore the all-deaths action while filtered")
     assertEquals(DeathpoolLog.columnHeaders.time:GetText(), "Rank", "success-only history should relabel the time column as rank")
+    assertEquals(DeathpoolLog.columnHeaders.sourceName:GetText(), "Source", "success-only history should show the source column label")
+    assertEquals(DeathpoolLog.columnHeaders.level, nil, "success-only history should omit the level column label")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetWidth(), historySourceWidth, "success-only history should use the scrollbar-aware source column after toggling back")
     assertEquals(DeathpoolLog.rows[1].time:GetText(), "#1", "success-only history should show the highest-scoring death as rank one")
     assertEquals(DeathpoolLog.rows[2].time:GetText(), "#2", "success-only history should show lower-scoring deaths with later ranks")
-    assertEquals(DeathpoolLog.rows[1].name:GetText(), "Drakedog", "success-only history should keep successful deaths visible")
-    assertEquals(DeathpoolLog.rows[2].name:GetText(), "Leeroy", "success-only history should sort lower-scoring successes underneath higher-scoring ones")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetText(), "Hogger", "success-only history should show the highest-scoring death source")
+    assertEquals(DeathpoolLog.rows[1].level, nil, "success-only history should not create level cells")
+    assertEquals(DeathpoolLog.rows[2].sourceName:GetText(), "Drowning", "success-only history should sort lower-scoring death sources underneath higher-scoring ones")
 end
 
 local function testTooltipUsesGreenForPositiveStreakRow()
@@ -577,7 +601,7 @@ local function testRefreshMethodsPreferIntroDemoStateOverLiveDatabase()
     Deathpool:RefreshLockedPrediction()
     Deathpool:RefreshCollapsedSummary()
 
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Demohunter", "demo refresh should prefer demo deaths over live database deaths")
+    assertEquals(Deathpool.deathRows[1].name, nil, "demo refresh should not create the removed name column")
     assertEquals(Deathpool.deathRows[1].level:GetText(), "34", "demo refresh should prefer the demo death level")
     assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Burning Blade Cultist", "demo refresh should prefer the demo death source")
     assertEquals(Deathpool.deathRows[1].zone:GetText(), "Desolace", "demo refresh should prefer the demo death zone")
@@ -589,7 +613,7 @@ local function testRefreshMethodsPreferIntroDemoStateOverLiveDatabase()
         "Level 30-39, source Burning Blade Cultist, or zone Desolace",
         "demo refresh should prefer the demo locked prediction"
     )
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].name:GetText(), "Demohunter", "demo refresh should prefer the demo collapsed death log")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].sourceName:GetText(), "Burning Blade Cultist", "demo refresh should prefer the demo collapsed death log")
     assertEquals(Deathpool.collapsedPointsValue:GetText(), "44", "demo refresh should prefer the demo collapsed score")
 end
 
@@ -675,20 +699,20 @@ local function testEmptyPredictionPromptReplacesMainDeathLogUntilPredictionSelec
 
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), true, "main window should show the empty-prediction prompt when nothing is selected")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "main window should hide recent death rows until a prediction exists")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Promptcheck", "hidden prompt rows should retain current death text")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Hogger", "hidden prompt rows should retain current death source")
 
     Deathpool.levelRangeButtons[2]:GetScript("OnClick")(Deathpool.levelRangeButtons[2])
 
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), true, "selecting a prediction should keep the empty-prediction prompt visible before lock-in")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "selecting a prediction should keep recent death rows hidden before lock-in")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Promptcheck", "selecting a prediction should not clear hidden death rows")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Hogger", "selecting a prediction should not clear hidden death rows")
 
     Deathpool.lockButton:GetScript("OnClick")()
 
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "locking in a prediction should hide the empty-prediction prompt")
     assertEquals(Deathpool.deathRows[1]:IsShown(), true, "locking in a prediction should show recent death rows again")
     assertEquals(DeathpoolCharacterState.hasSeenFirstRun, true, "locking in a prediction should persist the first-run flag")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Promptcheck", "recent deaths should return once a prediction is selected")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Hogger", "recent deaths should return once a prediction is selected")
 end
 
 local function testSetupWindowShowsBothIncompleteSetupItems()
@@ -913,7 +937,7 @@ local function testReturningPlayersDoNotSeeFirstRunPrompt()
 
     assertEquals(Deathpool.emptyPredictionPrompt:IsShown(), false, "returning players should not see the first-run prompt")
     assertEquals(Deathpool.deathRows[1]:IsShown(), true, "returning players should keep the recent death log visible")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Veterancheck", "returning players should still see recent deaths")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Hogger", "returning players should still see recent deaths")
 end
 
 local function testWaitingForFirstDeathNotificationUsesSharedPromptPane()
@@ -1063,13 +1087,13 @@ local function testWaitingForFirstDeathNotificationStaysVisibleForMinimumDuratio
     assertEquals(Deathpool.waitingPromptText:IsShown(), true, "incoming deaths should keep the waiting prompt visible until the minimum duration completes")
     assertEquals(Deathpool.waitingPromptDots:GetText(), "..", "incoming deaths should preserve the current waiting animation state")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "incoming deaths should stay hidden while the waiting prompt minimum duration is still active")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Soonenough", "incoming deaths should populate hidden rows while waiting")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Defias Trapper", "incoming deaths should populate hidden rows while waiting")
 
 ---@diagnostic disable-next-line: need-check-nil
     Deathpool:GetScript("OnUpdate")(Deathpool, WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS - 3)
     assertEquals(Deathpool.waitingPromptText:IsShown(), true, "incoming deaths should still wait until the minimum duration before revealing the log")
     assertEquals(Deathpool.deathRows[1]:IsShown(), false, "incoming deaths should remain hidden before the minimum duration completes")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Soonenough", "waiting rows should keep populated death data before reveal")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Defias Trapper", "waiting rows should keep populated death data before reveal")
     assertEquals(Deathpool.waitingPromptHelpText:IsShown(), false, "incoming deaths should not show the no-deaths help prompt while a death is already ready")
 
 ---@diagnostic disable-next-line: need-check-nil
@@ -1078,7 +1102,7 @@ local function testWaitingForFirstDeathNotificationStaysVisibleForMinimumDuratio
     assertEquals(Deathpool.waitingPromptDots:IsShown(), false, "incoming deaths should hide the animated dots after the minimum duration")
     assertEquals(Deathpool.waitingPromptHelpText:IsShown(), false, "incoming deaths should keep the no-deaths help prompt hidden once the death log appears")
     assertEquals(Deathpool.deathRows[1]:IsShown(), true, "incoming deaths should appear once the waiting prompt minimum duration completes")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Soonenough", "incoming deaths should render after the waiting prompt minimum duration completes")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Defias Trapper", "incoming deaths should render after the waiting prompt minimum duration completes")
 end
 
 local function testSuccessOnlyHistoryUsesTimestampTieBreakerForEqualScores()
@@ -1089,7 +1113,7 @@ local function testSuccessOnlyHistoryUsesTimestampTieBreakerForEqualScores()
                 timestamp = 300,
                 name = "Laterdeath",
                 level = 12,
-                sourceName = "Hogger",
+                sourceName = "Later Source",
                 zone = "Elwynn Forest",
                 prediction = {
                     elements = {
@@ -1103,7 +1127,7 @@ local function testSuccessOnlyHistoryUsesTimestampTieBreakerForEqualScores()
                 timestamp = 100,
                 name = "Earlierdeath",
                 level = 12,
-                sourceName = "Hogger",
+                sourceName = "Earlier Source",
                 zone = "Elwynn Forest",
                 prediction = {
                     elements = {
@@ -1123,10 +1147,12 @@ local function testSuccessOnlyHistoryUsesTimestampTieBreakerForEqualScores()
     assertEquals(DeathpoolLog.logSubtitle:GetText(), "Successful Predictions", "success-only refresh should keep the success subtitle")
     assertEquals(DeathpoolLog.filterButton:GetText(), "SHOW ALL", "success-only refresh should offer the all-history action")
     assertEquals(DeathpoolLog.columnHeaders.time:GetText(), "Rank", "success-only refresh should relabel the first column as rank")
+    assertEquals(DeathpoolLog.columnHeaders.level, nil, "success-only refresh should omit the level column")
     assertEquals(DeathpoolLog.rows[1].time:GetText(), "#1", "success-only refresh should show the first visible row as rank one")
     assertEquals(DeathpoolLog.rows[2].time:GetText(), "#2", "success-only refresh should show the second visible row as rank two")
-    assertEquals(DeathpoolLog.rows[1].name:GetText(), "Laterdeath", "success-only refresh should surface later equal-score deaths first after reverse rendering")
-    assertEquals(DeathpoolLog.rows[2].name:GetText(), "Earlierdeath", "success-only refresh should place earlier equal-score deaths underneath after reverse rendering")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetText(), "Later Source", "success-only refresh should show the later equal-score death source first after reverse rendering")
+    assertEquals(DeathpoolLog.rows[1].level, nil, "success-only refresh should not create level cells")
+    assertEquals(DeathpoolLog.rows[2].sourceName:GetText(), "Earlier Source", "success-only refresh should place the earlier equal-score death source underneath after reverse rendering")
 end
 
 local function testPredictionButtons()
@@ -1298,13 +1324,18 @@ end
 local function testCurrentPredictionSummaryAnchorsBelowLocation()
     local context = createUIContext()
     local Deathpool = context.Deathpool
+    local layout = _G.DeathpoolUI.LAYOUT
 
     local titlePoint, titleRelativeTo, titleRelativePoint, titleXOffset, titleYOffset = Deathpool.currentPredictionLabel:GetPoint(1)
     assertEquals(titlePoint, "TOPLEFT", "current prediction label should anchor from its top left")
-    assertEquals(titleRelativeTo, Deathpool.zoneLabel, "current prediction label should anchor below the location label")
-    assertEquals(titleRelativePoint, "TOPLEFT", "current prediction label should align to the location label's top left")
-    assertEquals(titleXOffset, 0, "current prediction label should keep the same horizontal alignment as location")
-    assertEquals(titleYOffset, -36, "current prediction label should keep the same row spacing as source to location")
+    assertEquals(titleRelativeTo, Deathpool, "current prediction label should anchor to the main frame")
+    assertEquals(titleRelativePoint, "TOPLEFT", "current prediction label should use the main frame origin")
+    assertEquals(titleXOffset, layout.predictionLabelX, "current prediction label should keep the label column alignment")
+    assertEquals(
+        titleYOffset,
+        layout.predictionZoneRowY + (layout.predictionZoneRowY - layout.predictionSourceRowY),
+        "current prediction label should keep the same absolute row position"
+    )
 
     local valuePoint, valueRelativeTo, valueRelativePoint, valueXOffset, valueYOffset = Deathpool.lockedPredictionValue:GetPoint(1)
     assertEquals(valuePoint, "TOPLEFT", "current prediction text should anchor from its top left")
@@ -1493,7 +1524,7 @@ local function testZeroScoreDeathDisplaysOnlyTotalPointsInMainWindow()
     assertEquals(Deathpool.deathRows[1].multiplier, nil, "recent death rows should omit the removed combo column")
     assertEquals(Deathpool.deathRows[1].streakMultiplier, nil, "recent death rows should omit the removed streak column")
     assertEquals(Deathpool.deathRows[1].awardedPoints:GetText(), "0", "recent death rows should show zero total points in the points column")
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].name:GetText(), "Drakedog", "collapsed death log should still render zero-score deaths")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].sourceName:GetText(), "Hogger", "collapsed death log should still render zero-score deaths")
     assertEquals(Deathpool.collapsedPointsValue:GetText(), "0", "collapsed score should still show zero totals")
 
     assertEquals(Deathpool.deathRows[1]:GetScript("OnEnter"), nil, "zero-score recent death rows should still avoid whole-row tooltips")
@@ -1545,8 +1576,8 @@ local function testCollapsedDeathLogShowsNewestRecentDeathsAtBottom()
     Deathpool:RefreshDeaths()
     Deathpool:RefreshCollapsedSummary()
 
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].name:GetText(), "Alamo", "collapsed death log should keep older recent deaths above newer ones")
-    assertEquals(Deathpool.collapsedLogFrame.rows[2].name:GetText(), "Drakedog", "collapsed death log should keep the newest stored recent death at the bottom")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].sourceName:GetText(), "Defias", "collapsed death log should keep older recent deaths above newer ones")
+    assertEquals(Deathpool.collapsedLogFrame.rows[2].sourceName:GetText(), "Hogger", "collapsed death log should keep the newest stored recent death at the bottom")
 end
 
 local function testFlexibleDeathLogListSupportsCustomColumns()
@@ -1607,7 +1638,8 @@ local function testFlexibleDeathLogListSupportsCustomColumns()
     assertEquals(flexibleLog.rows[2].name:GetText(), "Alamo", "flexible death log should continue rendering older rows underneath")
 
     flexibleLog.rows[1]:GetScript("OnEnter")(flexibleLog.rows[1])
-    assertEquals(GameTooltip.lines[1].left, "Name:", "flexible death log should reuse the history tooltip behavior")
+    assertEquals(GameTooltip.lines[1].left, "Level 10-19, source Hogger, or zone Elwynn Forest.", "flexible death log should reuse the history tooltip behavior")
+    assertTruthy(findTooltipLineIndex("Name:") == nil, "flexible death log should omit the dead player name from the tooltip")
     assertEquals(GameTooltip.lines[2].left, "Level:", "flexible death log should reuse identity rows in the tooltip")
     flexibleLog.rows[1]:GetScript("OnLeave")()
     assertEquals(GameTooltip.visible, false, "leaving a flexible death log row should hide the tooltip")
@@ -1669,7 +1701,8 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
 
     local customColumns = {
         { key = "name", label = "Name", x = 0, width = 80 },
-        { key = "awardedPoints", label = "Total", x = 84, width = 36 },
+        { key = "sourceName", label = "Source", x = 84, width = 80 },
+        { key = "awardedPoints", label = "Total", x = 168, width = 36 },
     }
     local death = Fixtures.storedDeath()
 
@@ -1717,7 +1750,8 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
     assertEquals(logWindowLog.rows[1]:GetScript("OnEnter"), nil, "log window tooltip options should disable whole-row hover when points-only targets are enabled")
     assertNoDeathLogCellTooltipTarget(logWindowLog.rows[1], "name", "log window tooltip options should not create a name-column tooltip target")
     hoverDeathLogCell(logWindowLog.rows[1], "awardedPoints")
-    assertEquals(GameTooltip.lines[1].left, "Name:", "log window tooltip options should start with identity rows")
+    assertEquals(GameTooltip.lines[1].left, "Level 10-19, source Hogger, or zone Elwynn Forest.", "log window tooltip options should start with the prediction text")
+    assertTruthy(findTooltipLineIndex("Name:") == nil, "log window tooltip options should omit the dead player name")
     assertEquals(GameTooltip.lines[2].left, "Level:", "log window tooltip options should include level before base points")
     leaveDeathLogCell(logWindowLog.rows[1], "awardedPoints")
 
@@ -1738,13 +1772,14 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
         reverseOrder = false,
     })
 
-    assertEquals(collapsedStyleLog.rows[1]:GetScript("OnEnter"), nil, "collapsed log tooltip options should disable whole-row hover when name-only targets are enabled")
-    assertNoDeathLogCellTooltipTarget(collapsedStyleLog.rows[1], "awardedPoints", "collapsed log tooltip options should not create a points-column tooltip target")
-    hoverDeathLogCell(collapsedStyleLog.rows[1], "name")
+    assertEquals(collapsedStyleLog.rows[1]:GetScript("OnEnter"), nil, "collapsed log tooltip options should disable whole-row hover when points-only targets are enabled")
+    assertNoDeathLogCellTooltipTarget(collapsedStyleLog.rows[1], "name", "collapsed log tooltip options should not create a name-column tooltip target")
+    assertNoDeathLogCellTooltipTarget(collapsedStyleLog.rows[1], "sourceName", "collapsed log tooltip options should not create a source-column tooltip target")
+    hoverDeathLogCell(collapsedStyleLog.rows[1], "awardedPoints")
     assertEquals(GameTooltip.lines[1].left, "Base points:", "collapsed log tooltip options should start with scoring rows in compact mode")
     assertTruthy(findTooltipLineIndex("Name:") == nil, "collapsed log tooltip options should omit identity rows in compact mode")
     assertTruthy(findTooltipLineIndex("Level 10-19, source Hogger, or zone Elwynn Forest.") == nil, "collapsed log tooltip options should omit prediction text in compact mode")
-    leaveDeathLogCell(collapsedStyleLog.rows[1], "name")
+    leaveDeathLogCell(collapsedStyleLog.rows[1], "awardedPoints")
 
     local historyStyleLog = CreateFrame("Frame", nil, UIParent)
     DeathpoolUI.CreateDeathLogList(historyStyleLog, {
@@ -1770,7 +1805,8 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
     assertTruthy(type(historyStyleLog.rows[1]:GetScript("OnEnter")) == "function", "history tooltip options should keep whole-row hover enabled")
     assertNoDeathLogCellTooltipTarget(historyStyleLog.rows[1], "awardedPoints", "history tooltip options should not create a points-column tooltip target")
     historyStyleLog.rows[1]:GetScript("OnEnter")(historyStyleLog.rows[1])
-    assertEquals(GameTooltip.lines[1].left, "Name:", "history tooltip options should still start with identity rows")
+    assertEquals(GameTooltip.lines[1].left, "Level 10-19, source Hogger, or zone Elwynn Forest.", "history tooltip options should start with the prediction text")
+    assertTruthy(findTooltipLineIndex("Name:") == nil, "history tooltip options should omit the dead player name")
     assertEquals(GameTooltip.lines[2].left, "Level:", "history tooltip options should still include level before base points")
     historyStyleLog.rows[1]:GetScript("OnLeave")()
 end

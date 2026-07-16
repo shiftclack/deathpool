@@ -83,7 +83,7 @@ end
 ---@return DeathpoolDeathDisplayFields
 local function CreateDisplayFields(death)
     return {
-        time = DeathpoolUI.GetDeathFieldValue(DeathpoolLogic.GetStoredDeathTime(death)),
+        time = DeathpoolUI.GetDeathFieldValue(DeathpoolUI.GetStoredDeathTime(death)),
         name = DeathpoolUI.GetDeathFieldValue(death.name),
         level = DeathpoolUI.GetDeathFieldValue(death.level),
         sourceName = DeathpoolUI.GetDeathFieldValue(death.sourceName),

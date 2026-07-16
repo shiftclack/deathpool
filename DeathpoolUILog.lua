@@ -24,10 +24,11 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
     ---@type DeathpoolMainLayout
     local layout = DeathpoolUI.LAYOUT
     local visibleRows = layout.logVisibleRows
-    local rowLeft = 10
-    local headerTop = -55
-    local rowTop = -72
-    local filterButtonBottom = 15
+    local rowHeight = layout.deathLogRowHeight
+    local rowLeft = layout.outsideGutter
+    local headerTop = layout.historyLogHeaderY
+    local rowTop = layout.historyLogFrameY
+    local filterButtonBottom = layout.footerGutter
     ---@type DeathpoolCharacterState
     local state = DeathpoolUI.GetState(parentFrame)
 
@@ -42,9 +43,21 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
     DeathpoolLog:Hide()
 
     local dragHandle = CreateFrame("Frame", nil, DeathpoolLog)
-    dragHandle:SetPoint("TOPLEFT", DeathpoolLog, "TOPLEFT", 8, -4)
-    dragHandle:SetPoint("TOPRIGHT", DeathpoolLog, "TOPRIGHT", -32, -4)
-    dragHandle:SetHeight(24)
+    dragHandle:SetPoint(
+        "TOPLEFT",
+        DeathpoolLog,
+        "TOPLEFT",
+        layout.titlebarDragLeftInset,
+        layout.titlebarDragTopInset
+    )
+    dragHandle:SetPoint(
+        "TOPRIGHT",
+        DeathpoolLog,
+        "TOPRIGHT",
+        -layout.titlebarDragRightInset,
+        layout.titlebarDragTopInset
+    )
+    dragHandle:SetHeight(layout.titlebarDragHeight)
     dragHandle:EnableMouse(true)
     dragHandle:RegisterForDrag("LeftButton")
     dragHandle:SetScript("OnDragStart", function()
@@ -67,7 +80,7 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
     logTitle:SetText("LOG")
 
     local logSubtitle = DeathpoolLog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    logSubtitle:SetPoint("TOP", logTitle, "BOTTOM", 0, -10)
+    logSubtitle:SetPoint("TOP", DeathpoolLog, "TOP", 0, layout.historySubtitleY)
     logSubtitle:SetText(
         DeathpoolDatabase.GetHistorySuccessfulOnly(state)
             and DeathpoolUI.HISTORY_SUBTITLE_SUCCESS_ONLY
@@ -85,8 +98,6 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
         header:SetJustifyH(column.justifyH)
         header:SetWordWrap(false)
         header:SetNonSpaceWrap(false)
-
-        -- in the historical log we conditionally show the rank
         if column.key == "time" and DeathpoolLog.showSuccessfulOnly == true then
             header:SetText(DeathpoolUI.HISTORY_SUCCESS_RANK_LABEL)
         else
@@ -101,22 +112,22 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
         DeathpoolLog,
         "FauxScrollFrameTemplate"
     )
-    logScrollFrame:SetPoint("TOPLEFT", DeathpoolLog, "TOPLEFT", 8, -72)
-    logScrollFrame:SetPoint("BOTTOMRIGHT", DeathpoolLog, "BOTTOMRIGHT", -30, 50)
+    logScrollFrame:SetPoint("TOPLEFT", DeathpoolLog, "TOPLEFT", layout.outsideGutter, rowTop)
+    logScrollFrame:SetPoint("BOTTOMRIGHT", DeathpoolLog, "BOTTOMRIGHT", -(layout.outsideGutter + layout.scrollbarInset), 50)
     DeathpoolLog.scrollFrame = logScrollFrame
 
     DeathpoolUI.CreateDeathLogList(DeathpoolLog, {
         columns = historyColumns,
         rowCount = visibleRows,
-        rowHeight = 16,
+        rowHeight = rowHeight,
         rowLeft = rowLeft,
         rowTop = rowTop,
-        rowRight = -32,
+        rowRight = -(layout.outsideGutter + layout.historyScrollbarGap + layout.scrollbarInset),
         tooltipOptions = DeathpoolUI.LOG_WINDOW_TOOLTIP_OPTIONS,
     })
 
     local filterButton = CreateFrame("Button", "DeathpoolLogFilterButton", DeathpoolLog, "GameMenuButtonTemplate")
-    filterButton:SetSize(160, 24)
+    filterButton:SetSize(160, layout.compactButtonHeight)
     filterButton:SetPoint("BOTTOM", DeathpoolLog, "BOTTOM", 0, filterButtonBottom)
     filterButton:SetText(
         DeathpoolLog.showSuccessfulOnly == true
@@ -136,7 +147,7 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
     DeathpoolLog.filterButton = filterButton
 
     logScrollFrame:SetScript("OnVerticalScroll", function(self, offset)
-        FauxScrollFrame_OnVerticalScroll(self, offset, 18, function()
+        FauxScrollFrame_OnVerticalScroll(self, offset, rowHeight, function()
             DeathpoolLog:RefreshHistory()
         end)
     end)

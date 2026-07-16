@@ -228,12 +228,14 @@ local function testAddonLoadRebindsUiToSavedVariablesTable()
             Fixtures.storedDeath({
                 timestamp = 100,
                 name = "Saveddeath",
+                sourceName = "Savedsource",
             }),
         },
         deathHistory = {
             Fixtures.storedDeath({
                 timestamp = 100,
                 name = "Saveddeath",
+                sourceName = "Savedsource",
                 awardedPoints = 7,
                 points = 7,
                 predictionStreak = 1,
@@ -243,6 +245,7 @@ local function testAddonLoadRebindsUiToSavedVariablesTable()
             Fixtures.storedDeath({
                 timestamp = 100,
                 name = "Saveddeath",
+                sourceName = "Savedsource",
                 awardedPoints = 7,
                 points = 7,
                 predictionStreak = 1,
@@ -260,8 +263,9 @@ local function testAddonLoadRebindsUiToSavedVariablesTable()
     local Deathpool = context.Deathpool
 
     assertEquals(Deathpool.state, savedDatabase, "addon load should rebind the UI to the loaded SavedVariables table")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Saveddeath", "addon load should populate recent deaths from the loaded SavedVariables table")
-    assertEquals(context.DeathpoolLog.rows[1].name:GetText(), "Saveddeath", "addon load should populate history rows from the loaded SavedVariables table")
+    assertEquals(Deathpool.deathRows[1].name, nil, "addon load should not create the removed main-window name column")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Savedsource", "addon load should populate recent deaths from the loaded SavedVariables table")
+    assertEquals(context.DeathpoolLog.rows[1].sourceName:GetText(), "Savedsource", "addon load should populate successful history rows with death sources from the loaded SavedVariables table")
 end
 
 local function testReloadDoesNotPersistVisibleMainWindowAsHidden()
@@ -612,6 +616,7 @@ local function testAddonRestoresSavedHistoryFilterAfterReload()
                 Fixtures.storedDeath({
                     timestamp = 100,
                     name = "Savedallhistory",
+                    sourceName = "Savedallsource",
                 }),
             },
             successfullyPredictedDeaths = {
@@ -627,7 +632,7 @@ local function testAddonRestoresSavedHistoryFilterAfterReload()
     assertEquals(context.DeathpoolLog.showSuccessfulOnly, false, "startup should restore the saved all-history filter mode")
     assertEquals(context.DeathpoolLog.logSubtitle:GetText(), "All Predictions", "startup should restore the saved all-history subtitle")
     assertEquals(context.DeathpoolLog.filterButton:GetText(), "SHOW SUCCESS ONLY", "startup should restore the alternate filter action")
-    assertEquals(context.DeathpoolLog.rows[1].name:GetText(), "Savedallhistory", "startup should restore all-history rows when that mode was saved")
+    assertEquals(context.DeathpoolLog.rows[1].sourceName:GetText(), "Savedallsource", "startup should restore all-history rows as sources when that mode was saved")
 end
 
 local function testAddonLoadRestoresSavedCollapsedWindowPosition()
@@ -648,7 +653,7 @@ local function testAddonLoadRestoresSavedCollapsedWindowPosition()
     local Deathpool = context.Deathpool
 
     assertEquals(Deathpool.width, 350, "addon load should restore the minimized width")
-    assertEquals(Deathpool.height, 98, "addon load should restore the minimized height")
+    assertEquals(Deathpool.height, 100, "addon load should restore the minimized height")
     assertEquals(Deathpool.points[1][4], -180, "addon load should restore the saved minimized x offset")
     assertEquals(Deathpool.points[1][5], 72, "addon load should restore the saved minimized y offset")
 end
@@ -664,7 +669,7 @@ local function testExpandingReloadedCollapsedWindowRestoresRecentDeathRows()
                 Fixtures.storedDeath({
                     name = "Reloadmini",
                     level = 19,
-                    source = "Murloc",
+                    sourceName = "Murloc",
                     zone = "Westfall",
                 }),
             },
@@ -674,14 +679,14 @@ local function testExpandingReloadedCollapsedWindowRestoresRecentDeathRows()
 
     assertEquals(Deathpool.isCollapsed, true, "startup should restore the saved mini-log state")
     assertEquals(Deathpool.recentDeathsFrame:IsShown(), false, "collapsed startup should hide the expanded recent death pane")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Reloadmini", "collapsed startup should still populate expanded death row data")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Murloc", "collapsed startup should still populate expanded death row data")
 
     _G.DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
 
     assertEquals(Deathpool.isCollapsed, false, "expanding the mini-log should restore the expanded state")
     assertEquals(Deathpool.recentDeathsFrame:IsShown(), true, "expanding the mini-log should show the expanded recent death pane")
     assertEquals(Deathpool.deathRows[1]:IsShown(), true, "expanding the mini-log should show populated death rows")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Reloadmini", "expanded death rows should show saved recent deaths")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Murloc", "expanded death rows should show saved recent deaths")
 end
 
 local function testAddonLoadDefaultsCombatAutoMinimizeToEnabled()
@@ -1562,14 +1567,15 @@ local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
 
 ---@diagnostic disable-next-line: need-check-nil
     Deathpool:GetScript("OnUpdate")(Deathpool, waitingPromptMinDuration)
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Drakedog", "ui refresh should show the parsed death in the recent deaths list after the waiting prompt minimum duration")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Hogger", "ui refresh should show the parsed death in the recent deaths list after the waiting prompt minimum duration")
     assertEquals(Deathpool.deathRows[1].multiplier, nil, "ui refresh should omit the removed main-window combo column")
     assertEquals(Deathpool.deathRows[1].awardedPoints:GetText(), tostring(awardedPoints), "ui refresh should show the evaluated total points after the waiting prompt minimum duration")
     assertEquals(Deathpool.totalPointsValue:GetText(), formattedAwardedPoints, "ui refresh should show the updated total score")
     assertEquals(Deathpool.currentStreakValue:GetText(), "1", "ui refresh should show the updated current streak")
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].name:GetText(), "Drakedog", "ui refresh should update the collapsed death log")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].sourceName:GetText(), "Hogger", "ui refresh should update the collapsed death log")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].awardedPoints:GetText(), tostring(awardedPoints), "ui refresh should update the collapsed death log points")
     assertEquals(Deathpool.collapsedPointsValue:GetText(), formattedAwardedPoints, "ui refresh should update the collapsed score")
-    assertEquals(DeathpoolLog.rows[1].name:GetText(), "Drakedog", "ui refresh should update the history log")
+    assertEquals(DeathpoolLog.rows[1].sourceName:GetText(), "Hogger", "ui refresh should update the successful history log with the death source")
     assertEquals(DeathpoolLog.rows[1].awardedPoints:GetText(), tostring(awardedPoints), "ui refresh should update history totals")
     assertEquals(DeathpoolDebug.detailValues.name:GetText(), "Drakedog", "ui refresh should update the debug detail view")
     assertEquals(DeathpoolDebug.detailValues.totalPoints:GetText(), tostring(awardedPoints), "ui refresh should update debug total points")

@@ -726,6 +726,9 @@ local function initializeGlobals(options)
         if formatString == "%H:%M:%S" then
             return "12:34:56"
         end
+        if formatString == "%B %d, %Y" then
+            return "January 01, 1970"
+        end
         return "10:05"
     end
 

@@ -110,11 +110,12 @@ local function CreateCheckbox(parent, labelText, onClick)
 end
 
 local function CreateCategoryFrame()
+    local layout = DeathpoolUI.LAYOUT
     local frame = CreateFrame("Frame", "DeathpoolSettingsPanel", UIParent)
     frame.name = "Deathpool"
 
     local title = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
-    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -16)
+    title:SetPoint("TOPLEFT", frame, "TOPLEFT", layout.outsideGutter, -layout.outsideGutter)
     title:SetJustifyH("LEFT")
     title:SetText("Hardcore Death Pool")
 

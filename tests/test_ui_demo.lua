@@ -73,7 +73,8 @@ local function testIntroDemoRefreshUsesMainWindowOnlyState()
     assertEquals(Deathpool.totalPointsValue:GetText(), "0", "intro demo should start at zero score before the higher-value hits land")
     assertEquals(Deathpool.currentStreakValue:GetText(), "0", "intro demo should start with no active streak")
     assertEquals(Deathpool.longestStreakValue:GetText(), "0", "intro demo should start with no completed streak")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Mudtooth", "intro demo should immediately show the first scripted death")
+    assertEquals(Deathpool.deathRows[1].name, nil, "intro demo should not create the removed name column")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Skeletal Raider", "intro demo should immediately show the first scripted death source")
     assertEquals(Deathpool.deathRows[1].pointsTooltipTarget, nil, "intro demo should omit the removed base points hover target")
     assertEquals(Deathpool.deathRows[1].awardedPoints:GetText(), "0", "intro demo should keep the opening miss at zero total points")
     assertContains(
@@ -107,7 +108,7 @@ local function testIntroDemoUsesHordeDemoData()
     Deathpool.introDemoController:Show()
 
     assertEquals(Deathpool.totalPointsValue:GetText(), "0", "horde intro demo should start at zero score")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Rascal", "horde intro demo should use the horde scripted deaths")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Twilight Acolyte", "horde intro demo should use the horde scripted deaths")
     assertEquals(Deathpool.deathRows[1].awardedPoints:GetText(), "0", "horde intro demo should open on a miss before the later streak")
     assertContains(
         Deathpool.lockedPredictionValue:GetText(),
@@ -154,7 +155,7 @@ local function testIntroDemoPlaybackAdvancesAndLoops()
         error("demo playback should append the second scripted death")
     end
 
-    assertEquals(Deathpool.deathRows[2].name:GetText(), "Haymaker", "demo playback should append the next scripted death")
+    assertEquals(Deathpool.deathRows[2].sourceName:GetText(), "Defias Rogue Wizard", "demo playback should append the next scripted death")
     assertEquals(
         Deathpool.deathRows[2].awardedPoints:GetText(),
         formatStoredDeathScore(secondDeath).awardedPoints,
@@ -171,7 +172,7 @@ local function testIntroDemoPlaybackAdvancesAndLoops()
         error("demo playback should append the third scripted death")
     end
 
-    assertEquals(Deathpool.deathRows[3].name:GetText(), "Copperkeg", "demo playback should continue through the static list")
+    assertEquals(Deathpool.deathRows[3].sourceName:GetText(), "Wild Grell", "demo playback should continue through the static list")
     assertEquals(
         Deathpool.deathRows[3].awardedPoints:GetText(),
         formatStoredDeathScore(thirdDeath).awardedPoints,
@@ -201,7 +202,7 @@ local function testIntroDemoPlaybackAdvancesAndLoops()
 
     -- demoState = advanceDemoPlayback(Deathpool)
     -- assertEquals(getDemoPlaybackState(demoState).currentDeathIndex, 1, "demo playback should loop back to the first scripted death after the sequence ends")
-    assertEquals(Deathpool.deathRows[1].name:GetText(), "Mudtooth", "demo playback should redisplay the first scripted death after the sequence ends")
+    assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Skeletal Raider", "demo playback should redisplay the first scripted death after the sequence ends")
     -- assertEquals(Deathpool.totalPointsValue:GetText(), "0", "demo playback should restart the score when looping the scripted sequence")
 end
 

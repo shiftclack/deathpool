@@ -112,26 +112,6 @@ return function(context)
         )
     end
 
-    local function testStoredDeathTimestampFallbacks()
-        local timestampOnlyDeath = Fixtures.storedDeath({
-            timestamp = 12345,
-        })
-        assertEquals(
-            DeathpoolLogic.GetStoredDeathTime(timestampOnlyDeath),
-            date("%H:%M", 12345),
-            "stored death time should be derived from the timestamp"
-        )
-
-        local missingTimestampDeath = Fixtures.storedDeath({
-            timestamp = false,
-        })
-        assertEquals(
-            DeathpoolLogic.GetStoredDeathTime(missingTimestampDeath),
-            date("%H:%M", 0),
-            "stored death time should display the epoch fallback when the timestamp is missing"
-        )
-    end
-
     local function testStoredDeathPersistedAndComputedContributions()
         local persistedContributionDeath = Fixtures.storedDeath({
             streakMultiplier = 7,
@@ -191,6 +171,5 @@ return function(context)
 
     testNormalizeDeathEvent()
     testStoredDeathHelpers()
-    testStoredDeathTimestampFallbacks()
     testStoredDeathPersistedAndComputedContributions()
 end

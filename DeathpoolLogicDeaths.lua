@@ -11,10 +11,6 @@ local DeathpoolLogic = _G.DeathpoolLogic or {}
 ---@field sourceMessage string
 ---@field isBlizzardVerified boolean
 
-local function FormatClockTime(timestamp)
-    return tostring(date("%H:%M", tonumber(timestamp)))
-end
-
 ---@param death DeathpoolDeath
 ---@return DeathpoolScoreResult
 local function GetStoredDeathScore(death)
@@ -68,14 +64,6 @@ function DeathpoolLogic.NormalizeDeathEvent(parsedDeath)
         sourceMessage = parsedDeath.sourceMessage,
         isBlizzardVerified = true,
     }
-end
-
--- Stored deaths should always have normalized timestamps. If SavedVariables are corrupt,
--- fall back to a formatted epoch time instead of carrying nil through every death-log caller.
----@param death DeathpoolDeath
----@return string
-function DeathpoolLogic.GetStoredDeathTime(death)
-    return FormatClockTime(tonumber(death.timestamp) or 0)
 end
 
 ---@param death DeathpoolDeath

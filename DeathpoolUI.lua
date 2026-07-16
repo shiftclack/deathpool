@@ -16,70 +16,95 @@ for _, levelRange in ipairs(DeathpoolConstants.SCORING.levelRanges) do
 end
 
 DeathpoolUI.DEATH_LOG_COLUMNS = {
-    { key = "time", label = "Time", x = 22, width = 50, justifyH = "LEFT" },
-    { key = "name", label = "Name", x = 82, width = 122, justifyH = "LEFT" },
-    { key = "level", label = "Level", x = 212, width = 44 , justifyH = "LEFT"},
-    { key = "sourceName", label = "Source", x = 264, width = 136, justifyH = "LEFT" },
-    { key = "zone", label = "Location", x = 440, width = 120, justifyH = "LEFT" },
-    { key = "awardedPoints", label = "Points", x = 582, width = 46, justifyH = "RIGHT" },
+    { key = "time", label = "Time", x = 0, width = 50, justifyH = "LEFT" },
+    { key = "sourceName", label = "Source", x = 58, width = 290, justifyH = "LEFT" },
+    { key = "level", label = "Level", x = 278, width = 40, justifyH = "LEFT" },
+    { key = "zone", label = "Location", x = 328, width = 400, justifyH = "LEFT" },
+    { key = "awardedPoints", label = "Points", x = 530, width = 46, justifyH = "RIGHT" },
 }
 
 DeathpoolUI.HISTORY_LOG_COLUMNS = {
-    { key = "time", label = "Time", x = 12, width = 44, justifyH = "LEFT" },
-    { key = "name", label = "Name", x = 62, width = 78, justifyH = "LEFT" },
-    { key = "level", label = "Level", x = 146, width = 30, justifyH = "LEFT" },
-    { key = "awardedPoints", label = "Points", x = 180, width = 32, justifyH = "RIGHT" },
+    { key = "time", label = "Time", x = 0, width = 45, justifyH = "LEFT" },
+    { key = "sourceName", label = "Source", x = 50, width = 100, justifyH = "LEFT" },
+    { key = "awardedPoints", label = "Points", x = 160, width = 32, justifyH = "RIGHT" },
 }
 
 DeathpoolUI.HISTORY_SUCCESS_RANK_LABEL = "Rank"
 
 DeathpoolUI.COLLAPSED_LOG_COLUMNS = {
-    { key = "name", label = "Name", x = 0, width = 94, justifyH = "LEFT" },
-    { key = "level", label = "Lvl", x = 100, width = 26, justifyH = "LEFT" },
-    { key = "sourceName", label = "Source", x = 132, width = 88, justifyH = "LEFT" },
-    { key = "zone", label = "Location", x = 226, width = 88, justifyH = "LEFT" },
+    { key = "time", label = "Time", x = 0, width = 38, justifyH = "LEFT" },
+    { key = "sourceName", label = "Source", x = 44, width = 102, justifyH = "LEFT" },
+    { key = "level", label = "Lvl", x = 152, width = 24, justifyH = "LEFT" },
+    { key = "zone", label = "Location", x = 182, width = 80, justifyH = "LEFT" },
+    { key = "awardedPoints", label = "Pts", x = 266, width = 40, justifyH = "RIGHT" },
 }
 
 DeathpoolUI.COLORS = {
-    poorMatchDeath = { 0.62, 0.62, 0.62 },
     commonMatchDeath = { 1.0, 1.0, 1.0 },
-    uncommonMatchDeath = { 0.12, 1.0, 0.0 },
-    rareMatchDeath = { 0.0, 0.44, 0.87 },
     epicMatchDeath = { 0.64, 0.21, 0.93 },
+    poorMatchDeath = { 0.62, 0.62, 0.62 },
     predictionInputActive = { 1.0, 1.0, 1.0, 1.0 },
     predictionInputLocked = { 0.5, 0.5, 0.5, 1.0 },
+    rareMatchDeath = { 0.0, 0.44, 0.87 },
+    uncommonMatchDeath = { 0.12, 1.0, 0.0 },
 }
 
 DeathpoolUI.LAYOUT = {
-    mainWindowHeight = 424,
-    expandedWindowWidth = 650,
+    actionButtonGap = 16,
+    collapsedLogHeaderY = -32,
+    collapsedLogRowHeight = 16,
+    collapsedLogVisibleRows = 5,
+    collapsedWindowHeight = 165,
+    collapsedWindowMaxHeight = 165,
+    collapsedWindowMinHeight = 100,
+    collapsedWindowWidth = 350,
+    compactButtonHeight = 24,
+    deathLogDividerY = -132,
+    deathLogFrameY = -48,
+    deathLogHeaderY = -36,
+    deathLogRowHeight = 16,
+    expandedWindowWidth = 620,
+    footerGutter = 15,
+    logVisibleRows = 19,
     logWindowHeight = 424,
     logWindowWidth = 260,
-    logVisibleRows = 19,
-    collapsedWindowWidth = 350,
-    collapsedWindowHeight = 176,
-    collapsedWindowMinHeight = 98,
-    collapsedWindowMaxHeight = 176,
-    collapsedLogVisibleRows = 5,
-    collapsedLogRowHeight = 18,
-    deathLogHeaderY = -36,
-    deathLogFrameY = -56,
-    deathLogDividerY = -152,
-    scoreSummaryY = -162,
-    predictionLabelX = 22,
-    predictionControlX = 104,
-    predictionSectionTop = -174,
-    predictionLevelRowY = -210,
-    predictionSourceRowY = -250,
-    predictionZoneRowY = -286,
-    predictionSummaryY = 88,
-    predictionSummaryWidth = 390,
-    predictionIntroDemoPanelX = 306,
-    predictionIntroDemoPanelY = -239,
-    predictionIntroDemoPanelWidth = 314,
+    mainWindowHeight = 424,
+    modalButtonGap = 12,
+    outsideGutter = 22,
+    predictionButtonY = 15,
+    predictionControlX = 96,
     predictionIntroDemoPanelHeight = 58,
-    predictionButtonY = 22,
+    predictionIntroDemoPanelWidth = 314,
+    predictionIntroDemoPanelX = 284,
+    predictionIntroDemoPanelY = -235,
+    predictionLabelX = 22,
+    predictionLevelRowY = -206,
+    predictionSectionTop = -170,
+    predictionSourceRowY = -246,
+    predictionSummaryWidth = 390,
+    predictionSummaryY = 88,
+    predictionZoneRowY = -282,
+    scrollbarInset = 10,
+    scrollbarWidth = 26,
+    standardButtonHeight = 28,
+    standardButtonWidth = 120,
+    titlebarDragHeight = 22,
+    titlebarDragLeftInset = 8,
+    titlebarDragRightInset = 32,
+    titlebarDragTopInset = -4,
 }
+
+DeathpoolUI.LAYOUT.logVerticalSpacing = DeathpoolUI.LAYOUT.deathLogHeaderY - DeathpoolUI.LAYOUT.deathLogFrameY
+DeathpoolUI.LAYOUT.historyScrollbarGap = math.floor(DeathpoolUI.LAYOUT.scrollbarWidth / 2)
+DeathpoolUI.LAYOUT.collapsedLogFrameY = DeathpoolUI.LAYOUT.collapsedLogHeaderY
+    - DeathpoolUI.LAYOUT.logVerticalSpacing
+DeathpoolUI.LAYOUT.historySubtitleY = DeathpoolUI.LAYOUT.deathLogHeaderY
+DeathpoolUI.LAYOUT.historySubtitleHeaderSpacing = DeathpoolUI.LAYOUT.logVerticalSpacing + 8
+DeathpoolUI.LAYOUT.historyLogHeaderY = DeathpoolUI.LAYOUT.historySubtitleY
+    - DeathpoolUI.LAYOUT.historySubtitleHeaderSpacing
+DeathpoolUI.LAYOUT.historyLogFrameY = DeathpoolUI.LAYOUT.historyLogHeaderY - DeathpoolUI.LAYOUT.logVerticalSpacing
+DeathpoolUI.LAYOUT.scoreSummaryY = DeathpoolUI.LAYOUT.deathLogDividerY
+    - (DeathpoolUI.LAYOUT.outsideGutter - DeathpoolUI.LAYOUT.footerGutter)
 
 ---@class DeathpoolModalBackdropOverlay
 ---@field Show fun(self: DeathpoolModalBackdropOverlay)
@@ -159,11 +184,24 @@ end
 ---@param ownerFrame table
 ---@return DeathpoolModalTitlebarDragHandle
 function DeathpoolUI.CreateModalTitlebarDragHandle(modalFrame, ownerFrame)
+    local layout = DeathpoolUI.LAYOUT
     local titlebarDragHandle = CreateFrame("Frame", nil, modalFrame)
     ---@cast titlebarDragHandle DeathpoolModalTitlebarDragHandle
-    titlebarDragHandle:SetPoint("TOPLEFT", modalFrame, "TOPLEFT", 8, -4)
-    titlebarDragHandle:SetPoint("TOPRIGHT", modalFrame, "TOPRIGHT", -32, -4)
-    titlebarDragHandle:SetHeight(22)
+    titlebarDragHandle:SetPoint(
+        "TOPLEFT",
+        modalFrame,
+        "TOPLEFT",
+        layout.titlebarDragLeftInset,
+        layout.titlebarDragTopInset
+    )
+    titlebarDragHandle:SetPoint(
+        "TOPRIGHT",
+        modalFrame,
+        "TOPRIGHT",
+        -layout.titlebarDragRightInset,
+        layout.titlebarDragTopInset
+    )
+    titlebarDragHandle:SetHeight(layout.titlebarDragHeight)
     titlebarDragHandle:EnableMouse(true)
     titlebarDragHandle:RegisterForDrag(MODAL_DRAG_BUTTON)
     titlebarDragHandle:SetScript("OnDragStart", function()
@@ -300,6 +338,40 @@ function DeathpoolUI.GetTooltipFieldValue(value, allowEmptyValue)
     end
 
     return DeathpoolUI.GetDeathFieldValue(value)
+end
+
+---@param timestamp number
+---@return string
+local function FormatClockTime(timestamp)
+    return tostring(date("%H:%M", timestamp))
+end
+
+---@param timestamp number
+---@return string
+local function FormatFullDate(timestamp)
+    return tostring(date("%B %d, %Y", timestamp))
+end
+
+---@param death DeathpoolDeath
+---@return string
+function DeathpoolUI.GetStoredDeathTime(death)
+    return FormatClockTime(tonumber(death.timestamp) or 0)
+end
+
+---@param death DeathpoolDeath
+---@return string
+function DeathpoolUI.GetStoredDeathDate(death)
+    return FormatFullDate(tonumber(death.timestamp) or 0)
+end
+
+---@param death DeathpoolDeath
+---@return string
+function DeathpoolUI.GetStoredDeathDateTime(death)
+    return string.format(
+        "%s %s",
+        DeathpoolUI.GetStoredDeathDate(death),
+        DeathpoolUI.GetStoredDeathTime(death)
+    )
 end
 
 ---@param multiplierValue number|string|nil
