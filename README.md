@@ -31,6 +31,13 @@ Copy this folder into `World of Warcraft\_classic_era_\Interface\AddOns`.
 
 The addon is intended for official WoW Hardcore Classic realms. It is not compatible with any other versions of the game.
 
+## Development
+
+- Requires Lua 5.1 and [luacheck](https://github.com/mpeterv/luacheck)
+- Run `make deps` to install development dependencies
+- Run `make check` to lint and run tests
+- Run `make dist` to generate a zipfile for release
+
 ## Libraries
 
 The following libraries are included with the addon:
@@ -40,9 +47,8 @@ The following libraries are included with the addon:
 - [LibDBIcon](https://www.curseforge.com/wow/addons/libdbicon-1-0)
 - [LibStub](https://www.curseforge.com/wow/addons/libstub)
 
-## Development
+## License
 
-- Requires Lua 5.1 and [luacheck](https://github.com/mpeterv/luacheck)
-- Run `make deps` to install development dependencies
-- Run `make check` to lint and run tests
-- Run `make dist` to generate a zipfile for release
+Copyright © 2026 Shiftclack
+
+Except for the third-party libraries contained in the [`libs/`](libs/) directory, Hardcore Death Pool is licensed under the [PolyForm Strict License 1.0.0](LICENSE.md).
