@@ -338,14 +338,14 @@ local function testInitializeReturnsFrames()
     assertEquals(
         select(4, DeathpoolLog.columnHeaders.awardedPoints:GetPoint(1))
             + DeathpoolLog.columnHeaders.awardedPoints:GetWidth(),
-        layout.logWindowWidth - layout.outsideGutter - layout.historyScrollbarGap - layout.scrollbarInset,
+        layout.logWindowWidth - layout.outsideGutter - layout.historyScrollbarGap - layout.scrollbarInset - 1,
         "history log points header should leave reduced room for the scrollbar"
     )
     assertEquals(
         select(4, DeathpoolLog.rows[1]:GetPoint(1))
             + select(4, DeathpoolLog.rows[1].awardedPoints:GetPoint(1))
             + DeathpoolLog.rows[1].awardedPoints:GetWidth(),
-        layout.logWindowWidth - layout.outsideGutter - layout.historyScrollbarGap - layout.scrollbarInset,
+        layout.logWindowWidth - layout.outsideGutter - layout.historyScrollbarGap - layout.scrollbarInset - 1,
         "history log points cells should leave reduced room for the scrollbar"
     )
     assertTruthy(Deathpool.helpFrame, "main frame should keep a reference to the help frame")
