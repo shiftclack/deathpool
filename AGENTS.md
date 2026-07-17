@@ -66,38 +66,39 @@ Top-level directories:
 - `libs/` contains bundled third-party libraries used by the addon; do not test or lint
 - `media/` contains addon media such as textures
 - `tests/` contains the Lua test harness, fixtures, and test suites
+- `src/` contains the Lua source code
 
-Top-level addon files:
-- `Deathpool.lua` should stay thin and focus on addon bootstrapping, event wiring, and coordination
-- `DeathpoolCommands.lua` should contain slash command parsing, help text, and slash command handlers
-- `DeathpoolConstants.lua` is the central source for gameplay, scoring, and storage constants
-- `DeathpoolDebug.lua` owns debug state, logging helpers, and debug window coordination
-- `DeathpoolDatabase.lua` owns SavedVariables defaults, normalization, and database accessors
-- `DeathpoolParser.lua` should contain Blizzard death message parsing and sanitizing only
-- `DeathpoolLogic.lua` is the shared logic namespace/bootstrap file
-- `DeathpoolLogicPrediction.lua` should contain prediction related logic
-- `DeathpoolLogicScoring.lua` should contain score logic
-- `DeathpoolLogicDeaths.lua` should contain death logic
-- `DeathpoolLogicState.lua` should contain database-backed gameplay state transitions
-- `DeathpoolMigration.lua` should contain code for migrating SavedVariables on startup
-- `DeathpoolSettings.lua` should contain settings actions and controller-owned Blizzard settings side effects
-- `DeathpoolSetup.lua` should contain setup state, setup actions, and controller-owned Blizzard setup side effects
-- `DeathpoolAnnouncements.lua` should contain controller-owned guild and local announcement behavior
-- `DeathpoolDemo.lua` should contain controller-owned intro demo session lifecycle, playback, and dismissal orchestration
-- `DeathpoolUI.lua` should contain shared UI constants, layout values, common widget helpers, and top-level frame creation
-- `DeathpoolUITooltip.lua` should contain standardized tooltip building for death rows and prediction previews
-- `DeathpoolUIDeathLogList.lua` should contain reusable death log row creation and row refresh behavior
-- `DeathpoolUIAutocomplete.lua` should contain history-backed suggestion lists and dropdown behavior for prediction inputs
-- `DeathpoolUIHelp.lua` should contain the help window
-- `DeathpoolUISetup.lua` should contain the setup window
-- `DeathpoolUIMode.lua` should contain the resolver for the current UI mode
-- `DeathpoolUIRefresh.lua` should coordinate refreshing windows and projecting model state into widgets
-- `DeathpoolUILog.lua` should contain the historical death log window
-- `DeathpoolUISettings.lua` should contain the Blizzard Settings panel
-- `DeathpoolUIDemo.lua` should contain scripted intro/demo data and inline onboarding callouts for the main window
-- `DeathpoolUIDebug.lua` should contain the debugging UI window
-- `DeathpoolUIMain.lua` should contain the main prediction UI window composition and collapsed/expanded interactions
-- `DeathpoolUIMinimap.lua` should contain all minimap button integration, feature-flagging, and LibDBIcon or broker specific code
+Addon files:
+- `src/Deathpool.lua` should stay thin and focus on addon bootstrapping, event wiring, and coordination
+- `src/DeathpoolCommands.lua` should contain slash command parsing, help text, and slash command handlers
+- `src/DeathpoolConstants.lua` is the central source for gameplay, scoring, and storage constants
+- `src/DeathpoolDebug.lua` owns debug state, logging helpers, and debug window coordination
+- `src/DeathpoolDatabase.lua` owns SavedVariables defaults, normalization, and database accessors
+- `src/DeathpoolParser.lua` should contain Blizzard death message parsing and sanitizing only
+- `src/DeathpoolLogic.lua` is the shared logic namespace/bootstrap file
+- `src/DeathpoolLogicPrediction.lua` should contain prediction related logic
+- `src/DeathpoolLogicScoring.lua` should contain score logic
+- `src/DeathpoolLogicDeaths.lua` should contain death logic
+- `src/DeathpoolLogicState.lua` should contain database-backed gameplay state transitions
+- `src/DeathpoolMigration.lua` should contain code for migrating SavedVariables on startup
+- `src/DeathpoolSettings.lua` should contain settings actions and controller-owned Blizzard settings side effects
+- `src/DeathpoolSetup.lua` should contain setup state, setup actions, and controller-owned Blizzard setup side effects
+- `src/DeathpoolAnnouncements.lua` should contain controller-owned guild and local announcement behavior
+- `src/DeathpoolDemo.lua` should contain controller-owned intro demo session lifecycle, playback, and dismissal orchestration
+- `src/DeathpoolUI.lua` should contain shared UI constants, layout values, common widget helpers, and top-level frame creation
+- `src/DeathpoolUITooltip.lua` should contain standardized tooltip building for death rows and prediction previews
+- `src/DeathpoolUIDeathLogList.lua` should contain reusable death log row creation and row refresh behavior
+- `src/DeathpoolUIAutocomplete.lua` should contain history-backed suggestion lists and dropdown behavior for prediction inputs
+- `src/DeathpoolUIHelp.lua` should contain the help window
+- `src/DeathpoolUISetup.lua` should contain the setup window
+- `src/DeathpoolUIMode.lua` should contain the resolver for the current UI mode
+- `src/DeathpoolUIRefresh.lua` should coordinate refreshing windows and projecting model state into widgets
+- `src/DeathpoolUILog.lua` should contain the historical death log window
+- `src/DeathpoolUISettings.lua` should contain the Blizzard Settings panel
+- `src/DeathpoolUIDemo.lua` should contain scripted intro/demo data and inline onboarding callouts for the main window
+- `src/DeathpoolUIDebug.lua` should contain the debugging UI window
+- `src/DeathpoolUIMain.lua` should contain the main prediction UI window composition and collapsed/expanded interactions
+- `src/DeathpoolUIMinimap.lua` should contain all minimap button integration, feature-flagging, and LibDBIcon or broker specific code
 
 Unit tests are supported:
 - `tests/support_fixtures.lua` contains our test fixtures
@@ -121,20 +122,20 @@ Support files:
 - `Makefile` should contain reusable commands for building, testing and static analysis. It should be compatible with Windows systems for development and Linux for CI.
 - `.luacheckrc` should contain our `luacheck` configuration. Keep changes focused and only update it when project lint rules or recognized WoW globals genuinely need to change
 - `luacov.*.out` contain `luacheck` output
-- `Deathpool.toc` and `Deathpool_Vanilla.toc` are the WoW TOC files for this project that control file load order
+- `src/Deathpool.toc` and `src/Deathpool_Vanilla.toc` are the WoW TOC files for this project that control file load order
 
 ### .toc files
 
 When adding new files, they must be added to two `.toc` files in order for the game to load them. Order is important. They are:
 
-1. `Deathpool.toc`
-2. `Deathpool_Vanilla.toc`
+1. `src/Deathpool.toc`
+2. `src/Deathpool_Vanilla.toc`
 
 ### Model, View Controller (MVC)
 
-- Treat `DeathpoolDatabase.lua` and `DeathpoolLogic*.lua` as the domain/model layer. They own SavedVariables shape, defaulting, normalization, querying, sorting, and gameplay state transitions.
-- Treat `DeathpoolUI*.lua` as the view layer. UI code should read model state through model APIs and update widgets, but should not directly modify the database state, sort model collections, or implement gameplay rules.
-- Treat `Deathpool.lua` as a thin controller/coordinator. It should react to WoW events and slash commands, call into model code, and ask the UI to refresh.
+- Treat `src/DeathpoolDatabase.lua` and `src/DeathpoolLogic*.lua` as the domain/model layer. They own SavedVariables shape, defaulting, normalization, querying, sorting, and gameplay state transitions.
+- Treat `src/DeathpoolUI*.lua` as the view layer. UI code should read model state through model APIs and update widgets, but should not directly modify the database state, sort model collections, or implement gameplay rules.
+- Treat `src/Deathpool.lua` as a thin controller/coordinator. It should react to WoW events and slash commands, call into model code, and ask the UI to refresh.
 - If code is asking `if DeathpoolCharacterState then ...` or building fallback tables in UI code, that is usually a sign the responsibility belongs back in the model layer.
 
 ## Lua
@@ -172,7 +173,7 @@ The current libraries are explicitly permitted:
 
 - Minimap
     - The Minimap icon uses LibDBIcon for compatibility with addons such as Titan Panel and Leatrix. 
-    - The use of these libraries should be strictly confined to `DeathpoolUIMinimap.lua`
+    - The use of these libraries should be strictly confined to `src/DeathpoolUIMinimap.lua`
     - Maintain the ability to easily remove them at any time.
     - Permitted Libs for the Minimap
         - LibDBIcon
@@ -208,7 +209,7 @@ The current libraries are explicitly permitted:
 - LuaLS is used to provide type checking via annotations
 - Warnings are surfaced both in the editor UI and as part of `make check`
 - When adding new functions, add LuaLS style `---@param` and `---@return` comments to specify types
-- Check for existing types before adding new ones, especially for files with similar names like DeathpoolUI*.lua or DeathpoolLogic*.lua.
+- Check for existing types before adding new ones, especially for files with similar names like `src/DeathpoolUI*.lua` or `src/DeathpoolLogic*.lua`.
 - Prefer being strict about parameters, it helps future developers reason about the codebase
 
 ### Lua Environment Differences (WoW vs Standard Lua)
@@ -322,14 +323,14 @@ SavedVariables is how WoW persists user configuration and data for the addon.
 - Treat `DeathpoolCharacterState` as persistent user data
 - Initialize SavedVariables through `DeathpoolDatabase.Init(DeathpoolCharacterState)` in the controller and preserve that table identity afterward
 - `DeathpoolDatabase.Init`, migrations, and defaulting mutate the provided table in place and return the same table for convenience
-- Do not persist debug mode in `DeathpoolCharacterState`; debug enablement is session-only state owned by `DeathpoolDebug.lua`
+- Do not persist debug mode in `DeathpoolCharacterState`; debug enablement is session-only state owned by `src/DeathpoolDebug.lua`
 - When adding fields, initialize missing values defensively in `DeathpoolDatabase`
 - Do not require users to delete SavedVariables for normal addon updates
 - Prefer additive schema changes over breaking renames
 
 ### Migrations
 
-- In `DeathpoolMigration.lua` we have a set of migrations for SavedVariables
+- In `src/DeathpoolMigration.lua` we have a set of migrations for SavedVariables
 - We don't want to litter the code with backward compatibility checks, so keep migration code in this file
 - It is OK to still program defensively in case of corrupt data loaded from SavedVariables
 - This file is currently ***empty*** until we have a v1.0 release

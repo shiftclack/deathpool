@@ -1,6 +1,6 @@
 DEATHPOOL_INSTALL_DIR ?= C:\Program Files (x86)\World of Warcraft\_classic_era_\Interface\AddOns\Deathpool
 DEATHPOOL_INSTALL_DIR_MACOS ?= /Applications/World of Warcraft/_classic_era_/Interface/AddOns
-DEATHPOOL_SOURCES := *.lua tests/*.lua
+DEATHPOOL_SOURCES := src/*.lua tests/*.lua
 DOCKER_SRC_DIR ?= /lua
 DOCKER_TEST_IMAGE ?= ghcr.io/shiftclack/lua-wow:1.3.0
 LUA ?= lua
@@ -74,12 +74,11 @@ dist-docker:
 
 build:
 	@powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path dist,dist\Deathpool,dist\Deathpool\libs | Out-Null"
-	@powershell -NoProfile -Command "Copy-Item -Recurse libs\LibStub,libs\CallbackHandler-1.0,libs\LibDataBroker-1.1,libs\LibDBIcon-1.0 dist\Deathpool\libs -Force"
-	@powershell -NoProfile -Command "Copy-Item -Recurse LICENSE.md,*.lua,*.toc dist\Deathpool -Force"
+	@powershell -NoProfile -Command "Copy-Item -Recurse README.md,LICENSE.md,src\*.lua,src\*.toc,libs dist\Deathpool\ -Force"
 
 build-ci:
 	@mkdir -p dist/Deathpool
-	@cp LICENSE.md README.md *.lua *.toc dist/Deathpool/
+	@cp LICENSE.md README.md src/*.lua src/*.toc dist/Deathpool/
 	@mkdir -p dist/Deathpool/libs
 	@cp -r libs/LibStub libs/CallbackHandler-1.0 libs/LibDataBroker-1.1 libs/LibDBIcon-1.0 dist/Deathpool/libs/
 

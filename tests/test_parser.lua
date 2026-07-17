@@ -2,6 +2,7 @@
 ---@diagnostic disable: param-type-mismatch
 
 package.path = table.concat({
+    "./src/?.lua",
     "./?.lua",
     "./?/init.lua",
     package.path,
