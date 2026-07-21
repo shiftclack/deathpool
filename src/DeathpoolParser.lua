@@ -4,7 +4,11 @@
 ---@field GetBlizzardDeathPatterns fun(): DeathpoolParserPattern[]
 ---@field Initialize fun()
 ---@field ParseBlizzardDeathMessage fun(message: string): DeathpoolParsedDeathEvent|nil
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
 local DeathpoolParser = {}
+ns.DeathpoolParser = DeathpoolParser
 
 ---@class DeathpoolParserPattern
 ---@field name string
@@ -360,7 +364,5 @@ end
 function DeathpoolParser.Initialize()
     DeathpoolParser.GetBlizzardDeathPatterns()
 end
-
-_G.DeathpoolParser = DeathpoolParser
 
 return DeathpoolParser

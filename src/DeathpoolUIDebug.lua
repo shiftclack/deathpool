@@ -1,4 +1,7 @@
-local DeathpoolUI = _G.DeathpoolUI
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI
 
 ---@param parent table
 ---@param pointX number

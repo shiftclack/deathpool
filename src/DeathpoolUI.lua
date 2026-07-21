@@ -1,8 +1,12 @@
-local DeathpoolUI = _G.DeathpoolUI or {}
-local DeathpoolDatabase = _G.DeathpoolDatabase
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolDatabase = ns.DeathpoolDatabase
 local ITEM_QUALITY_COLORS = _G.ITEM_QUALITY_COLORS
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolLogic = _G.DeathpoolLogic
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolLogic = ns.DeathpoolLogic
+ns.DeathpoolUI = DeathpoolUI
 
 DeathpoolUI.LOG_TOGGLE_BUTTON_TEXT = "LOG"
 DeathpoolUI.HISTORY_SUBTITLE_ALL = "All Predictions"
@@ -898,7 +902,5 @@ function DeathpoolUI.ApplyDesiredLogWindowState(frame, database)
 
     ApplyLogWindowDisplayState(frame.logFrame, shouldShow)
 end
-
-_G.DeathpoolUI = DeathpoolUI
 
 return DeathpoolUI

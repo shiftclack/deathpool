@@ -1,5 +1,8 @@
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolLogic = _G and _G.DeathpoolLogic
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolLogic = ns.DeathpoolLogic
 local TOOLTIP_WHITE = { 1, 1, 1 }
 local TOOLTIP_GREEN = { 0.12, 1.0, 0.0 }
 local TOOLTIP_YELLOW = { 1, 0.82, 0 }

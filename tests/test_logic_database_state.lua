@@ -1,5 +1,6 @@
 return function(context)
     local DeathpoolLogic = context.DeathpoolLogic
+    local DeathpoolDatabase = context.DeathpoolDatabase
     local Fixtures = context.Fixtures
     local SCORE_RULES = context.SCORE_RULES
     local STORAGE_RULES = context.STORAGE_RULES
@@ -17,7 +18,7 @@ return function(context)
 
     local function testDatabaseInitPreservesIdentity()
         local database = {}
-        local returnedDatabase = _G.DeathpoolDatabase.Init(database)
+        local returnedDatabase = DeathpoolDatabase.Init(database)
 
         assertEquals(returnedDatabase, database, "database init should return the same table instance")
         assertTruthy(type(database.recentDeaths) == "table", "database init should populate default recent death storage")
@@ -29,7 +30,7 @@ return function(context)
     end
 
     local function testDatabaseInitRepairsCorruptTopLevelValue()
-        local returnedDatabase = _G.DeathpoolDatabase.Init(nil)
+        local returnedDatabase = DeathpoolDatabase.Init(nil)
 
         assertTruthy(type(returnedDatabase) == "table", "database init should repair a corrupt top-level savedvariables value")
         assertTruthy(type(returnedDatabase.recentDeaths) == "table", "database init should still populate default recent death storage after repair")
@@ -59,7 +60,7 @@ return function(context)
             longestPredictionStreak = "10",
         }
 
-        _G.DeathpoolDatabase.Init(database)
+        DeathpoolDatabase.Init(database)
 
         assertTruthy(type(database.recentDeaths) == "table", "database init should repair recent death storage")
         assertTruthy(type(database.deathHistory) == "table", "database init should repair death history storage")
@@ -99,7 +100,7 @@ return function(context)
     local function testDatabaseInitDefaultsGuildAnnouncements()
         local database = {}
 
-        _G.DeathpoolDatabase.Init(database)
+        DeathpoolDatabase.Init(database)
 
         assertEquals(database.announcements.enabled, false, "database init should disable guild announcements by default")
         assertEquals(
@@ -139,7 +140,7 @@ return function(context)
         local deathHistory = database.deathHistory
         local successfulDeaths = database.successfullyPredictedDeaths
 
-        _G.DeathpoolDatabase.Init(database)
+        DeathpoolDatabase.Init(database)
 
         assertEquals(database.recentDeaths, recentDeaths, "database init should preserve recent death table identity")
         assertEquals(database.deathHistory, deathHistory, "database init should preserve death history table identity")
@@ -164,15 +165,15 @@ return function(context)
     local function testGuildAnnouncementAccessors()
         local emptyDatabase = {}
         ---@cast emptyDatabase table
-        local database = _G.DeathpoolDatabase.Init(emptyDatabase)
+        local database = DeathpoolDatabase.Init(emptyDatabase)
 
         assertEquals(
-            _G.DeathpoolDatabase.GetGuildAnnouncementsEnabled(database),
+            DeathpoolDatabase.GetGuildAnnouncementsEnabled(database),
             false,
             "guild announcements should be disabled by default"
         )
         assertEquals(
-            _G.DeathpoolDatabase.SetGuildAnnouncementsEnabled(database, true),
+            DeathpoolDatabase.SetGuildAnnouncementsEnabled(database, true),
             true,
             "guild announcement setter should persist enabled state"
         )
@@ -183,12 +184,12 @@ return function(context)
         )
 
         assertEquals(
-            _G.DeathpoolDatabase.GetAnnounceDeathToGuild(database),
+            DeathpoolDatabase.GetAnnounceDeathToGuild(database),
             true,
             "death score announcement getter should use the nested default"
         )
         assertEquals(
-            _G.DeathpoolDatabase.SetAnnounceDeathToGuild(database, false),
+            DeathpoolDatabase.SetAnnounceDeathToGuild(database, false),
             false,
             "death score announcement setter should persist disabled state"
         )
@@ -199,12 +200,12 @@ return function(context)
         )
 
         assertEquals(
-            _G.DeathpoolDatabase.GetAnnounceScoreOnLevelUp(database),
+            DeathpoolDatabase.GetAnnounceScoreOnLevelUp(database),
             false,
             "level-up score announcement getter should use the nested default"
         )
         assertEquals(
-            _G.DeathpoolDatabase.SetAnnounceScoreOnLevelUp(database, false),
+            DeathpoolDatabase.SetAnnounceScoreOnLevelUp(database, false),
             false,
             "level-up score announcement setter should persist disabled state"
         )
@@ -219,21 +220,21 @@ return function(context)
     local function testDatabaseInitDefaultsFirstRunFlag()
         local database = {}
 
-        _G.DeathpoolDatabase.Init(database)
+        DeathpoolDatabase.Init(database)
 
         assertEquals(database.hasSeenFirstRun, false, "database init should default the first-run flag to false")
         assertEquals(
-            _G.DeathpoolDatabase.GetHasSeenFirstRun(database),
+            DeathpoolDatabase.GetHasSeenFirstRun(database),
             false,
             "database getter should report unseen first-run state by default"
         )
         assertEquals(
-            _G.DeathpoolDatabase.SetHasSeenFirstRun(database, true),
+            DeathpoolDatabase.SetHasSeenFirstRun(database, true),
             true,
             "database setter should persist a seen first-run state"
         )
         assertEquals(
-            _G.DeathpoolDatabase.GetHasSeenFirstRun(database),
+            DeathpoolDatabase.GetHasSeenFirstRun(database),
             true,
             "database getter should report the persisted first-run state"
         )
@@ -262,8 +263,8 @@ return function(context)
             },
         })
 
-        local sources = _G.DeathpoolDatabase.GetDeathHistorySourceNames(database)
-        local zones = _G.DeathpoolDatabase.GetDeathHistoryZones(database)
+        local sources = DeathpoolDatabase.GetDeathHistorySourceNames(database)
+        local zones = DeathpoolDatabase.GetDeathHistoryZones(database)
 
         assertTableLength(sources, 2, "history sources should contain each normalized value once")
         assertEquals(sources[1], "Alpha Beast", "history sources should be sorted alphabetically")
@@ -309,7 +310,7 @@ return function(context)
         local deathHistory = database.deathHistory
         local successfulDeaths = database.successfullyPredictedDeaths
 
-        _G.DeathpoolDatabase.ResetGameplayState(database)
+        DeathpoolDatabase.ResetGameplayState(database)
 
         assertEquals(database.lockedPrediction, nil, "reset gameplay state should clear the locked prediction")
         assertEquals(database.lastPrediction, nil, "reset gameplay state should clear the last prediction")

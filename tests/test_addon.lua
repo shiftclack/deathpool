@@ -8,9 +8,12 @@ package.path = table.concat({
 local TestHelpers = require("tests.support_helpers")
 local Fixtures = require("tests.support_fixtures")
 local UIHarness = require("tests.support_ui_harness")
-require("DeathpoolMigration")
-local DeathpoolDatabase = require("DeathpoolDatabase")
-local DeathpoolConstants = require("DeathpoolConstants")
+local AddonLoader = require("tests.support_addon_loader")
+local addonLoader = AddonLoader.GetDefault()
+addonLoader:Load("DeathpoolConstants")
+addonLoader:Load("DeathpoolMigration")
+local DeathpoolDatabase = addonLoader:Load("DeathpoolDatabase")
+local DeathpoolConstants = addonLoader.ns.DeathpoolConstants
 local LogicHelpers = require("tests.support_logic_helpers")
 local suite = TestHelpers.CreateSuite()
 local DATABASE_DEFAULTS = DeathpoolDatabase.DEFAULTS or {}
@@ -92,7 +95,7 @@ local function testMainWindowVisibilityPersistsThroughStartup()
     assertTruthy(DeathpoolCharacterState ~= nil, "addon load should initialize SavedVariables")
     assertEquals(DeathpoolCharacterState.hidden, getDefault("hidden"), "addon load should honor the configured hidden default")
     assertEquals(DeathpoolCharacterState.debugEnabled, nil, "addon load should not persist debug mode to SavedVariables")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), false, "addon load should start with debug mode disabled for the session")
+    assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), false, "addon load should start with debug mode disabled for the session")
     assertEquals(DeathpoolCharacterState.logWindowShown, getDefault("logWindowShown"), "addon load should honor the configured log window default")
     assertEquals(DeathpoolDebug:IsShown(), false, "addon load should keep the debug window hidden by default")
 
@@ -305,7 +308,7 @@ end
 local function testDebugLogOnlyPrintsWhileDebugModeIsEnabled()
     local context = createLoadedAddonContext()
     local chatMessages = context.chatMessages
-    local debugApi = _G.DeathpoolDebug
+    local debugApi = context.ns.DeathpoolDebug
 
     assertEquals(#chatMessages, 0, "addon load should not print chat announcements")
 
@@ -327,14 +330,14 @@ local function testDebugToggleControlsWindowAndPrinting()
     local chatMessages = context.chatMessages
 
     SlashCmdList.DEATHPOOL("debug")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), true, "debug command should enable shared debug mode")
+    assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), true, "debug command should enable shared debug mode")
     assertEquals(DeathpoolCharacterState.debugEnabled, nil, "debug command should not write debug mode to SavedVariables")
     assertEquals(DeathpoolDebug:IsShown(), true, "debug command should show the debug window while enabled")
     assertTruthy(string.find(chatMessages[#chatMessages], "enabled", 1, true), "debug command should print enable message")
 
 
     SlashCmdList.DEATHPOOL("debug")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), false, "debug command should disable shared debug mode")
+    assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), false, "debug command should disable shared debug mode")
     assertEquals(DeathpoolCharacterState.debugEnabled, nil, "debug command should keep SavedVariables free of debug mode state")
     assertEquals(DeathpoolDebug:IsShown(), false, "debug command should hide the debug window while disabled")
     --assertEquals(chatMessages[#chatMessages], "|cffcc3333Deathpool|r: Debug mode disabled.", "debug command should announce disablement")
@@ -359,10 +362,10 @@ local function testReloadClearsLegacySavedDebugFlagAndSessionDebugMode()
     })
 
     assertEquals(DeathpoolCharacterState.debugEnabled, nil, "addon load should clear the legacy saved debug flag")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), false, "legacy saved debug mode should not re-enable debug for the session")
+    assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), false, "legacy saved debug mode should not re-enable debug for the session")
 
     context.runSlash("debug")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), true, "debug command should still enable runtime debug mode")
+    assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), true, "debug command should still enable runtime debug mode")
 
     local reloadedContext = createLoadedAddonContext({
         state = DeathpoolCharacterState,
@@ -370,7 +373,7 @@ local function testReloadClearsLegacySavedDebugFlagAndSessionDebugMode()
     })
 
     assertEquals(reloadedContext.getDebugFrame():IsShown(), false, "reload should bring the debug window back hidden")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), false, "reload should reset debug mode for the new session")
+    assertEquals(reloadedContext.ns.DeathpoolDebugState.IsEnabled(), false, "reload should reset debug mode for the new session")
     assertEquals(DeathpoolCharacterState.debugEnabled, nil, "reload should keep SavedVariables free of the debug flag")
 end
 
@@ -569,7 +572,7 @@ local function testSetupWindowClosesLogWindowWithoutRememberingLogState()
         "setup should not persist a closed desired log state"
     )
 
-    DeathpoolUI.SetLogWindowShown(Deathpool, DeathpoolCharacterState, false)
+    context.DeathpoolUI.SetLogWindowShown(Deathpool, DeathpoolCharacterState, false)
     context.runSlash("log")
 
     assertEquals(DeathpoolCharacterState.logWindowShown, true, "log command should still update desired log state")
@@ -682,7 +685,7 @@ local function testExpandingReloadedCollapsedWindowRestoresRecentDeathRows()
     assertEquals(Deathpool.recentDeathsFrame:IsShown(), false, "collapsed startup should hide the expanded recent death pane")
     assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Murloc", "collapsed startup should still populate expanded death row data")
 
-    _G.DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
+    context.DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, false)
 
     assertEquals(Deathpool.isCollapsed, false, "expanding the mini-log should restore the expanded state")
     assertEquals(Deathpool.recentDeathsFrame:IsShown(), true, "expanding the mini-log should show the expanded recent death pane")
@@ -697,7 +700,7 @@ local function testAddonLoadDefaultsCombatAutoMinimizeToEnabled()
 end
 
 local function testAddonLoadDefaultsDeathAnnouncementToEnabled()
-    createLoadedAddonContext()
+    local context = createLoadedAddonContext()
 
     assertEquals(
         DeathpoolCharacterState.announcements.enabled,
@@ -711,12 +714,12 @@ local function testAddonLoadDefaultsDeathAnnouncementToEnabled()
     )
 
     assertEquals(
-        _G.DeathpoolUISettings.guildAnnouncementsEnabledCheckbox:GetChecked(),
+        context.ns.DeathpoolUISettings.guildAnnouncementsEnabledCheckbox:GetChecked(),
         getDefault("announcements").enabled,
         "settings panel should show the configured guild announcement default"
     )
     assertEquals(
-        _G.DeathpoolUISettings.announceDeathToGuildCheckbox:IsEnabled(),
+        context.ns.DeathpoolUISettings.announceDeathToGuildCheckbox:IsEnabled(),
         getDefault("announcements").enabled,
         "settings panel should enable guild announcement options from the configured default"
     )
@@ -1050,7 +1053,7 @@ local function testSlashCommandsReachTheirExpectedBranches()
     context.runSlash("setup")
     assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should show the setup window")
 
-    DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
+    context.DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
     context.runSlash("setup")
     assertEquals(Deathpool.isCollapsed, false, "setup command should expand the main window before showing setup")
     assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should keep setup visible after expanding the main window")
@@ -1063,7 +1066,7 @@ local function testSlashCommandsReachTheirExpectedBranches()
     assertTruthy(Deathpool.setupFrame:IsShown(), "setup command should keep the setup window shown after showing main")
 
     context.runSlash("debug")
-    assertEquals(_G.DeathpoolDebugState.IsEnabled(), true, "debug command should reach the debug toggle branch")
+    assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), true, "debug command should reach the debug toggle branch")
 
     context.runSlash("showincombat")
     assertEquals(DeathpoolCharacterState.showInCombat, false, "showincombat command should reach the combat setting branch")
@@ -1117,7 +1120,7 @@ local function testSlashCommandsReachTheirExpectedBranches()
 end
 
 local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
-    createLoadedAddonContext({
+    local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             announcements = {
                 enabled = true,
@@ -1133,7 +1136,7 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
 
     local category = _G.Settings.registeredAddOnCategories[#_G.Settings.registeredAddOnCategories]
     ---@type DeathpoolUISettingsPanelModule
-    local settingsModule = _G.DeathpoolUISettings
+    local settingsModule = context.ns.DeathpoolUISettings
     local function getRelativeToAndXOffset(region)
         local _, relativeTo, _, x = region:GetPoint(1)
         return relativeTo, x
@@ -1211,14 +1214,14 @@ local function testSettingsPanelRegistersAddonCategoryAndReflectsSavedState()
 end
 
 local function testSettingsPanelInitializeRebindsCheckboxesToLatestOptions()
-    createLoadedAddonContext({
+    local context = createLoadedAddonContext({
         state = Fixtures.addonDatabase({
             showInCombat = false,
         }),
     })
 
     ---@type DeathpoolUISettingsPanelModule
-    local settingsModule = _G.DeathpoolUISettings
+    local settingsModule = context.ns.DeathpoolUISettings
     local reboundState = Fixtures.addonDatabase({
         announcements = {
             enabled = true,
@@ -1317,7 +1320,7 @@ local function testSettingsPanelCheckboxesUseSharedSettingHandlers()
     })
 
     ---@type DeathpoolUISettingsPanelModule
-    local settingsModule = _G.DeathpoolUISettings
+    local settingsModule = context.ns.DeathpoolUISettings
 
     settingsModule.categoryFrame:Show()
 
@@ -1513,7 +1516,7 @@ local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
     local Deathpool = context.Deathpool
     local DeathpoolDebug = context.DeathpoolDebug
     local DeathpoolLog = context.DeathpoolLog
-    local DeathpoolLogic = _G.DeathpoolLogic
+    local DeathpoolLogic = context.ns.DeathpoolLogic
     local dispatchEvent = context.dispatchEvent
     local controller = context.controller
     local waitingPromptMinDuration = DEMO_RULES.waitingForFirstDeathMinDurationSeconds
@@ -1615,6 +1618,7 @@ local function testHardcoreDeathsChannelWithoutSameZoneBonus()
     })
     local dispatchEvent = context.dispatchEvent
     local controller = context.controller
+    local DeathpoolLogic = context.ns.DeathpoolLogic
     local sourcePoints = LogicHelpers.getExpectedBasePoints({ source = true })
     local expectedAwardedPoints = sourcePoints * LogicHelpers.getDisplayMultiplier(1, 1)
     local rawMessage = "[Drakedog] has been slain by Hogger in Westfall! They were level 12"
@@ -1640,12 +1644,12 @@ local function testHardcoreDeathsChannelWithoutSameZoneBonus()
     local storedDeath = DeathpoolCharacterState.recentDeaths[1]
     assertEquals(storedDeath.sameZoneBonusApplied, false, "different-zone deaths should not persist the same-zone bonus flag")
     assertEquals(
-        _G.DeathpoolLogic.GetStoredDeathSameZoneBonusPoints(storedDeath),
+        DeathpoolLogic.GetStoredDeathSameZoneBonusPoints(storedDeath),
         0,
         "different-zone deaths should not award same-zone bonus points"
     )
     assertEquals(
-        _G.DeathpoolLogic.GetStoredDeathAwardedPoints(storedDeath),
+        DeathpoolLogic.GetStoredDeathAwardedPoints(storedDeath),
         expectedAwardedPoints,
         "different-zone deaths should keep the normal awarded score"
     )
@@ -1673,8 +1677,9 @@ local function testHardcoreDeathsChannelApplySameZoneBonusWithoutZonePrediction(
     })
     local dispatchEvent = context.dispatchEvent
     local controller = context.controller
+    local DeathpoolLogic = context.ns.DeathpoolLogic
     local sourcePoints = LogicHelpers.getExpectedBasePoints({ source = true })
-    local sameZonePoints = _G.DeathpoolConstants.SCORING.sameZoneFixedBonusPoints
+    local sameZonePoints = context.ns.DeathpoolConstants.SCORING.sameZoneFixedBonusPoints
     local expectedMultiplier = LogicHelpers.getDisplayMultiplier(1, 1)
     local rawMessage = "[Drakedog] has been slain by Hogger in Elwynn Forest! They were level 12"
 
@@ -1699,12 +1704,12 @@ local function testHardcoreDeathsChannelApplySameZoneBonusWithoutZonePrediction(
     local storedDeath = DeathpoolCharacterState.recentDeaths[1]
     assertEquals(storedDeath.sameZoneBonusApplied, true, "same-zone deaths should persist the bonus flag even without a zone prediction")
     assertEquals(
-        _G.DeathpoolLogic.GetStoredDeathSameZoneBonusPoints(storedDeath),
+        DeathpoolLogic.GetStoredDeathSameZoneBonusPoints(storedDeath),
         sameZonePoints,
         "same-zone deaths should award bonus points even when zone was not predicted"
     )
     assertEquals(
-        _G.DeathpoolLogic.GetStoredDeathAwardedPoints(storedDeath),
+        DeathpoolLogic.GetStoredDeathAwardedPoints(storedDeath),
         (sourcePoints + sameZonePoints) * expectedMultiplier,
         "same-zone bonus should add into the total for non-zone predictions"
     )

@@ -62,7 +62,11 @@
 ---@field windowPosition DeathpoolFrameAnchor|nil
 ---@field collapsedWindowPosition DeathpoolFrameAnchor|nil
 
-local DeathpoolDatabase = _G.DeathpoolDatabase or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolDatabase = ns.DeathpoolDatabase or {}
+ns.DeathpoolDatabase = DeathpoolDatabase
 DeathpoolDatabase.DEFAULTS = {
     hidden = true,
     hasSeenIntroDemo = false,
@@ -165,7 +169,7 @@ end
 ---@param database DeathpoolCharacterState|nil
 ---@return DeathpoolCharacterState
 function DeathpoolDatabase.Init(database)
-    local migration = _G.DeathpoolMigration
+    local migration = ns.DeathpoolMigration
     database = EnsureDatabase(database)
     database = migration.Apply(database)
     return database
@@ -539,7 +543,5 @@ function DeathpoolDatabase.SetWindowPosition(database, collapsed, anchor)
 
     return anchor
 end
-
-_G.DeathpoolDatabase = DeathpoolDatabase
 
 return DeathpoolDatabase

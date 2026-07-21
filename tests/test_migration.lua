@@ -5,7 +5,8 @@ package.path = table.concat({
     package.path,
 }, ";")
 
-local DeathpoolMigration = require("DeathpoolMigration")
+local AddonLoader = require("tests.support_addon_loader")
+local DeathpoolMigration = AddonLoader.Create():Load("DeathpoolMigration")
 local TestHelpers = require("tests.support_helpers")
 local suite = TestHelpers.CreateSuite()
 local assertEquals = function(actual, expected, message)

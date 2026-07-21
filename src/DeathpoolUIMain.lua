@@ -1,9 +1,13 @@
-local DeathpoolUI = _G.DeathpoolUI or {}
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolDebug = _G.DeathpoolDebug
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolUIMode = _G.DeathpoolUIMode
-local DeathpoolUISetup = _G.DeathpoolUISetup
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolDebug = ns.DeathpoolDebug
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolUIMode = ns.DeathpoolUIMode
+local DeathpoolUISetup = ns.DeathpoolUISetup
+ns.DeathpoolUI = DeathpoolUI
 local SCORE_RULES = DeathpoolConstants.SCORING
 local DEMO_RULES = DeathpoolConstants.DEMO
 local EMPTY_PREDICTION_PROMPT_TEXT = "Make your prediction"

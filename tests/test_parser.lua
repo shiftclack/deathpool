@@ -8,10 +8,11 @@ package.path = table.concat({
     package.path,
 }, ";")
 
+local AddonLoader = require("tests.support_addon_loader")
+
 local function loadParserModule()
-    package.loaded.DeathpoolParser = nil
-    _G.DeathpoolParser = nil
-    return require("DeathpoolParser")
+    local loader = AddonLoader.Create()
+    return loader:Load("DeathpoolParser")
 end
 
 local OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS = {

@@ -1,5 +1,24 @@
 ---@meta
 
+---@class DeathpoolNamespace
+---@field DeathpoolAnnouncements table
+---@field DeathpoolCommands table
+---@field DeathpoolConstants table
+---@field DeathpoolDatabase table
+---@field DeathpoolDebug table
+---@field DeathpoolDebugState table
+---@field DeathpoolDemo table
+---@field DeathpoolLogic table
+---@field DeathpoolMigration table
+---@field DeathpoolParser table
+---@field DeathpoolSettings table
+---@field DeathpoolSetup table
+---@field DeathpoolUI table
+---@field DeathpoolUISettings table
+---@field DeathpoolUISetup table
+---@field DeathpoolUIMinimap table
+---@field DeathpoolUIMode table
+
 ---@class ColorInfo
 ---@field r number
 ---@field g number

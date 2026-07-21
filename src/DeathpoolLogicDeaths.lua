@@ -1,4 +1,8 @@
-local DeathpoolLogic = _G.DeathpoolLogic or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolLogic = ns.DeathpoolLogic or {}
+ns.DeathpoolLogic = DeathpoolLogic
 
 ---@class DeathpoolDeathEvent
 ---@field timestamp integer
@@ -158,7 +162,5 @@ function DeathpoolLogic.GetStoredDeathTotalPoints(deaths)
 end
 
 DeathpoolLogic._CreateStoredDeathEntry = CreateStoredDeathEntry
-
-_G.DeathpoolLogic = DeathpoolLogic
 
 return DeathpoolLogic

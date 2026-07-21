@@ -1,4 +1,8 @@
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
 local DeathpoolSetup = {}
+ns.DeathpoolSetup = DeathpoolSetup
 
 local HARDCORE_DEATH_CHAT_TYPE_CVAR = "hardcoreDeathChatType"
 local HARDCORE_DEATHS_CHANNEL_NAME = "HardcoreDeaths"
@@ -64,7 +68,5 @@ function DeathpoolSetup.JoinHardcoreDeathsChannel()
     JoinPermanentChannel(HARDCORE_DEATHS_CHANNEL_NAME)
     sessionState.hasJoinedHardcoreDeathsChannel = true
 end
-
-_G.DeathpoolSetup = DeathpoolSetup
 
 return DeathpoolSetup

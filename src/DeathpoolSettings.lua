@@ -9,8 +9,11 @@
 ---@field SetAnnounceScoreOnLevelUp fun(database: DeathpoolCharacterState, enabled: boolean): boolean
 ---@field GetMinimapHidden fun(database: DeathpoolCharacterState): boolean
 
-local DeathpoolSettings = _G.DeathpoolSettings or {}
-local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolSettings = ns.DeathpoolSettings or {}
+ns.DeathpoolSettings = DeathpoolSettings
 
 ---@type DeathpoolCharacterState|nil
 local activeDatabase = nil
@@ -91,6 +94,7 @@ end
 ---@param disabled boolean
 ---@return boolean
 function DeathpoolSettings.SetDisableMinimapIcon(disabled)
+    local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
     return DeathpoolUIMinimap.SetHidden(nil, GetDatabase(), disabled)
 end
 
@@ -98,7 +102,5 @@ end
 function DeathpoolSettings.ToggleShowInCombat()
     return DeathpoolSettings.SetShowInCombat(not DeathpoolSettings.GetShowInCombat())
 end
-
-_G.DeathpoolSettings = DeathpoolSettings
 
 return DeathpoolSettings

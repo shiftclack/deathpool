@@ -1,4 +1,8 @@
-local DeathpoolUI = _G.DeathpoolUI or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI or {}
+ns.DeathpoolUI = DeathpoolUI
 
 local DEMO_DEFAULT_SERVER = "Doomhowl"
 local DEMO_DEFAULT_CAUSE_TYPE = "HARDCORE_CAUSEOFDEATH_CREATURE"
@@ -389,7 +393,5 @@ end
 function DeathpoolUI.GetIntroDemoAttractModeText()
     return DEMO_ATTRACT_MODE_TEXT
 end
-
-_G.DeathpoolUI = DeathpoolUI
 
 return DeathpoolUI

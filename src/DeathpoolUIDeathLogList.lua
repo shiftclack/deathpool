@@ -1,5 +1,8 @@
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolLogic = _G.DeathpoolLogic
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolLogic = ns.DeathpoolLogic
 local EMPTY_DEATHS = {}
 
 ---@class DeathpoolDeathDisplayFields

@@ -32,10 +32,15 @@
 ---@field showInCombatCheckbox DeathpoolUISettingsPanelCheckbox|nil
 ---@field Initialize fun(settingsApi: DeathpoolUISettingsSettingsApi)
 
-local DeathpoolUISettings = _G.DeathpoolUISettings or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUISettings = ns.DeathpoolUISettings or {}
 ---@cast DeathpoolUISettings DeathpoolUISettingsPanelModule
-local DeathpoolConstants = _G.DeathpoolConstants
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolUI = ns.DeathpoolUI
 local Settings = _G.Settings
+ns.DeathpoolUISettings = DeathpoolUISettings
 
 ---@type DeathpoolUISettingsSettingsApi|nil
 local activeSettingsApi = nil
@@ -203,7 +208,5 @@ function DeathpoolUISettings.Initialize(settingsApi)
 
     RefreshCheckboxStates()
 end
-
-_G.DeathpoolUISettings = DeathpoolUISettings
 
 return DeathpoolUISettings

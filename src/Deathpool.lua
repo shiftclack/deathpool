@@ -1,17 +1,18 @@
-local ADDON_NAME = ...
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolDebug = _G.DeathpoolDebug
-local DeathpoolParser = _G.DeathpoolParser
-local DeathpoolLogic = _G.DeathpoolLogic
-local DeathpoolAnnouncements = _G.DeathpoolAnnouncements
-local DeathpoolCommands = _G.DeathpoolCommands
-local DeathpoolSettings = _G.DeathpoolSettings
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
-local DeathpoolUISetup = _G.DeathpoolUISetup
-local DeathpoolUISettings = _G.DeathpoolUISettings
-local DeathpoolDemo = _G.DeathpoolDemo
+local ADDON_NAME, ns = ...
+---@cast ns DeathpoolNamespace
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolDebug = ns.DeathpoolDebug
+local DeathpoolParser = ns.DeathpoolParser
+local DeathpoolLogic = ns.DeathpoolLogic
+local DeathpoolAnnouncements = ns.DeathpoolAnnouncements
+local DeathpoolCommands = ns.DeathpoolCommands
+local DeathpoolSettings = ns.DeathpoolSettings
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
+local DeathpoolUISetup = ns.DeathpoolUISetup
+local DeathpoolUISettings = ns.DeathpoolUISettings
+local DeathpoolDemo = ns.DeathpoolDemo
 
 local STORAGE_RULES = DeathpoolConstants.STORAGE
 local HARDCORE_DEATHS_CHANNEL_NAME = "HardcoreDeaths"

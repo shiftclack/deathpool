@@ -1,4 +1,6 @@
-local DeathpoolLogic = _G.DeathpoolLogic or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
 
-_G.DeathpoolLogic = DeathpoolLogic
+local DeathpoolLogic = ns.DeathpoolLogic or {}
+ns.DeathpoolLogic = DeathpoolLogic
 return DeathpoolLogic

@@ -1,5 +1,9 @@
-local DeathpoolLogic = _G.DeathpoolLogic or {}
-local DeathpoolConstants = _G.DeathpoolConstants
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolLogic = ns.DeathpoolLogic or {}
+local DeathpoolConstants = ns.DeathpoolConstants
+ns.DeathpoolLogic = DeathpoolLogic
 local SCORE_RULES = DeathpoolConstants.SCORING
 
 ---@param ... boolean
@@ -284,7 +288,5 @@ end
 DeathpoolLogic._GetPredictionMatchState = GetPredictionMatchState
 DeathpoolLogic._IsPredictionMatched = IsPredictionMatched
 DeathpoolLogic._NormalizeComparableText = NormalizeComparableText
-
-_G.DeathpoolLogic = DeathpoolLogic
 
 return DeathpoolLogic

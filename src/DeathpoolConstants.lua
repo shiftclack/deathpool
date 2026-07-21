@@ -1,3 +1,6 @@
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
 local DeathpoolConstants = {
     HELP = {
         -- url displayed in help
@@ -78,6 +81,6 @@ local DeathpoolConstants = {
     },
 }
 
-_G.DeathpoolConstants = DeathpoolConstants
+ns.DeathpoolConstants = DeathpoolConstants
 
 return DeathpoolConstants

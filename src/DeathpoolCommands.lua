@@ -9,14 +9,18 @@
 ---@field lowered string
 ---@field command string
 
-local DeathpoolCommands = _G.DeathpoolCommands or {}
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolDebug = _G.DeathpoolDebug
-local DeathpoolDebugState = _G.DeathpoolDebugState
-local DeathpoolSettings = _G.DeathpoolSettings
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolUISetup = _G.DeathpoolUISetup
-local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolCommands = ns.DeathpoolCommands or {}
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolDebug = ns.DeathpoolDebug
+local DeathpoolDebugState = ns.DeathpoolDebugState
+local DeathpoolSettings = ns.DeathpoolSettings
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUISetup = ns.DeathpoolUISetup
+local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
+ns.DeathpoolCommands = DeathpoolCommands
 
 ---@type DeathpoolCommandsAddonFrame|nil
 local activeAddonFrame = nil
@@ -242,7 +246,5 @@ SLASH_DEATHPOOL1 = "/deathpool"
 SlashCmdList.DEATHPOOL = function(message)
     DeathpoolCommands.HandleSlashCommand(message)
 end
-
-_G.DeathpoolCommands = DeathpoolCommands
 
 return DeathpoolCommands

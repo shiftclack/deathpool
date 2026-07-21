@@ -4,10 +4,14 @@
 ---@field Hide fun(self: DeathpoolMinimapControllerFrame)
 ---@field Raise fun(self: DeathpoolMinimapControllerFrame)|nil
 
-local DeathpoolUIMinimap = _G.DeathpoolUIMinimap or {}
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolLogic = _G.DeathpoolLogic
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUIMinimap = ns.DeathpoolUIMinimap or {}
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolLogic = ns.DeathpoolLogic
 local LibStub = _G.LibStub
+ns.DeathpoolUIMinimap = DeathpoolUIMinimap
 
 DeathpoolUIMinimap.ENABLED = true
 DeathpoolUIMinimap.ICON_PATH =  "Interface\\Icons\\INV_Misc_Bone_ElfSkull_01"
@@ -155,7 +159,5 @@ function DeathpoolUIMinimap.Initialize(frame, database)
     DeathpoolUIMinimap.RefreshLauncherText(frame, database)
     DeathpoolUIMinimap.SetHidden(frame, database, DeathpoolDatabase.GetMinimapHidden(database))
 end
-
-_G.DeathpoolUIMinimap = DeathpoolUIMinimap
 
 return DeathpoolUIMinimap

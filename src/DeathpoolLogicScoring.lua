@@ -12,9 +12,13 @@
 --
 -- luacheck: ignore 561
 
-local DeathpoolLogic = _G.DeathpoolLogic or {}
-local DeathpoolDebug = _G.DeathpoolDebug
-local DeathpoolConstants = _G.DeathpoolConstants
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolLogic = ns.DeathpoolLogic or {}
+local DeathpoolDebug = ns.DeathpoolDebug
+local DeathpoolConstants = ns.DeathpoolConstants
+ns.DeathpoolLogic = DeathpoolLogic
 local SCORE_RULES = DeathpoolConstants.SCORING
 local PREDICTION_PREVIEW_KEY_ORDER = { "levelRange", "source", "zone" }
 local PREDICTION_PREVIEW_KEY_LABELS = {
@@ -653,7 +657,5 @@ function DeathpoolLogic.GetPointColorQuality(points)
 
     return 4
 end
-
-_G.DeathpoolLogic = DeathpoolLogic
 
 return DeathpoolLogic

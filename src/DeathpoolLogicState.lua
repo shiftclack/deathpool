@@ -1,6 +1,10 @@
-local DeathpoolLogic = _G.DeathpoolLogic or {}
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolDatabase = _G.DeathpoolDatabase
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolLogic = ns.DeathpoolLogic or {}
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolDatabase = ns.DeathpoolDatabase
+ns.DeathpoolLogic = DeathpoolLogic
 local SCORE_RULES = DeathpoolConstants.SCORING
 local STORAGE_RULES = DeathpoolConstants.STORAGE
 
@@ -288,7 +292,5 @@ function DeathpoolLogic.AddDeathToDatabase(database, death, recentDeathKeys, opt
 
     return true, score
 end
-
-_G.DeathpoolLogic = DeathpoolLogic
 
 return DeathpoolLogic

@@ -5,6 +5,8 @@ package.path = table.concat({
     package.path,
 }, ";")
 
+local AddonLoader = require("tests.support_addon_loader")
+
 local function createRegion(regionKind, name, parent, template)
     local region = {
         kind = regionKind,
@@ -533,9 +535,6 @@ local function initializeGlobals(options)
     UIParent:SetSize(1024, 768)
     DeathpoolCharacterState = nil
     _G.LibStub = nil
-    _G.DeathpoolSetup = nil
-    _G.DeathpoolUISetup = nil
-    _G.DeathpoolUIMode = nil
     _G.UISpecialFrames = {}
     _G.__frames = {}
     local function registerCanvasLayoutCategory(frame, name)
@@ -779,65 +778,38 @@ local function initializeGlobals(options)
 end
 
 local function loadUiModules()
-    package.loaded.DeathpoolConstants = nil
-    package.loaded.DeathpoolDatabase = nil
-    package.loaded.DeathpoolLogic = nil
-    package.loaded.DeathpoolLogicPrediction = nil
-    package.loaded.DeathpoolLogicScoring = nil
-    package.loaded.DeathpoolLogicDeaths = nil
-    package.loaded.DeathpoolLogicState = nil
-    package.loaded.DeathpoolDebug = nil
-    _G.DeathpoolConstants = require("DeathpoolConstants")
-    _G.DeathpoolDatabase = require("DeathpoolDatabase")
-    _G.DeathpoolDebug = require("DeathpoolDebug")
-    _G.DeathpoolLogic = require("DeathpoolLogic")
-    require("DeathpoolLogicPrediction")
-    require("DeathpoolLogicScoring")
-    require("DeathpoolLogicDeaths")
-    require("DeathpoolLogicState")
+    local loader = AddonLoader.Create()
 
-    package.loaded.DeathpoolUI = nil
-    package.loaded.DeathpoolUITooltip = nil
-    package.loaded.DeathpoolUIDeathLogList = nil
-    package.loaded.DeathpoolUIAutocomplete = nil
-    package.loaded.DeathpoolUIHelp = nil
-    package.loaded.DeathpoolSetup = nil
-    package.loaded.DeathpoolUISetup = nil
-    package.loaded.DeathpoolUIMode = nil
-    package.loaded.DeathpoolUIRefresh = nil
-    package.loaded.DeathpoolUILog = nil
-    package.loaded.DeathpoolSettings = nil
-    package.loaded.DeathpoolUISettings = nil
-    package.loaded.DeathpoolAnnouncements = nil
-    package.loaded.DeathpoolUIDemo = nil
-    package.loaded.DeathpoolDemo = nil
-    package.loaded.DeathpoolUIDebug = nil
-    package.loaded.DeathpoolUIMinimap = nil
-    package.loaded.DeathpoolUIMain = nil
-    package.loaded.DeathpoolCommands = nil
-    package.loaded.DeathpoolMigration = nil
+    loader:Load("DeathpoolConstants")
+    loader:Load("DeathpoolDebug")
+    loader:Load("DeathpoolDatabase")
+    loader:Load("DeathpoolParser")
+    loader:Load("DeathpoolLogic")
+    loader:Load("DeathpoolLogicPrediction")
+    loader:Load("DeathpoolLogicScoring")
+    loader:Load("DeathpoolLogicDeaths")
+    loader:Load("DeathpoolLogicState")
+    loader:Load("DeathpoolMigration")
+    loader:Load("DeathpoolSettings")
+    loader:Load("DeathpoolSetup")
+    loader:Load("DeathpoolAnnouncements")
+    loader:Load("DeathpoolUI")
+    loader:Load("DeathpoolUITooltip")
+    loader:Load("DeathpoolUIDeathLogList")
+    loader:Load("DeathpoolUIMinimap")
+    loader:Load("DeathpoolUIAutocomplete")
+    loader:Load("DeathpoolUIHelp")
+    loader:Load("DeathpoolUISetup")
+    loader:Load("DeathpoolUIMode")
+    loader:Load("DeathpoolUIRefresh")
+    loader:Load("DeathpoolUILog")
+    loader:Load("DeathpoolUISettings")
+    loader:Load("DeathpoolUIDemo")
+    loader:Load("DeathpoolDemo")
+    loader:Load("DeathpoolUIDebug")
+    loader:Load("DeathpoolUIMain")
 
-    local DeathpoolUI = require("DeathpoolUI")
-    local DeathpoolUIMinimap = require("DeathpoolUIMinimap")
-    require("DeathpoolMigration")
-    require("DeathpoolUITooltip")
-    require("DeathpoolUIDeathLogList")
-    require("DeathpoolUIAutocomplete")
-    require("DeathpoolUIHelp")
-    require("DeathpoolSetup")
-    require("DeathpoolUISetup")
-    require("DeathpoolUIMode")
-    require("DeathpoolUIRefresh")
-    require("DeathpoolUILog")
-    require("DeathpoolSettings")
-    require("DeathpoolUISettings")
-    require("DeathpoolAnnouncements")
-    require("DeathpoolUIDemo")
-    require("DeathpoolDemo")
-    require("DeathpoolUIDebug")
-    require("DeathpoolUIMain")
-
-    return DeathpoolUI, DeathpoolUIMinimap
+    return loader, loader.ns.DeathpoolUI, loader.ns.DeathpoolUIMinimap
 end
 
 local UIHarness = {}
@@ -847,14 +819,16 @@ function UIHarness.Create(options)
     initializeGlobals(options)
 
     local printedMessages = {}
-    local DeathpoolUI, DeathpoolUIMinimap = loadUiModules()
-    DeathpoolCharacterState = _G.DeathpoolDatabase.Init(options.state)
+    local loader, DeathpoolUI, DeathpoolUIMinimap = loadUiModules()
+    local ns = loader.ns
+    DeathpoolCharacterState = ns.DeathpoolDatabase.Init(options.state)
     local Deathpool, DeathpoolDebug, DeathpoolLog = DeathpoolUI.Initialize(
         DeathpoolCharacterState,
-        _G.DeathpoolLogic,
-        _G.DeathpoolConstants.STORAGE.maxRecentDeaths
+        ns.DeathpoolLogic,
+        ns.DeathpoolConstants.STORAGE.maxRecentDeaths
     )
-    local introDemoController = _G.DeathpoolDemo.Initialize(
+    Deathpool.__testNs = ns
+    local introDemoController = ns.DeathpoolDemo.Initialize(
         DeathpoolCharacterState,
         function()
             Deathpool:RefreshDeaths()
@@ -865,8 +839,14 @@ function UIHarness.Create(options)
     introDemoController:AttachFrame(Deathpool)
 
     return {
+        loader = loader,
+        ns = ns,
         DeathpoolUI = DeathpoolUI,
         DeathpoolUIMinimap = DeathpoolUIMinimap,
+        DeathpoolConstants = ns.DeathpoolConstants,
+        DeathpoolDatabase = ns.DeathpoolDatabase,
+        DeathpoolLogic = ns.DeathpoolLogic,
+        DeathpoolDemo = ns.DeathpoolDemo,
         Deathpool = Deathpool,
         DeathpoolDebug = DeathpoolDebug,
         DeathpoolLog = DeathpoolLog,
@@ -887,16 +867,11 @@ function UIHarness.CreateAddon(options)
     options = options or {}
     initializeGlobals(options)
 
-    local DeathpoolUI, DeathpoolUIMinimap = loadUiModules()
-    package.loaded.DeathpoolParser = nil
-    package.loaded.DeathpoolCommands = nil
-    package.loaded.Deathpool = nil
-    _G.DeathpoolDebug = require("DeathpoolDebug")
-    _G.DeathpoolMigration = require("DeathpoolMigration")
+    local loader, DeathpoolUI, DeathpoolUIMinimap = loadUiModules()
+    local ns = loader.ns
     DeathpoolCharacterState = options.state
-    _G.DeathpoolParser = require("DeathpoolParser")
-    _G.DeathpoolCommands = require("DeathpoolCommands")
-    require("Deathpool")
+    loader:Load("DeathpoolCommands")
+    loader:Load("Deathpool")
 
     local function getController()
         return rawget(_G, "DeathpoolAddonFrame")
@@ -915,8 +890,16 @@ function UIHarness.CreateAddon(options)
     end
 
     return {
+        loader = loader,
+        ns = ns,
         DeathpoolUI = DeathpoolUI,
         DeathpoolUIMinimap = DeathpoolUIMinimap,
+        DeathpoolConstants = ns.DeathpoolConstants,
+        DeathpoolDatabase = ns.DeathpoolDatabase,
+        DeathpoolDebug = ns.DeathpoolDebug,
+        DeathpoolDebugState = ns.DeathpoolDebugState,
+        DeathpoolLogic = ns.DeathpoolLogic,
+        DeathpoolUISettings = ns.DeathpoolUISettings,
         controller = getController(),
         getController = getController,
         getMainFrame = getMainFrame,

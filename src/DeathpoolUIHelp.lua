@@ -1,5 +1,8 @@
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolConstants = _G.DeathpoolConstants
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolConstants = ns.DeathpoolConstants
 local HELP_RULES = DeathpoolConstants.HELP
 local DOWNLOAD_AREA_WIDTH = 204
 local GITHUB_LINK_DIALOG_WIDTH = 430

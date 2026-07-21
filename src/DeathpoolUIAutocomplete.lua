@@ -1,5 +1,9 @@
-local DeathpoolUI = _G.DeathpoolUI or {}
-local DeathpoolDatabase = _G.DeathpoolDatabase
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolDatabase = ns.DeathpoolDatabase
+ns.DeathpoolUI = DeathpoolUI
 
 ---@class DeathpoolAutocompleteButton: DeathpoolWidget
 ---@field rowBackground table
@@ -367,7 +371,5 @@ function DeathpoolUI.UpdateSuggestions(frame, input)
 
     ShowDropdown(frame, matches)
 end
-
-_G.DeathpoolUI = DeathpoolUI
 
 return DeathpoolUI

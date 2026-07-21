@@ -5,15 +5,8 @@ package.path = table.concat({
     package.path,
 }, ";")
 
-package.loaded.DeathpoolConstants = nil
-package.loaded.DeathpoolDatabase = nil
-package.loaded.DeathpoolMigration = nil
-package.loaded.DeathpoolDebug = nil
-package.loaded.DeathpoolLogic = nil
-package.loaded.DeathpoolLogicPrediction = nil
-package.loaded.DeathpoolLogicScoring = nil
-package.loaded.DeathpoolLogicDeaths = nil
-package.loaded.DeathpoolLogicState = nil
+local AddonLoader = require("tests.support_addon_loader")
+local loader = AddonLoader.ResetDefault()
 
 rawset(_G, "wipe", function(values)
     for key in pairs(values) do
@@ -23,17 +16,23 @@ rawset(_G, "wipe", function(values)
     return values
 end)
 
-_G.DeathpoolConstants = require("DeathpoolConstants")
-_G.DeathpoolMigration = require("DeathpoolMigration")
-_G.DeathpoolDatabase = require("DeathpoolDatabase")
-_G.DeathpoolDebug = require("DeathpoolDebug")
+loader:Load("DeathpoolConstants")
+loader:Load("DeathpoolMigration")
+loader:Load("DeathpoolDatabase")
+loader:Load("DeathpoolDebug")
 rawset(_G, "GetZoneText", function()
     return "Test Logic Zone"
 end)
-_G.DeathpoolLogic = require("DeathpoolLogic")
-require("DeathpoolLogicPrediction")
-require("DeathpoolLogicScoring")
-require("DeathpoolLogicDeaths")
-require("DeathpoolLogicState")
+loader:Load("DeathpoolLogic")
+loader:Load("DeathpoolLogicPrediction")
+loader:Load("DeathpoolLogicScoring")
+loader:Load("DeathpoolLogicDeaths")
+loader:Load("DeathpoolLogicState")
 
-return _G.DeathpoolLogic
+return {
+    loader = loader,
+    ns = loader.ns,
+    DeathpoolConstants = loader.ns.DeathpoolConstants,
+    DeathpoolDatabase = loader.ns.DeathpoolDatabase,
+    DeathpoolLogic = loader.ns.DeathpoolLogic,
+}

@@ -5,8 +5,9 @@ package.path = table.concat({
     package.path,
 }, ";")
 
+local AddonLoader = require("tests.support_addon_loader")
 local Fixtures = require("tests.support_fixtures")
-local SCORE_RULES = _G.DeathpoolConstants.SCORING
+local SCORE_RULES = AddonLoader.GetDefault().ns.DeathpoolConstants.SCORING
 
 local Helpers = {}
 

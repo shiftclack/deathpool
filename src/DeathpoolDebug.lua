@@ -16,8 +16,13 @@
 ---@class DeathpoolDebugAddonFrame
 ---@field HandleBlizzardDeathMessage fun(self: DeathpoolDebugAddonFrame, message: string): boolean
 
-local DeathpoolDebug = _G.DeathpoolDebug or {}
-local DeathpoolDebugState = _G.DeathpoolDebugState or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolDebug = ns.DeathpoolDebug or {}
+local DeathpoolDebugState = ns.DeathpoolDebugState or {}
+ns.DeathpoolDebug = DeathpoolDebug
+ns.DeathpoolDebugState = DeathpoolDebugState
 ---@type DeathpoolCharacterState|nil
 local activeState = nil
 ---@type DeathpoolDebugDatabaseApi|nil
@@ -29,9 +34,6 @@ local activeDebugFrame = nil
 ---@type DeathpoolDebugAddonFrame|nil
 local activeAddonFrame = nil
 local debugEnabled = false
-
-_G.DeathpoolDebug = DeathpoolDebug
-_G.DeathpoolDebugState = DeathpoolDebugState
 
 local function Print(message)
     if activePrintMessage then

@@ -5,21 +5,25 @@ package.path = table.concat({
     package.path,
 }, ";")
 
-_G.DeathpoolConstants = require("DeathpoolConstants")
-_G.DeathpoolDatabase = require("DeathpoolDatabase")
-_G.DeathpoolDebug = require("DeathpoolDebug")
+local AddonLoader = require("tests.support_addon_loader")
+local loader = AddonLoader.GetDefault()
+loader:Load("DeathpoolConstants")
+loader:Load("DeathpoolMigration")
+loader:Load("DeathpoolDatabase")
+loader:Load("DeathpoolDebug")
 rawset(_G, "GetZoneText", function()
     return "Test UI Zone"
 end)
-local DeathpoolLogic = require("DeathpoolLogic")
-require("DeathpoolLogicPrediction")
-require("DeathpoolLogicScoring")
-require("DeathpoolLogicDeaths")
-require("DeathpoolLogicState")
+loader:Load("DeathpoolLogic")
+loader:Load("DeathpoolLogicPrediction")
+loader:Load("DeathpoolLogicScoring")
+loader:Load("DeathpoolLogicDeaths")
+loader:Load("DeathpoolLogicState")
+local DeathpoolLogic = loader.ns.DeathpoolLogic
 local TestHelpers = require("tests.support_helpers")
 local UIHarness = require("tests.support_ui_harness")
 local Fixtures = require("tests.support_fixtures")
-local SCORE_RULES = _G.DeathpoolConstants.SCORING
+local SCORE_RULES = loader.ns.DeathpoolConstants.SCORING
 
 local function buildLevelPointsSummary()
     local visibleRanges = {}
@@ -75,7 +79,11 @@ local function createUIContext(state, options)
     })
 
     return {
+        ns = ui.ns,
         DeathpoolUI = ui.DeathpoolUI,
+        DeathpoolConstants = ui.DeathpoolConstants,
+        DeathpoolDatabase = ui.DeathpoolDatabase,
+        DeathpoolLogic = ui.DeathpoolLogic,
         Deathpool = ui.Deathpool,
         DeathpoolDebug = ui.DeathpoolDebug,
         DeathpoolLog = ui.DeathpoolLog,
@@ -96,6 +104,10 @@ local function Create()
     return {
         Fixtures = Fixtures,
         suite = suite,
+        ns = loader.ns,
+        DeathpoolConstants = loader.ns.DeathpoolConstants,
+        DeathpoolDatabase = loader.ns.DeathpoolDatabase,
+        DeathpoolLogic = DeathpoolLogic,
         createUIContext = createUIContext,
         buildLevelPointsSummary = buildLevelPointsSummary,
         formatPredictionPreview = formatPredictionPreview,

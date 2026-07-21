@@ -1,7 +1,11 @@
-local DeathpoolAnnouncements = _G.DeathpoolAnnouncements or {}
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolLogic = _G.DeathpoolLogic
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolAnnouncements = ns.DeathpoolAnnouncements or {}
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolLogic = ns.DeathpoolLogic
+ns.DeathpoolAnnouncements = DeathpoolAnnouncements
 
 local ANNOUNCEMENT_RULES = DeathpoolConstants.ANNOUNCEMENTS
 local MIN_ANNOUNCE_LEVEL = 10
@@ -60,7 +64,5 @@ function DeathpoolAnnouncements.AnnouncePlayerDeath(state, printMessage)
         )
     end
 end
-
-_G.DeathpoolAnnouncements = DeathpoolAnnouncements
 
 return DeathpoolAnnouncements

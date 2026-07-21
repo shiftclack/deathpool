@@ -1,7 +1,11 @@
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
 local DeathpoolUISetup = {}
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolSetup = _G.DeathpoolSetup
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolSetup = ns.DeathpoolSetup
+ns.DeathpoolUISetup = DeathpoolUISetup
 
 ---@class DeathpoolSetupFrame
 ---@field Show fun(self: DeathpoolSetupFrame)
@@ -287,7 +291,5 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
 
     return setupFrame
 end
-
-_G.DeathpoolUISetup = DeathpoolUISetup
 
 return DeathpoolUISetup

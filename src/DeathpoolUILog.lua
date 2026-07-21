@@ -1,5 +1,8 @@
-local DeathpoolUI = _G.DeathpoolUI
-local DeathpoolDatabase = _G.DeathpoolDatabase
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolDatabase = ns.DeathpoolDatabase
 
 ---@class DeathpoolHistoryParentFrame: DeathpoolMainFrameShell
 ---@field [string] any

@@ -5,6 +5,7 @@ package.path = table.concat({
     package.path,
 }, ";")
 
+local AddonLoader = require("tests.support_addon_loader")
 local TestHelpers = require("tests.support_helpers")
 local suite = TestHelpers.CreateSuite()
 local assertEquals = function(actual, expected, message)
@@ -15,23 +16,7 @@ local assertTruthy = function(value, message)
 end
 
 local function resetEnvironment()
-    package.loaded.DeathpoolDatabase = nil
-    package.loaded.DeathpoolLogic = nil
-    package.loaded.DeathpoolLogicPrediction = nil
-    package.loaded.DeathpoolLogicScoring = nil
-    package.loaded.DeathpoolLogicDeaths = nil
-    package.loaded.DeathpoolLogicState = nil
-    package.loaded.DeathpoolConstants = nil
-    package.loaded.DeathpoolDebug = nil
-    package.loaded.DeathpoolUI = nil
-    package.loaded.DeathpoolUIMinimap = nil
-    _G.DeathpoolDatabase = nil
-    _G.DeathpoolLogic = nil
-    _G.DeathpoolConstants = nil
-    _G.DeathpoolDebug = nil
-    DeathpoolUIMinimap = nil
     DeathpoolCharacterState = nil
-    DeathpoolUI = nil
 end
 
 local function createButton(dataObject)
@@ -128,18 +113,20 @@ local function loadMinimapModule()
     resetEnvironment()
 
     local state = createLibStubs()
+    local loader = AddonLoader.Create()
 
-    _G.DeathpoolConstants = require("DeathpoolConstants")
-    _G.DeathpoolDatabase = require("DeathpoolDatabase")
-    _G.DeathpoolDebug = require("DeathpoolDebug")
-    _G.DeathpoolLogic = require("DeathpoolLogic")
-    _G.DeathpoolUI = require("DeathpoolUI")
-    require("DeathpoolLogicPrediction")
-    require("DeathpoolLogicScoring")
-    require("DeathpoolLogicDeaths")
-    require("DeathpoolLogicState")
-    local module = require("DeathpoolUIMinimap")
-    return module, state
+    loader:Load("DeathpoolConstants")
+    loader:Load("DeathpoolDebug")
+    loader:Load("DeathpoolDatabase")
+    loader:Load("DeathpoolLogic")
+    loader:Load("DeathpoolLogicPrediction")
+    loader:Load("DeathpoolLogicScoring")
+    loader:Load("DeathpoolLogicDeaths")
+    loader:Load("DeathpoolLogicState")
+    loader:Load("DeathpoolMigration")
+    loader:Load("DeathpoolUI")
+    local module = loader:Load("DeathpoolUIMinimap")
+    return module, state, loader.ns
 end
 
 local function createFrame(options)
@@ -205,10 +192,10 @@ local function testIsEnabledReflectsFeatureFlag()
 end
 
 local function testInitializeModelDatabaseDefaultsCreatesMinimapSettings()
-    loadMinimapModule()
+    local _, _, ns = loadMinimapModule()
     local database = {}
 
-    _G.DeathpoolDatabase.GetMinimapSettings(database)
+    ns.DeathpoolDatabase.GetMinimapSettings(database)
 
     assertTruthy(type(database.minimap) == "table", "database model should create a minimap settings table")
     assertEquals(database.minimap.hide, false, "database model should leave the minimap icon visible by default")
@@ -289,7 +276,7 @@ local function testTogglePreservesCollapsedStateWhenOpening()
     }
     local logStateCalls = {}
 
-    DeathpoolUI = {
+    local mockUI = {
         ApplyDesiredLogWindowState = function(targetFrame, targetDatabase)
             logStateCalls[#logStateCalls + 1] = {
                 frame = targetFrame,
@@ -298,7 +285,7 @@ local function testTogglePreservesCollapsedStateWhenOpening()
         end,
     }
     frame:SetScript("OnShow", function(self)
-        DeathpoolUI.ApplyDesiredLogWindowState(self, database)
+        mockUI.ApplyDesiredLogWindowState(self, database)
     end)
 
     minimap.Toggle(frame, database)
@@ -317,11 +304,6 @@ local function testButtonClickUsesInitializeClosure()
     })
     local database = {
         hidden = true,
-    }
-
-    DeathpoolUI = {
-        ApplyDesiredLogWindowState = function()
-        end,
     }
 
     minimap.Initialize(frame, database)
@@ -344,11 +326,6 @@ local function testButtonClickTracksMostRecentInitializationTarget()
     })
     local secondDatabase = {
         hidden = true,
-    }
-
-    DeathpoolUI = {
-        ApplyDesiredLogWindowState = function()
-        end,
     }
 
     minimap.Initialize(firstFrame, firstDatabase)

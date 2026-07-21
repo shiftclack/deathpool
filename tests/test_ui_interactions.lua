@@ -1,6 +1,6 @@
 local UITestContext = require("tests.support_ui_test_context")
-local DeathpoolLogic = require("DeathpoolLogic")
 local testContext = UITestContext.Create()
+local DeathpoolLogic = testContext.DeathpoolLogic
 local suite = testContext.suite
 local Fixtures = testContext.Fixtures
 local createUIContext = testContext.createUIContext
@@ -12,14 +12,14 @@ local assertTableLength = testContext.assertTableLength
 local TOOLTIP_WHITE = { 1, 1, 1 }
 local TOOLTIP_GREEN = { 0.12, 1.0, 0.0 }
 local TOOLTIP_YELLOW = { 1, 0.82, 0 }
-local DeathpoolConstants = require("DeathpoolConstants")
+local DeathpoolConstants = testContext.DeathpoolConstants
 local SCORE_RULES = DeathpoolConstants.SCORING
 local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DeathpoolConstants.DEMO.waitingForFirstDeathMinDurationSeconds
 local WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS =
     DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
 
 local function showSetupWindow(Deathpool)
-    _G.DeathpoolUISetup.Show(Deathpool.setupFrame, Deathpool)
+    Deathpool.__testNs.DeathpoolUISetup.Show(Deathpool.setupFrame, Deathpool)
 end
 
 local function findTooltipLineIndex(label)
@@ -207,7 +207,7 @@ local function testRefreshMethods()
         "locked prediction summary should reflect the stored prediction"
     )
     assertEquals(Deathpool.collapsedLogFrame.rows[1].name, nil, "collapsed death log should not create the removed name column")
-    assertEquals(Deathpool.collapsedLogFrame.rows[1].time:GetText(), DeathpoolUI.GetStoredDeathTime(fullPredictionDeath), "collapsed death log should show the latest time")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].time:GetText(), context.DeathpoolUI.GetStoredDeathTime(fullPredictionDeath), "collapsed death log should show the latest time")
     assertEquals(Deathpool.collapsedLogFrame.rows[1].sourceName:GetText(), "Hogger", "collapsed death log should show the latest source")
     assertEquals(Deathpool.collapsedLogFrame.rows[1].level:GetText(), "12", "collapsed death log should show the latest level")
     assertEquals(Deathpool.collapsedLogFrame.rows[1].zone:GetText(), "Elwynn Forest", "collapsed death log should show the latest zone")
@@ -1324,7 +1324,7 @@ end
 local function testCurrentPredictionSummaryAnchorsBelowLocation()
     local context = createUIContext()
     local Deathpool = context.Deathpool
-    local layout = _G.DeathpoolUI.LAYOUT
+    local layout = context.DeathpoolUI.LAYOUT
 
     local titlePoint, titleRelativeTo, titleRelativePoint, titleXOffset, titleYOffset = Deathpool.currentPredictionLabel:GetPoint(1)
     assertEquals(titlePoint, "TOPLEFT", "current prediction label should anchor from its top left")

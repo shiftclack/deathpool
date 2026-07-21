@@ -1,12 +1,14 @@
 ---@diagnostic disable: inject-field
-local DeathpoolMigration = _G.DeathpoolMigration or {}
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolMigration = ns.DeathpoolMigration or {}
+ns.DeathpoolMigration = DeathpoolMigration
 
 ---@param database DeathpoolCharacterState
 ---@return DeathpoolCharacterState
 function DeathpoolMigration.Apply(database)
     return database
 end
-
-_G.DeathpoolMigration = DeathpoolMigration
 
 return DeathpoolMigration

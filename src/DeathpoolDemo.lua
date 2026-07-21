@@ -1,8 +1,12 @@
-local DeathpoolDemo = _G.DeathpoolDemo or {}
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolLogic = _G.DeathpoolLogic
-local DeathpoolUI = _G.DeathpoolUI
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolDemo = ns.DeathpoolDemo or {}
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolLogic = ns.DeathpoolLogic
+local DeathpoolUI = ns.DeathpoolUI
+ns.DeathpoolDemo = DeathpoolDemo
 
 local STORAGE_RULES = DeathpoolConstants.STORAGE
 local DEMO_CONFIG = DeathpoolConstants.DEMO
@@ -180,7 +184,5 @@ function DeathpoolDemo.Initialize(database, refreshMainFrame)
 
     return controller
 end
-
-_G.DeathpoolDemo = DeathpoolDemo
 
 return DeathpoolDemo

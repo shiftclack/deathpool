@@ -1,8 +1,12 @@
 -- This module reads the current UI/model facts and derives
 -- how the main window should behave during the next refresh.
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
 local DeathpoolUIMode = {}
-local DeathpoolConstants = _G.DeathpoolConstants
-local DeathpoolDatabase = _G.DeathpoolDatabase
+local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolDatabase = ns.DeathpoolDatabase
+ns.DeathpoolUIMode = DeathpoolUIMode
 
 local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DeathpoolConstants.DEMO.waitingForFirstDeathMinDurationSeconds
 local WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS =
@@ -181,7 +185,5 @@ function DeathpoolUIMode.Resolve(frame, displayState, database)
         showWaitingHelp = prompt == "waiting" and ShouldShowWaitingForFirstDeathHelp(frame, displayState),
     }
 end
-
-_G.DeathpoolUIMode = DeathpoolUIMode
 
 return DeathpoolUIMode

@@ -1,7 +1,11 @@
-local DeathpoolUI = _G.DeathpoolUI or {}
-local DeathpoolDatabase = _G.DeathpoolDatabase
-local DeathpoolUIMode = _G.DeathpoolUIMode
-local DeathpoolUISetup = _G.DeathpoolUISetup
+local _, ns = ...
+---@cast ns DeathpoolNamespace
+
+local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolUIMode = ns.DeathpoolUIMode
+local DeathpoolUISetup = ns.DeathpoolUISetup
+ns.DeathpoolUI = DeathpoolUI
 
 ---@alias DeathpoolRefreshFontStringMap table<string, table>
 
@@ -169,7 +173,7 @@ local DeathpoolUISetup = _G.DeathpoolUISetup
 function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLog, logic)
     local deathLogColumns = DeathpoolUI.DEATH_LOG_COLUMNS
     local historyLogColumns = DeathpoolUI.HISTORY_LOG_COLUMNS
-    local DeathpoolUIMinimap = _G.DeathpoolUIMinimap
+    local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
     local displayCache = DeathpoolUI.CreateDeathLogDisplayCache()
     local FIRST_RUN_PROMPT_TEXT = "Make your prediction"
     local WAITING_FOR_FIRST_DEATH_TEXT = "Waiting for first death"

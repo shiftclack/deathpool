@@ -9,9 +9,9 @@ local assertTruthy = testContext.assertTruthy
 local function testModuleSurface()
     local context = createUIContext()
     local DeathpoolUI = context.DeathpoolUI
-    local DeathpoolSetup = _G.DeathpoolSetup
-    local DeathpoolUISetup = _G.DeathpoolUISetup
-    local DeathpoolUIMode = _G.DeathpoolUIMode
+    local DeathpoolSetup = context.ns.DeathpoolSetup
+    local DeathpoolUISetup = context.ns.DeathpoolUISetup
+    local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
     assertTruthy(DeathpoolUI.Initialize, "UI module should expose Initialize")
     assertTruthy(DeathpoolUI.SetWindowCollapsed, "UI module should expose SetWindowCollapsed")
@@ -99,7 +99,7 @@ end
 local function testUIModeResolverPrioritizesSetup()
     local context = createUIContext()
     local Deathpool = context.Deathpool
-    local DeathpoolUIMode = _G.DeathpoolUIMode
+    local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
     Deathpool.helpFrame:Show()
     Deathpool.setupFrame:Show()
@@ -126,7 +126,7 @@ local function testUIModeResolverPrioritizesIntroDemoBeforeCollapsedAndPrompts()
     }))
     local Deathpool = context.Deathpool
     local DeathpoolUI = context.DeathpoolUI
-    local DeathpoolUIMode = _G.DeathpoolUIMode
+    local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
     DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
     setFakeIntroDemoActive(Deathpool)
@@ -148,7 +148,7 @@ local function testUIModeResolverHandlesCollapsedMode()
     local context = createUIContext()
     local Deathpool = context.Deathpool
     local DeathpoolUI = context.DeathpoolUI
-    local DeathpoolUIMode = _G.DeathpoolUIMode
+    local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
     DeathpoolUI.SetWindowCollapsed(Deathpool, DeathpoolCharacterState, true)
 
@@ -170,7 +170,7 @@ local function testUIModeResolverHandlesNormalPromptsAndLocks()
         hasSeenFirstRun = false,
     }))
     local Deathpool = context.Deathpool
-    local DeathpoolUIMode = _G.DeathpoolUIMode
+    local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
     local firstRunMode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
     assertEquals(firstRunMode.mode, "normal", "first-run prompt should stay in normal mode")
@@ -193,7 +193,7 @@ local function testUIModeResolverHandlesNormalPromptsAndLocks()
     assertEquals(waitingMode.showRecentDeathRows, false, "waiting prompt should hide expanded death rows")
     assertEquals(waitingMode.showWaitingHelp, false, "waiting help should wait for the configured delay")
 
-    Deathpool.waitingPromptDisplayDuration = _G.DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
+    Deathpool.waitingPromptDisplayDuration = context.DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
     local waitingHelpMode = DeathpoolUIMode.Resolve(Deathpool, buildModeDisplayState(), DeathpoolCharacterState)
     assertEquals(waitingHelpMode.showRecentDeathRows, false, "waiting help should keep expanded death rows hidden")
     assertEquals(waitingHelpMode.showWaitingHelp, true, "waiting help should show after the configured delay")
@@ -222,7 +222,7 @@ local function testUIModeResolverHandlesHelpModal()
         hasSeenFirstRun = false,
     }))
     local Deathpool = context.Deathpool
-    local DeathpoolUIMode = _G.DeathpoolUIMode
+    local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
     Deathpool.helpFrame:Show()
 

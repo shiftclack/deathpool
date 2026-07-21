@@ -1,7 +1,9 @@
 local Fixtures = {}
-local DeathpoolConstants = require("DeathpoolConstants")
-require("DeathpoolMigration")
-local DeathpoolDatabase = require("DeathpoolDatabase")
+local AddonLoader = require("tests.support_addon_loader")
+local loader = AddonLoader.GetDefault()
+local DeathpoolConstants = loader:Load("DeathpoolConstants")
+loader:Load("DeathpoolMigration")
+local DeathpoolDatabase = loader:Load("DeathpoolDatabase")
 local SCORE_RULES = DeathpoolConstants.SCORING
 local DATABASE_DEFAULTS = DeathpoolDatabase.DEFAULTS or {}
 
