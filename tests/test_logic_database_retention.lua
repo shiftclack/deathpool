@@ -12,7 +12,7 @@ return function(context)
         suite:assertTruthy(value, message)
     end
 
-    local function testDedupeAndRetention()
+    local function testRetention()
         local database = Fixtures.database({
             lockedPrediction = Fixtures.prediction({
                 levelRange = false,
@@ -20,14 +20,10 @@ return function(context)
                 zone = false,
             }),
         })
-        local recentDeathKeys = {}
-
         local added = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "Drakedog",
             sourceName = "Hogger",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 100,
-            dedupeWindowSeconds = 5,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 2,
         }))
         assertTruthy(added, "first death should be accepted")
@@ -67,23 +63,10 @@ return function(context)
             "per-death prediction snapshots should persist the full prediction timestamp"
         )
 
-        local duplicateAdded = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
-            name = "Drakedog",
-            sourceName = "Defias",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 103,
-            dedupeWindowSeconds = 5,
-            maxRecentDeaths = 2,
-        }))
-        assertEquals(duplicateAdded, false, "duplicate death inside the dedupe window should be rejected")
-        assertEquals(#database.recentDeaths, 1, "duplicate death should not be inserted")
-
         DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "Alamo",
             sourceName = "Hogger",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 110,
-            dedupeWindowSeconds = 5,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 2,
         }))
         assertEquals(
@@ -107,9 +90,7 @@ return function(context)
         DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "Drakedog",
             sourceName = "Murloc",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 120,
-            dedupeWindowSeconds = 5,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 2,
         }))
 
@@ -140,7 +121,6 @@ return function(context)
                 zone = false,
             }),
         })
-        local recentDeathKeys = {}
         local maxDeathHistory = 100
         local sourceOnlyBasePoints = Helpers.getExpectedBasePoints({ source = true })
         local runningTotal = 0
@@ -151,8 +131,7 @@ return function(context)
             local added = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
                 name = "History" .. tostring(index),
                 sourceName = "Hogger",
-            }), recentDeathKeys, Fixtures.addDeathOptions({
-                now = 1000 + index,
+            }), Fixtures.addDeathOptions({
                 maxRecentDeaths = STORAGE_RULES.maxRecentDeaths,
                 maxDeathHistory = maxDeathHistory,
             }))
@@ -183,8 +162,6 @@ return function(context)
                 zone = false,
             }),
         })
-        local recentDeathKeys = {}
-
         local maxSuccessfullyPredictedDeaths = STORAGE_RULES.maxSuccessfullyPredictedDeaths
         local failedInsertIndex
 
@@ -192,8 +169,7 @@ return function(context)
             local added = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
                 name = "Success" .. tostring(index),
                 sourceName = "Hogger",
-            }), recentDeathKeys, Fixtures.addDeathOptions({
-                now = 1200 + index,
+            }), Fixtures.addDeathOptions({
                 maxRecentDeaths = maxSuccessfullyPredictedDeaths + 5,
                 maxSuccessfullyPredictedDeaths = maxSuccessfullyPredictedDeaths,
             }))
@@ -223,8 +199,6 @@ return function(context)
 
     local function testSuccessfullyPredictedDeathRetentionPrefersHighestScores()
         local database = Fixtures.database()
-        local recentDeathKeys = {}
-
         local function addSuccessfulDeath(options)
             database.lockedPrediction = options.prediction
             database.correctPredictionStreak = options.streakBefore or 0
@@ -235,8 +209,7 @@ return function(context)
                 level = options.level or 12,
                 sourceName = options.sourceName or "Hogger",
                 zone = options.zone or "Elwynn Forest",
-            }), recentDeathKeys, Fixtures.addDeathOptions({
-                now = options.now,
+            }), Fixtures.addDeathOptions({
                 maxRecentDeaths = 10,
                 maxSuccessfullyPredictedDeaths = 3,
             }))
@@ -247,19 +220,19 @@ return function(context)
         local candidates = {
             {
                 name = "HighOne",
-                now = 1301,
+                order = 1,
                 streakBefore = 4,
                 prediction = Fixtures.prediction(),
             },
             {
                 name = "HighTwo",
-                now = 1302,
+                order = 2,
                 streakBefore = 3,
                 prediction = Fixtures.prediction(),
             },
             {
                 name = "MidThree",
-                now = 1303,
+                order = 3,
                 streakBefore = 0,
                 prediction = Fixtures.prediction({
                     levelRange = false,
@@ -269,7 +242,7 @@ return function(context)
             },
             {
                 name = "LowFour",
-                now = 1304,
+                order = 4,
                 streakBefore = 0,
                 prediction = Fixtures.prediction({
                     levelRange = "10-19",
@@ -305,7 +278,7 @@ return function(context)
             local candidatePoints = getRetentionPoints(candidate)
 
             if candidatePoints < expectedDroppedPoints
-                or (candidatePoints == expectedDroppedPoints and candidate.now < expectedDroppedCandidate.now) then
+                or (candidatePoints == expectedDroppedPoints and candidate.order < expectedDroppedCandidate.order) then
                 expectedDroppedCandidate = candidate
                 expectedDroppedPoints = candidatePoints
             end
@@ -342,14 +315,11 @@ return function(context)
                 zoneLabel = false,
             }),
         })
-        local recentDeathKeys = {}
-
         for index = 1, 11 do
             DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
                 name = "Match" .. tostring(index),
                 sourceName = "Hogger",
-            }), recentDeathKeys, Fixtures.addDeathOptions({
-                now = 200 + index,
+            }), Fixtures.addDeathOptions({
                 maxRecentDeaths = 11,
             }))
         end
@@ -376,7 +346,7 @@ return function(context)
         assertEquals(database.totalPoints, expectedTotalPoints, "total points should include the combined match and streak multipliers")
     end
 
-    testDedupeAndRetention()
+    testRetention()
     testHistoricalLogRetentionCap()
     testSuccessfullyPredictedDeathRetentionCap()
     testSuccessfullyPredictedDeathRetentionPrefersHighestScores()

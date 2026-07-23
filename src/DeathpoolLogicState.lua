@@ -9,8 +9,6 @@ local SCORE_RULES = DeathpoolConstants.SCORING
 local STORAGE_RULES = DeathpoolConstants.STORAGE
 
 ---@class DeathpoolAddDeathOptions: DeathpoolScoreOptions
----@field now integer
----@field dedupeWindowSeconds integer
 ---@field maxRecentDeaths integer
 ---@field maxDeathHistory integer
 ---@field maxSuccessfullyPredictedDeaths integer
@@ -45,8 +43,6 @@ local STORAGE_RULES = DeathpoolConstants.STORAGE
 ---@field lockedPrediction DeathpoolPrediction|nil
 ---@field draftPrediction DeathpoolPrediction|nil
 ---@field lastPrediction DeathpoolPrediction|nil
-
----@alias DeathpoolRecentDeathKeys table<string, integer>
 
 ---@param database DeathpoolCharacterState
 ---@param evaluation DeathpoolScoreResult
@@ -197,36 +193,12 @@ function DeathpoolLogic.GetDisplayState(database)
     }
 end
 
----@param recentDeathKeys DeathpoolRecentDeathKeys
----@param death DeathpoolDeathEvent
----@param now integer
----@param dedupeWindowSeconds integer
----@return boolean
-local function IsDuplicateDeath(recentDeathKeys, death, now, dedupeWindowSeconds)
-    -- we dedupe by player name within a short time window to avoid repeat feed entries
-    local key = death.name or "Unknown"
-
-    for deathKey, timestamp in pairs(recentDeathKeys) do
-        if now - timestamp > dedupeWindowSeconds then
-            recentDeathKeys[deathKey] = nil
-        end
-    end
-
-    if recentDeathKeys[key] and now - recentDeathKeys[key] <= dedupeWindowSeconds then
-        return true
-    end
-
-    recentDeathKeys[key] = now
-    return false
-end
-
 ---@param database DeathpoolCharacterState
 ---@param death DeathpoolDeathEvent
----@param recentDeathKeys DeathpoolRecentDeathKeys
 ---@param options DeathpoolAddDeathOptions|nil
 ---@return boolean added
 ---@return DeathpoolScoreResult|nil score
-function DeathpoolLogic.AddDeathToDatabase(database, death, recentDeathKeys, options)
+function DeathpoolLogic.AddDeathToDatabase(database, death, options)
     if database == nil then
         print("database table is required")
         return false, nil
@@ -238,16 +210,9 @@ function DeathpoolLogic.AddDeathToDatabase(database, death, recentDeathKeys, opt
     local successfulDeaths = DeathpoolDatabase.GetSuccessfullyPredictedDeaths(database)
     local lockedPrediction = DeathpoolDatabase.GetLockedPrediction(database)
 
-    local now = options.now or time()
     local maxRecentDeaths = options.maxRecentDeaths or STORAGE_RULES.maxRecentDeaths
-    local dedupeWindowSeconds = options.dedupeWindowSeconds or STORAGE_RULES.dedupeWindowSeconds
     local maxDeathHistory = options.maxDeathHistory or STORAGE_RULES.maxDeathHistory
     local maxSuccessfullyPredictedDeaths = options.maxSuccessfullyPredictedDeaths or STORAGE_RULES.maxSuccessfullyPredictedDeaths
-
-    -- not even sure if this is necessary for initial release. can blizz events dupe?
-    if IsDuplicateDeath(recentDeathKeys, death, now, dedupeWindowSeconds) then
-        return false, nil
-    end
 
     -- First score the prediction with the preview streak so we can decide
     -- whether this death extends or breaks the live streak.

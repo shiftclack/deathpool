@@ -456,7 +456,6 @@ return function(context)
                 zoneLabel = false,
             }),
         })
-        local recentDeathKeys = {}
         local sourcePoints = Helpers.getExpectedBasePoints({ source = true })
         local expectedTotals = {}
         local expectedMultipliers = {}
@@ -474,8 +473,7 @@ return function(context)
             local added, evaluation = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
                 name = "Streak" .. tostring(index),
                 sourceName = "Hogger",
-            }), recentDeathKeys, Fixtures.addDeathOptions({
-                now = 300 + index,
+            }), Fixtures.addDeathOptions({
                 maxRecentDeaths = 10,
             }))
 
@@ -526,7 +524,6 @@ return function(context)
         local database = Fixtures.database({
             lockedPrediction = Fixtures.prediction(),
         })
-        local recentDeathKeys = {}
         local fullMatchBasePoints = Helpers.getExpectedBasePoints({
             levelRange = "10-19",
             level = 12,
@@ -539,8 +536,7 @@ return function(context)
         for index = 1, 10 do
             local added, evaluation = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
                 name = "Formula" .. tostring(index),
-            }), recentDeathKeys, Fixtures.addDeathOptions({
-                now = 600 + index,
+            }), Fixtures.addDeathOptions({
                 maxRecentDeaths = STORAGE_RULES.maxRecentDeaths + 7,
             }))
 
@@ -585,28 +581,23 @@ return function(context)
                 zoneLabel = false,
             }),
         })
-        local recentDeathKeys = {}
-
         DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "HitOne",
             sourceName = "Hogger",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 400,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
         }))
         DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "HitTwo",
             sourceName = "Hogger",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 401,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
         }))
 
         local missedAdded = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "Missed",
             sourceName = "Defias",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 402,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
         }))
         assertTruthy(missedAdded, "a missed prediction should still create a death row")
@@ -622,8 +613,7 @@ return function(context)
         local resetAdded = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "HitAfterMiss",
             sourceName = "Hogger",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 403,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
         }))
         assertTruthy(resetAdded, "a new correct prediction after a miss should still be inserted")
@@ -655,13 +645,10 @@ return function(context)
             lockedPrediction = Fixtures.prediction(),
             correctPredictionStreak = 2,
         })
-        local recentDeathKeys = {}
-
         local added, evaluation = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "AlmostRight",
             zone = "Westfall",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 700,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
         }))
 
@@ -697,13 +684,11 @@ return function(context)
                 zone = "elwynn forest",
             }),
         })
-        local recentDeathKeys = {}
         local added, evaluation = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "SameZone",
             sourceName = "Hogger",
             zone = "Elwynn Forest",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 901,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
             playerZone = "Elwynn Forest",
         }))
@@ -751,7 +736,6 @@ return function(context)
                 zoneLabel = false,
             }),
         })
-        local noZoneRecentDeathKeys = {}
         local noZoneAdded, noZoneEvaluation = DeathpoolLogic.AddDeathToDatabase(
             noZoneDatabase,
             Helpers.createDeathForInsert({
@@ -759,9 +743,7 @@ return function(context)
                 sourceName = "Hogger",
                 zone = "Elwynn Forest",
             }),
-            noZoneRecentDeathKeys,
             Fixtures.addDeathOptions({
-                now = 902,
                 maxRecentDeaths = 10,
                 playerZone = "Elwynn Forest",
             })
@@ -796,13 +778,10 @@ return function(context)
             correctPredictionStreak = 3,
             longestPredictionStreak = 3,
         })
-        local recentDeathKeys = {}
-
         local added, evaluation = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "Unpredicted",
             sourceName = "Hogger",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 500,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 10,
         }))
 
@@ -834,13 +813,10 @@ return function(context)
         local database = Fixtures.database({
             deathHistory = false,
         })
-        local recentDeathKeys = {}
-
         local added = DeathpoolLogic.AddDeathToDatabase(database, Helpers.createDeathForInsert({
             name = "HistoryInit",
             sourceName = "Defias",
-        }), recentDeathKeys, Fixtures.addDeathOptions({
-            now = 900,
+        }), Fixtures.addDeathOptions({
             maxRecentDeaths = 5,
         }))
 

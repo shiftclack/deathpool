@@ -16,8 +16,6 @@ local DeathpoolConstants = {
         maxDeathHistory = 500,
         -- Maximum number of correctly predicted deaths remembered for stats or review.
         maxSuccessfullyPredictedDeaths = 500,
-        -- Time window used to ignore duplicate copies of the same Blizzard death event.
-        dedupeWindowSeconds = 4,
     },
     SCORING = {
         -- Default streak value shown before the player has built up any real streak bonus.

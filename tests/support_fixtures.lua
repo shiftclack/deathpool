@@ -260,8 +260,6 @@ end
 
 function Fixtures.addDeathOptions(overrides)
     return normalizeFalseAsNil(merge({
-        now = 0,
-        dedupeWindowSeconds = DeathpoolConstants.STORAGE.dedupeWindowSeconds,
         maxRecentDeaths = DeathpoolConstants.STORAGE.maxRecentDeaths,
         maxSuccessfullyPredictedDeaths = DeathpoolConstants.STORAGE.maxSuccessfullyPredictedDeaths,
     }, overrides))

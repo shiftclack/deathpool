@@ -20,16 +20,12 @@ local function BuildDemoPlayback()
         currentDeathIndex = 0,
         elapsedSeconds = 0,
         nextAdvanceDelaySeconds = DEMO_CONFIG.minDelaySeconds,
-        recentDeathKeys = {},
         scriptDeaths = DeathpoolUI.GetIntroDemoScriptDeaths(),
     }
 end
 
----@param death DeathpoolDeathEvent
-local function BuildDemoAddDeathOptions(death)
+local function BuildDemoAddDeathOptions()
     return {
-        now = death.timestamp,
-        dedupeWindowSeconds = STORAGE_RULES.dedupeWindowSeconds,
         maxRecentDeaths = STORAGE_RULES.maxRecentDeaths,
         maxDeathHistory = STORAGE_RULES.maxDeathHistory,
         maxSuccessfullyPredictedDeaths = STORAGE_RULES.maxSuccessfullyPredictedDeaths,
@@ -100,7 +96,6 @@ function DeathpoolDemo.Initialize(database, refreshMainFrame)
         self.playback.currentDeathIndex = 0
         self.playback.elapsedSeconds = 0
         self.playback.nextAdvanceDelaySeconds = DEMO_CONFIG.minDelaySeconds
-        self.playback.recentDeathKeys = {}
     end
 
     function controller:Show()
@@ -155,8 +150,7 @@ function DeathpoolDemo.Initialize(database, refreshMainFrame)
         if not DeathpoolLogic.AddDeathToDatabase(
             self.demoState,
             nextDeath,
-            self.playback.recentDeathKeys,
-            BuildDemoAddDeathOptions(nextDeath)
+            BuildDemoAddDeathOptions()
         ) then
             return false
         end

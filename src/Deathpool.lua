@@ -113,7 +113,6 @@ function Deathpool:ADDON_LOADED(addonName)
     DeathpoolCharacterState = DeathpoolDatabase.Init(DeathpoolCharacterState)
     self.state = DeathpoolCharacterState
     self.isShuttingDown = false
-    self.recentDeathKeys = {}
 
     self.mainFrame, self.debugFrame, self.logFrame = DeathpoolUI.Initialize(
         self.state,
@@ -178,7 +177,6 @@ function Deathpool:AddDeath(death)
     local state = GetState()
 
     local addDeathOptions = {
-        dedupeWindowSeconds = STORAGE_RULES.dedupeWindowSeconds,
         maxRecentDeaths = STORAGE_RULES.maxRecentDeaths,
         maxDeathHistory = STORAGE_RULES.maxDeathHistory,
         maxSuccessfullyPredictedDeaths = STORAGE_RULES.maxSuccessfullyPredictedDeaths,
@@ -188,7 +186,6 @@ function Deathpool:AddDeath(death)
     local added = DeathpoolLogic.AddDeathToDatabase(
         state,
         death,
-        self.recentDeathKeys,
         addDeathOptions
     )
 
