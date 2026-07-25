@@ -21,6 +21,11 @@ return function(context)
         local returnedDatabase = DeathpoolDatabase.Init(database)
 
         assertEquals(returnedDatabase, database, "database init should return the same table instance")
+        assertEquals(
+            database.databaseVersion,
+            context.DeathpoolMigration.CURRENT_VERSION,
+            "database init should migrate state to the current database version"
+        )
         assertTruthy(type(database.recentDeaths) == "table", "database init should populate default recent death storage")
         assertTruthy(type(database.minimap) == "table", "database init should populate minimap settings")
         assertTruthy(
@@ -43,6 +48,7 @@ return function(context)
 
     local function testDatabaseInitNormalizesStoredState()
         local database = {
+            databaseVersion = "invalid",
             recentDeaths = false,
             deathHistory = false,
             successfullyPredictedDeaths = false,
@@ -62,6 +68,11 @@ return function(context)
 
         DeathpoolDatabase.Init(database)
 
+        assertEquals(
+            database.databaseVersion,
+            context.DeathpoolMigration.CURRENT_VERSION,
+            "database init should repair and migrate an invalid database version"
+        )
         assertTruthy(type(database.recentDeaths) == "table", "database init should repair recent death storage")
         assertTruthy(type(database.deathHistory) == "table", "database init should repair death history storage")
         assertTruthy(

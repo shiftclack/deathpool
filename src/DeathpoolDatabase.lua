@@ -40,6 +40,7 @@
 ---@field sameZoneBonusApplied boolean|nil
 
 ---@class DeathpoolCharacterState
+---@field databaseVersion integer
 ---@field hidden boolean
 ---@field hasSeenIntroDemo boolean
 ---@field hasSeenFirstRun boolean
@@ -132,6 +133,11 @@ local function EnsureAnnouncements(database)
     return announcements
 end
 
+---@param database table
+local function EnsureDatabaseVersion(database)
+    database.databaseVersion = tonumber(database.databaseVersion) or 0
+end
+
 --- if database is nil one will be returned with default values
 --- also try to fix any corrupt or missing fields
 --- any state initialization that needs to happen before migrations should go here
@@ -155,6 +161,7 @@ local function EnsureDatabase(database)
     EnsureTableField(database, "successfullyPredictedDeaths")
     EnsureTableField(database, "minimap")
     EnsureAnnouncements(database)
+    EnsureDatabaseVersion(database)
 
     -- Debug mode is session-only and should not remain in SavedVariables.
     database.debugEnabled = nil

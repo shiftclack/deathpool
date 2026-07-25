@@ -34,5 +34,6 @@ return {
     ns = loader.ns,
     DeathpoolConstants = loader.ns.DeathpoolConstants,
     DeathpoolDatabase = loader.ns.DeathpoolDatabase,
+    DeathpoolMigration = loader.ns.DeathpoolMigration,
     DeathpoolLogic = loader.ns.DeathpoolLogic,
 }

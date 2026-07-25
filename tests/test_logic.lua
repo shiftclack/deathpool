@@ -7,6 +7,7 @@ local suite = TestHelpers.CreateSuite()
 local context = {
     DeathpoolLogic = DeathpoolLogic,
     DeathpoolDatabase = loadedLogic.DeathpoolDatabase,
+    DeathpoolMigration = loadedLogic.DeathpoolMigration,
     Fixtures = Fixtures,
     suite = suite,
     SCORE_RULES = loadedLogic.DeathpoolConstants.SCORING,

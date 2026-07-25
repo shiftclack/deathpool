@@ -332,8 +332,6 @@ SavedVariables is how WoW persists user configuration and data for the addon.
 
 - In `src/DeathpoolMigration.lua` we have a set of migrations for SavedVariables
 - We don't want to litter the code with backward compatibility checks, so keep migration code in this file
-- It is OK to still program defensively in case of corrupt data loaded from SavedVariables
-- This file is currently ***empty*** until we have a v1.0 release
 
 ## Documentation hygiene
 
