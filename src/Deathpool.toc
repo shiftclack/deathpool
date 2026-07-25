@@ -1,6 +1,8 @@
 ## Interface: 11509
 ## Title: Hardcore Death Pool
 ## Notes: Hardcore death prediction game.
+## Category: Minigames
+## IconTexture: Interface\Icons\INV_Misc_Bone_ElfSkull_01
 ## Author: shiftclack
 ## Version: 0.11.0
 ## SavedVariablesPerCharacter: DeathpoolCharacterState
