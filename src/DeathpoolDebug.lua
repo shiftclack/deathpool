@@ -1,4 +1,3 @@
----@alias DeathpoolDebugPrintMessage fun(message: string)
 ---@alias DeathpoolDebugDeathLike DeathpoolDeath|DeathpoolDeathEvent
 
 ---@class DeathpoolDebugDatabaseApi
@@ -23,35 +22,30 @@ local DeathpoolDebug = ns.DeathpoolDebug or {}
 local DeathpoolDebugState = ns.DeathpoolDebugState or {}
 ns.DeathpoolDebug = DeathpoolDebug
 ns.DeathpoolDebugState = DeathpoolDebugState
+
 ---@type DeathpoolCharacterState|nil
 local activeState = nil
 ---@type DeathpoolDebugDatabaseApi|nil
 local activeDatabaseApi = nil
----@type DeathpoolDebugPrintMessage|nil
-local activePrintMessage = nil
+---@type DeathpoolPrint
+local Print = function() end
 ---@type DeathpoolDebugFrame|nil
 local activeDebugFrame = nil
 ---@type DeathpoolDebugAddonFrame|nil
 local activeAddonFrame = nil
 local debugEnabled = false
 
-local function Print(message)
-    if activePrintMessage then
-        activePrintMessage(message)
-    end
-end
-
 ---@param addonFrame DeathpoolDebugAddonFrame
 ---@param state DeathpoolCharacterState
 ---@param databaseApi DeathpoolDebugDatabaseApi
 ---@param debugFrame DeathpoolDebugFrame|nil
----@param printMessage DeathpoolDebugPrintMessage
+---@param printMessage DeathpoolPrint
 function DeathpoolDebug.Initialize(addonFrame, state, databaseApi, debugFrame, printMessage)
     activeAddonFrame = addonFrame
     activeState = state
     activeDatabaseApi = databaseApi
     activeDebugFrame = debugFrame
-    activePrintMessage = printMessage
+    Print = printMessage
     debugEnabled = false
 end
 
@@ -86,16 +80,12 @@ function DeathpoolDebug.Log(...)
         return
     end
 
-    if type(activePrintMessage) ~= "function" then
-        return
-    end
-
     local parts = {}
     for index = 1, select("#", ...) do
         parts[#parts + 1] = tostring(select(index, ...))
     end
 
-    activePrintMessage(table.concat(parts, " "))
+    Print(table.concat(parts, " "))
 end
 
 ---@param death DeathpoolDebugDeathLike|nil

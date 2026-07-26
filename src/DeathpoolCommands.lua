@@ -1,5 +1,3 @@
----@alias DeathpoolCommandsPrintMessage fun(message: string)
-
 ---@class DeathpoolCommandsAddonFrame
 ---@field state DeathpoolCharacterState
 ---@field mainFrame DeathpoolMinimapControllerFrame|nil
@@ -25,8 +23,8 @@ ns.DeathpoolCommands = DeathpoolCommands
 ---@type DeathpoolCommandsAddonFrame|nil
 local activeAddonFrame = nil
 
----@type DeathpoolCommandsPrintMessage|nil
-local activePrintMessage = nil
+---@type DeathpoolPrint
+local Print = function() end
 
 ---@return DeathpoolCommandsAddonFrame|nil
 local function GetAddonFrame()
@@ -37,13 +35,6 @@ end
 local function GetState()
     local addonFrame = GetAddonFrame()
     return addonFrame and addonFrame.state or nil
-end
-
----@param message string
-local function Print(message)
-    if activePrintMessage then
-        activePrintMessage(message)
-    end
 end
 
 ---@param message string
@@ -218,10 +209,10 @@ local SLASH_COMMAND_HANDLERS = {
 }
 
 ---@param addonFrame DeathpoolCommandsAddonFrame
----@param printMessage DeathpoolCommandsPrintMessage
+---@param printMessage DeathpoolPrint
 function DeathpoolCommands.Initialize(addonFrame, printMessage)
     activeAddonFrame = addonFrame
-    activePrintMessage = printMessage
+    Print = printMessage
 end
 
 ---@param message string

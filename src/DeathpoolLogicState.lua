@@ -114,8 +114,8 @@ end
 ---@param prediction DeathpoolPrediction|DeathpoolPredictionElements|nil
 ---@return DeathpoolPrediction|nil
 function DeathpoolLogic.ApplyLockedPrediction(database, prediction)
-    if database == nil then
-        error("database table is required")
+    if not database then
+        error("database is required", 2)
     end
 
     if prediction == nil then
@@ -139,7 +139,7 @@ end
 ---@param database DeathpoolCharacterState
 function DeathpoolLogic.ClearLockedPrediction(database)
     if not database then
-        error("database table is required")
+        error("database is required", 2)
     end
 
     DeathpoolDatabase.SetLastPrediction(
@@ -158,7 +158,7 @@ end
 ---@return DeathpoolPrediction|nil
 function DeathpoolLogic.UpdateDraftPrediction(database, prediction)
     if not database then
-        error("database table is required")
+        error("database is required", 2)
     end
 
     if prediction == nil then
@@ -196,8 +196,8 @@ end
 ---@return boolean added
 ---@return DeathpoolScoreResult|nil score
 function DeathpoolLogic.AddDeathToDatabase(database, death, options)
-    if database == nil then
-        error("database table is required")
+    if not database then
+        error("database is required", 2)
     end
 
     options = options or {}

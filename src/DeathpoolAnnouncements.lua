@@ -10,8 +10,6 @@ ns.DeathpoolAnnouncements = DeathpoolAnnouncements
 local ANNOUNCEMENT_RULES = DeathpoolConstants.ANNOUNCEMENTS
 local MIN_ANNOUNCE_LEVEL = 10
 
----@alias DeathpoolAnnouncementsPrintMessage fun(message: string|number)
-
 ---@param state DeathpoolCharacterState
 ---@param level integer
 function DeathpoolAnnouncements.AnnouncePlayerLevelUp(state, level)
@@ -43,7 +41,7 @@ function DeathpoolAnnouncements.AnnouncePlayerLevelUp(state, level)
 end
 
 ---@param state DeathpoolCharacterState
----@param printMessage DeathpoolAnnouncementsPrintMessage
+---@param printMessage DeathpoolPrint
 function DeathpoolAnnouncements.AnnouncePlayerDeath(state, printMessage)
     local formattedScore = DeathpoolLogic.FormatPoints(DeathpoolDatabase.GetTotalPoints(state))
     local playerLevel = UnitLevel("player")

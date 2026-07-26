@@ -1,3 +1,5 @@
+---@alias DeathpoolPrint fun(message: string|number)
+
 local ADDON_NAME, ns = ...
 ---@cast ns DeathpoolNamespace
 local DeathpoolConstants = ns.DeathpoolConstants
