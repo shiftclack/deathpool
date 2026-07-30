@@ -97,8 +97,11 @@ Addon files:
 - `src/DeathpoolUISettings.lua` should contain the Blizzard Settings panel
 - `src/DeathpoolUIDemo.lua` should contain scripted intro/demo data and inline onboarding callouts for the main window
 - `src/DeathpoolUIDebug.lua` should contain the debugging UI window
-- `src/DeathpoolUIMain.lua` should contain the main prediction UI window composition and collapsed/expanded interactions
-- `src/DeathpoolUIMinimap.lua` should contain all minimap button integration, feature-flagging, and LibDBIcon or broker specific code
+- `src/DeathpoolUIMain.lua` should contain the main window UI
+- `src/DeathpoolUIMainCollapsed.lua` should contain the collapsed mini-log
+- `src/DeathpoolUIMainRecentDeaths.lua` should contain the recent death pane for the main window
+- `src/DeathpoolUIMainPrediction.lua` should contain the main-window prediction UI
+- `src/DeathpoolUIMinimap.lua` should contain minimap button integration
 
 Unit tests are supported:
 - `tests/support_fixtures.lua` contains our test fixtures

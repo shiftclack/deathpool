@@ -807,6 +807,9 @@ local function loadUiModules()
     loader:Load("DeathpoolUIDemo")
     loader:Load("DeathpoolDemo")
     loader:Load("DeathpoolUIDebug")
+    loader:Load("DeathpoolUIMainCollapsed")
+    loader:Load("DeathpoolUIMainRecentDeaths")
+    loader:Load("DeathpoolUIMainPrediction")
     loader:Load("DeathpoolUIMain")
 
     return loader, loader.ns.DeathpoolUI, loader.ns.DeathpoolUIMinimap

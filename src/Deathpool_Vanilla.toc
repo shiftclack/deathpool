@@ -39,6 +39,9 @@ DeathpoolUISettings.lua
 DeathpoolUIDemo.lua
 DeathpoolDemo.lua
 DeathpoolUIDebug.lua
+DeathpoolUIMainCollapsed.lua
+DeathpoolUIMainRecentDeaths.lua
+DeathpoolUIMainPrediction.lua
 DeathpoolUIMain.lua
 DeathpoolCommands.lua
 Deathpool.lua

@@ -515,6 +515,18 @@ function DeathpoolUI.GetState(frame)
     error("state table is required", 2)
 end
 
+---@param frame table
+---@param logic DeathpoolMainLogic
+---@return DeathpoolDisplayState|nil
+function DeathpoolUI.GetIntroDemoDisplayedState(frame, logic)
+    local introDemoController = frame.introDemoController
+    if introDemoController then
+        return introDemoController:GetDisplayedState(logic)
+    end
+
+    return nil
+end
+
 ---@param frame table|nil
 ---@param database DeathpoolCharacterState
 ---@param collapsed boolean|nil
