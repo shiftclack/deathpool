@@ -98,8 +98,6 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstD
 ---@field suggestionList string[]|nil
 ---@field suggestionKind string|nil
 ---@field collapsedWindowStates table<string, boolean>|nil
----@field predictionLogic DeathpoolMainLogic|nil
----@field predictionLevelRanges string[]|nil
 
 ---@class DeathpoolMainFrame: DeathpoolMainFrameShell
 ---@field logFrame DeathpoolWidget
@@ -411,7 +409,7 @@ local function CreateActionButtons(ctx)
     pauseButton:SetText("PAUSE")
     pauseButton:SetScript("OnClick", function()
         ---@cast frame DeathpoolMainFrame
-        DeathpoolUI.OnMainPredictionPauseButtonClicked(frame)
+        DeathpoolUI.OnMainPredictionPauseButtonClicked(frame, ctx.logic)
     end)
     frame.pauseButton = pauseButton
     DeathpoolUI.RegisterCollapsibleRegion(frame, pauseButton)
@@ -425,7 +423,7 @@ local function CreateActionButtons(ctx)
     lockButton:SetText("LOCK IN")
     lockButton:SetScript("OnClick", function()
         ---@cast frame DeathpoolMainFrame
-        DeathpoolUI.OnMainPredictionLockButtonClicked(frame)
+        DeathpoolUI.OnMainPredictionLockButtonClicked(frame, ctx.logic, ctx.levelRanges)
     end)
     frame.lockButton = lockButton
     DeathpoolUI.RegisterCollapsibleRegion(frame, lockButton)
@@ -607,7 +605,7 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
     )
     CreateActionButtons(ctx)
     DeathpoolUI.CreateMainCurrentPredictionSummarySection(frame, layout, logic)
-    DeathpoolUI.AttachMainPredictionMethods(frame, logic, DeathpoolUI.LEVEL_RANGES)
+    DeathpoolUI.AttachMainPredictionMethods(frame, logic)
     AttachMainFrameMethods(ctx)
     InitializeMainFrameDefaults(frame)
 

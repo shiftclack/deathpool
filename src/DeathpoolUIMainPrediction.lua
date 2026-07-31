@@ -20,16 +20,6 @@ local function DebugUI(...)
 end
 
 ---@param frame DeathpoolMainFrameShell
----@param logic DeathpoolMainLogic
----@param levelRanges string[]|nil
-local function BindMainPredictionDependencies(frame, logic, levelRanges)
-    frame.predictionLogic = logic
-    if levelRanges then
-        frame.predictionLevelRanges = levelRanges
-    end
-end
-
----@param frame DeathpoolMainFrameShell
 ---@return boolean
 local function IsIntroDemoActive(frame)
     local introDemoController = frame.introDemoController
@@ -76,10 +66,9 @@ local function AttachPredictionGameInfoCallout(frame, region, lines)
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return DeathpoolPredictionElements
-local function BuildPredictionElements(frame)
-    local logic = frame.predictionLogic
-    ---@cast logic DeathpoolMainLogic
+local function BuildPredictionElements(frame, logic)
     local trimText = DeathpoolUI.TrimText
 
     return {
@@ -90,58 +79,61 @@ local function BuildPredictionElements(frame)
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return boolean
-local function HasAnyPredictionSelected(frame)
-    local elements = BuildPredictionElements(frame)
+local function HasAnyPredictionSelected(frame, logic)
+    local elements = BuildPredictionElements(frame, logic)
     return elements.levelRange ~= nil or elements.source ~= nil or elements.zone ~= nil
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return DeathpoolPrediction
-local function BuildLockedPrediction(frame)
+local function BuildLockedPrediction(frame, logic)
     return {
-        elements = BuildPredictionElements(frame),
+        elements = BuildPredictionElements(frame, logic),
         lockedAt = time(),
     }
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return DeathpoolPrediction
-local function BuildDraftPrediction(frame)
+local function BuildDraftPrediction(frame, logic)
     return {
-        elements = BuildPredictionElements(frame),
+        elements = BuildPredictionElements(frame, logic),
     }
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return DeathpoolPrediction|nil
-local function UpdateDraftPrediction(frame)
+local function UpdateDraftPrediction(frame, logic)
     if frame.predictionInputsLocked then
         return nil
     end
 
-    local logic = frame.predictionLogic
-    ---@cast logic DeathpoolMainLogic
-    return logic.UpdateDraftPrediction(DeathpoolUI.GetState(frame), BuildDraftPrediction(frame))
+    return logic.UpdateDraftPrediction(DeathpoolUI.GetState(frame), BuildDraftPrediction(frame, logic))
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return DeathpoolDisplayState
-local function GetMainPredictionDisplayState(frame)
-    local logic = frame.predictionLogic
-    ---@cast logic DeathpoolMainLogic
+local function GetMainPredictionDisplayState(frame, logic)
     return DeathpoolUI.GetIntroDemoDisplayedState(frame, logic) or logic.GetDisplayState(DeathpoolUI.GetState(frame))
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return DeathpoolUIModeState
-local function ResolveMainPredictionMode(frame)
-    return DeathpoolUIMode.Resolve(frame, GetMainPredictionDisplayState(frame), DeathpoolUI.GetState(frame))
+local function ResolveMainPredictionMode(frame, logic)
+    return DeathpoolUIMode.Resolve(frame, GetMainPredictionDisplayState(frame, logic), DeathpoolUI.GetState(frame))
 end
 
 ---@param frame DeathpoolMainFrameShell
-local function RefreshActionButtonState(frame)
-    local uiMode = ResolveMainPredictionMode(frame)
+---@param logic DeathpoolMainLogic
+local function RefreshActionButtonState(frame, logic)
+    local uiMode = ResolveMainPredictionMode(frame, logic)
 
     if uiMode.mainBlocked then
         frame.lockButton:Disable()
@@ -159,7 +151,7 @@ local function RefreshActionButtonState(frame)
 
     if hasLockedPrediction then
         frame.lockButton:Disable()
-    elseif HasAnyPredictionSelected(frame) then
+    elseif HasAnyPredictionSelected(frame, logic) then
         frame.lockButton:Enable()
     else
         frame.lockButton:Disable()
@@ -187,8 +179,9 @@ end
 
 ---@param frame DeathpoolMainFrameShell
 ---@param layout DeathpoolMainLayout
+---@param logic DeathpoolMainLogic
 ---@param levelRanges string[]
-local function CreateLevelRangeButtons(frame, layout, levelRanges)
+local function CreateLevelRangeButtons(frame, layout, logic, levelRanges)
     frame.selectedLevelRange = levelRanges[1]
     frame.levelRangeButtons = {}
 
@@ -210,11 +203,11 @@ local function CreateLevelRangeButtons(frame, layout, levelRanges)
             end
 
             SelectLevelRange(frame, self.levelRangeValue)
-            UpdateDraftPrediction(frame)
+            UpdateDraftPrediction(frame, logic)
             if frame.RefreshRecentDeathLogState then
                 frame:RefreshRecentDeathLogState()
             end
-            RefreshActionButtonState(frame)
+            RefreshActionButtonState(frame, logic)
         end)
         frame.levelRangeButtons[index] = button
         DeathpoolUI.RegisterCollapsibleRegion(frame, button)
@@ -301,8 +294,6 @@ end
 ---@param logic DeathpoolMainLogic
 ---@param levelRanges string[]
 function DeathpoolUI.CreateMainPredictionSection(frame, layout, logic, levelRanges)
-    BindMainPredictionDependencies(frame, logic, levelRanges)
-
     local predictionTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     predictionTitle:SetPoint("TOPLEFT", frame, "TOPLEFT", layout.predictionLabelX, layout.predictionSectionTop)
     predictionTitle:SetText("Prediction")
@@ -323,7 +314,7 @@ function DeathpoolUI.CreateMainPredictionSection(frame, layout, logic, levelRang
     )
     DeathpoolUI.RegisterCollapsibleRegion(frame, levelRangeLabel)
     frame.levelRangeLabel = levelRangeLabel
-    CreateLevelRangeButtons(frame, layout, levelRanges)
+    CreateLevelRangeButtons(frame, layout, logic, levelRanges)
 
     local sourceLabel = CreatePredictionControlLabel(
         frame,
@@ -376,10 +367,9 @@ function DeathpoolUI.CreateMainPredictionSection(frame, layout, logic, levelRang
 end
 
 ---@param frame DeathpoolMainFrameShell
+---@param logic DeathpoolMainLogic
 ---@return string[]
-local function GetCurrentPredictionGameInfoCalloutLines(frame)
-    local logic = frame.predictionLogic
-    ---@cast logic DeathpoolMainLogic
+local function GetCurrentPredictionGameInfoCalloutLines(frame, logic)
     local displayState
     local prediction
     local lines = {
@@ -405,8 +395,6 @@ end
 ---@param layout DeathpoolMainLayout
 ---@param logic DeathpoolMainLogic
 function DeathpoolUI.CreateMainCurrentPredictionSummarySection(frame, layout, logic)
-    BindMainPredictionDependencies(frame, logic, nil)
-
     local currentPredictionTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     currentPredictionTitle:SetPoint(
         "TOPLEFT",
@@ -419,7 +407,7 @@ function DeathpoolUI.CreateMainCurrentPredictionSummarySection(frame, layout, lo
     frame.currentPredictionLabel = currentPredictionTitle
     DeathpoolUI.RegisterCollapsibleRegion(frame, currentPredictionTitle)
     AttachPredictionGameInfoCallout(frame, currentPredictionTitle, function()
-        return GetCurrentPredictionGameInfoCalloutLines(frame)
+        return GetCurrentPredictionGameInfoCalloutLines(frame, logic)
     end)
 
     local currentPredictionValue = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -432,12 +420,14 @@ function DeathpoolUI.CreateMainCurrentPredictionSummarySection(frame, layout, lo
     frame.lockedPredictionValue = currentPredictionValue
     DeathpoolUI.RegisterCollapsibleRegion(frame, currentPredictionValue)
     AttachPredictionGameInfoCallout(frame, currentPredictionValue, function()
-        return GetCurrentPredictionGameInfoCalloutLines(frame)
+        return GetCurrentPredictionGameInfoCalloutLines(frame, logic)
     end)
 end
 
 ---@param frame DeathpoolMainFrame
-function DeathpoolUI.OnMainPredictionLockButtonClicked(frame)
+---@param logic DeathpoolMainLogic
+---@param levelRanges string[]
+function DeathpoolUI.OnMainPredictionLockButtonClicked(frame, logic, levelRanges)
     if IsIntroDemoActive(frame) then
         if frame.introDemoController and frame.introDemoController.Dismiss then
             frame.introDemoController:Dismiss()
@@ -448,14 +438,10 @@ function DeathpoolUI.OnMainPredictionLockButtonClicked(frame)
         return
     end
 
-    local logic = frame.predictionLogic
-    local levelRanges = frame.predictionLevelRanges
-    ---@cast logic DeathpoolMainLogic
-    ---@cast levelRanges string[]
     local trimText = DeathpoolUI.TrimText
     local sourceText = trimText(frame.sourceEditBox:GetText())
     local zoneText = trimText(frame.zoneEditBox:GetText())
-    local lockedPrediction = BuildLockedPrediction(frame)
+    local lockedPrediction = BuildLockedPrediction(frame, logic)
     logic.ApplyLockedPrediction(DeathpoolUI.GetState(frame), lockedPrediction)
     DeathpoolDatabase.SetHasSeenFirstRun(DeathpoolUI.GetState(frame), true)
     local lockedElements = logic.GetPredictionElements(lockedPrediction)
@@ -471,16 +457,15 @@ function DeathpoolUI.OnMainPredictionLockButtonClicked(frame)
     DebugUI(prediction)
     DeathpoolUI.ApplyPredictionInputLockState(frame, true)
     frame:RefreshLockedPrediction()
-    RefreshActionButtonState(frame)
+    RefreshActionButtonState(frame, logic)
     frame:RefreshAuxiliaryWindowState()
 end
 
 ---@param frame DeathpoolMainFrame
-function DeathpoolUI.OnMainPredictionPauseButtonClicked(frame)
+---@param logic DeathpoolMainLogic
+function DeathpoolUI.OnMainPredictionPauseButtonClicked(frame, logic)
     local preservedSourceText = frame.sourceEditBox:GetText()
     local preservedZoneText = frame.zoneEditBox:GetText()
-    local logic = frame.predictionLogic
-    ---@cast logic DeathpoolMainLogic
 
     logic.ClearLockedPrediction(DeathpoolUI.GetState(frame))
     DeathpoolUI.HideDropdown(frame)
@@ -488,14 +473,15 @@ function DeathpoolUI.OnMainPredictionPauseButtonClicked(frame)
     frame:RefreshLockedPrediction()
     frame.sourceEditBox:SetText(preservedSourceText or "")
     frame.zoneEditBox:SetText(preservedZoneText or "")
-    UpdateDraftPrediction(frame)
-    RefreshActionButtonState(frame)
+    UpdateDraftPrediction(frame, logic)
+    RefreshActionButtonState(frame, logic)
 end
 
 ---@param frame DeathpoolMainFrame
+---@param logic DeathpoolMainLogic
 ---@param editBox DeathpoolEditBox
 ---@param suggestionKind string
-local function AttachPredictionEditBoxHandler(frame, editBox, suggestionKind)
+local function AttachPredictionEditBoxHandler(frame, logic, editBox, suggestionKind)
     ---@param activeEditBox DeathpoolEditBox
     local function SetActiveSuggestionInput(activeEditBox)
         frame.activeEditBox = activeEditBox
@@ -519,11 +505,11 @@ local function AttachPredictionEditBoxHandler(frame, editBox, suggestionKind)
         else
             DeathpoolUI.HideDropdown(frame)
         end
-        UpdateDraftPrediction(frame)
+        UpdateDraftPrediction(frame, logic)
         if frame.RefreshRecentDeathLogState then
             frame:RefreshRecentDeathLogState()
         end
-        RefreshActionButtonState(frame)
+        RefreshActionButtonState(frame, logic)
     end)
 
     editBox:SetScript("OnEditFocusGained", function(self)
@@ -546,23 +532,19 @@ end
 ---@param frame DeathpoolMainFrame
 ---@param logic DeathpoolMainLogic
 function DeathpoolUI.AttachMainPredictionEditBoxHandlers(frame, logic)
-    BindMainPredictionDependencies(frame, logic, nil)
-    AttachPredictionEditBoxHandler(frame, frame.sourceEditBox, "source")
-    AttachPredictionEditBoxHandler(frame, frame.zoneEditBox, "zone")
+    AttachPredictionEditBoxHandler(frame, logic, frame.sourceEditBox, "source")
+    AttachPredictionEditBoxHandler(frame, logic, frame.zoneEditBox, "zone")
 end
 
 ---@param frame DeathpoolMainFrameShell
 ---@param logic DeathpoolMainLogic
----@param levelRanges string[]
-function DeathpoolUI.AttachMainPredictionMethods(frame, logic, levelRanges)
-    BindMainPredictionDependencies(frame, logic, levelRanges)
-
+function DeathpoolUI.AttachMainPredictionMethods(frame, logic)
     frame.ApplyPredictionInputState = function(prediction)
         DeathpoolUI.ApplyPredictionInputState(frame, logic, prediction)
     end
     frame.RefreshPredictionActionButtonState = function()
         ---@cast frame DeathpoolMainFrame
-        RefreshActionButtonState(frame)
+        RefreshActionButtonState(frame, logic)
     end
     frame.SetPredictionInputsLocked = function(locked)
         DeathpoolUI.ApplyPredictionInputLockState(frame, locked)
