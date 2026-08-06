@@ -16,16 +16,10 @@ When project guidance conflicts, use this order of precedence:
 4. Existing tested behavior in the codebase
 5. [README.md](README.md) examples, mockups, and older notes
 
-### Status of project
-
-The project is currently in its early stages. We want to keep things focused on the specific features 
-we need while not worrying about backward compatibility yet.
-
 ### Goals
 
 - Provide an experience where the user (a WoW hardcore player) can predict attributes of upcoming deaths of other players
-- There will be a points system where the player is awarded points for correctly guessing deaths
-- These predictions involve no exchange of any in-game items or currency of any kind
+- Utilize a points system where the player is awarded points for correctly guessing deaths
 - The UI should reflect the built-in WoW UI style, including its UI elements such as buttons and tooltips
 
 ### Technical goals
@@ -134,12 +128,11 @@ When adding new files, they must be added to two `.toc` files in order for the g
 1. `src/Deathpool.toc`
 2. `src/Deathpool_Vanilla.toc`
 
-### Model, View Controller (MVC)
+### Model-View-Controller (MVC)
 
 - Treat `src/DeathpoolDatabase.lua` and `src/DeathpoolLogic*.lua` as the domain/model layer. They own SavedVariables shape, defaulting, normalization, querying, sorting, and gameplay state transitions.
 - Treat `src/DeathpoolUI*.lua` as the view layer. UI code should read model state through model APIs and update widgets, but should not directly modify the database state, sort model collections, or implement gameplay rules.
 - Treat `src/Deathpool.lua` as a thin controller/coordinator. It should react to WoW events and slash commands, call into model code, and ask the UI to refresh.
-- If code is asking `if DeathpoolCharacterState then ...` or building fallback tables in UI code, that is usually a sign the responsibility belongs back in the model layer.
 
 ## Lua
 
@@ -153,31 +146,23 @@ There are three environments we develop for:
 ### Compatibility
 
 - Do not attempt to be forward-compatible with newer versions of Lua
-- It's better to only support 5.1 for the sake of simplicity and low likelihood of a WoW upgrade in the future
-- Do not unnecessarily add shims for backward compatibility without explicit instructions
-- Do not use `require()` anywhere in the addon code as its not supported by WoW Lua. The only exception are unit tests in the `tests/` directory
+- Do not add shims for backward compatibility without explicit instructions
 - Only use Blizzard APIs that are available to Classic-era addons
 - Do not invent APIs or assume Retail-only helpers exist in Classic
-- No runtime code loading
-- No external I/O
-- All dependencies are known and ordered at load time (`.toc` files)
+- If the test system doesn't have a particular function available, then mock it. Do not pollute production code with guards for the tests!
+- If a Blizzard/WoW API is valid in Classic but tooling flags it as an undefined global, prefer updating `.luacheckrc` and `.luarc.json` over adding local aliases or other production-code workarounds just to satisfy tooling
 
 ### Parsing behavior
 
-The death feed parser is intentionally conservative. The addon listens only to `CHAT_MSG_CHANNEL` messages from the `hardcoredeaths` channel and parses Blizzard death announcement text plus localized Blizzard `HARDCORE_CAUSEOFDEATH_*` format strings where available. Do not, under any circumstances, communicate with or parse data from other addons such as Deathlog or the Hardcore addon! (Parsing debug data for development is acceptable.)
-
-- Death rows are populated only from the official Blizzard death announcements channel payload.
-- The addon does not attempt `/who` lookups or any other follow-up enrichment for guild, race, or class.
+The death feed parser is intentionally conservative. The addon listens only to `CHAT_MSG_CHANNEL` messages from the `hardcoredeaths` channel and parses Blizzard death announcement text plus localized Blizzard `HARDCORE_CAUSEOFDEATH_*` format strings. Do not, under any circumstances, communicate with or parse data from other addons.
 
 ### Use of third party libraries
 
-Unrestrained use of third party libraries is prohibited. They should not be introduced, or used, without specific, unambiguous, clear instructions.
-The current libraries are explicitly permitted:
+Unrestrained use of third party libraries is prohibited. They should not be used without specific, unambiguous instructions. The current libraries are explicitly permitted:
 
 - Minimap
     - The Minimap icon uses LibDBIcon for compatibility with addons such as Titan Panel and Leatrix. 
     - The use of these libraries should be strictly confined to `src/DeathpoolUIMinimap.lua`
-    - Maintain the ability to easily remove them at any time.
     - Permitted Libs for the Minimap
         - LibDBIcon
         - LibDataBroker
@@ -187,7 +172,6 @@ The current libraries are explicitly permitted:
 ### Prefer numbers to strings
 
 - Use numeric multiplier values internally
-- Prefer built-in math and numeric operations over string manipulation or regular expressions when calculating score or multiplier behavior
 - Present the multiplier in `xN` format only in user-facing UI elements
 - Do not use regular expressions when data could more easily be compared numerically
 
@@ -195,17 +179,13 @@ The current libraries are explicitly permitted:
 
 - Prefer small, direct changes over broad refactors
 - Do not introduce new modules, frameworks, or abstractions unless they clearly reduce complexity
-- Keep the addon readable to a human who is still learning Lua and WoW addon development
 - When in doubt, choose the simpler implementation that matches the current project style
 
 ### Nil-check contracts
 
 - Keep `nil` guards at real boundaries: WoW event handlers, slash commands, SavedVariables/database normalization, and UI scripts that can legitimately fire before state is bound
 - Inside a module, prefer explicit helper contracts over repeated defensive checks
-- If one helper always normalizes inputs for the next helper, remove the downstream `nil` fallback branches and let misuse fail loudly during development
 - Avoid writing the same code path to accept multiple internal shapes unless that flexibility is required by a real public caller
-- If a private helper only exists for one file, prefer keeping it `local` and stricter rather than treating it like a defensive utility
-- If you find UI code building fallback tables like `state = state or {}` or iterating `values or {}` deep inside private refresh/cache helpers, first ask whether the normalization belongs at the module boundary instead
 
 ### LuaLS annotations
 
@@ -215,7 +195,7 @@ The current libraries are explicitly permitted:
 - Check for existing types before adding new ones, especially for files with similar names like `src/DeathpoolUI*.lua` or `src/DeathpoolLogic*.lua`.
 - Prefer being strict about parameters, it helps future developers reason about the codebase
 
-### Lua Environment Differences (WoW vs Standard Lua)
+### WoW vs Standard Lua
 
 World of Warcraft uses a restricted Lua 5.1 runtime with significant differences from standard Lua:
 
@@ -244,10 +224,6 @@ World of Warcraft uses a restricted Lua 5.1 runtime with significant differences
   Dependency ordering must be handled manually via the `.toc` file. There is no runtime dependency resolution.
 
 ### WoW Lua's extra functions
-
-_If the test system doesn't have a particular function available, then mock it. Do not pollute production code with guards for the tests!_
-
-Here are some useful functions which are specific to WoW Lua:
 
 #### wipe()
 
@@ -290,8 +266,6 @@ print(time())
 - When running into issues with `make check` around globals, check:
   - `.luacheckrc` which defines exceptions for WoW globals in the build system
   - `.luarc.json` which defines exceptions for `lua-language-server`
-- If a Blizzard/WoW API is valid in Classic but tooling flags it as an undefined global, prefer updating `.luacheckrc` and `.luarc.json` over adding local aliases or other production-code workarounds just to satisfy tooling
-- Do not rewrite addon code from `SomeWowApi(...)` to `local SomeWowApi = _G.SomeWowApi` solely to silence linting; reserve local aliases for real code readability or behavior reasons, not config drift
 
 ## Testing
 
@@ -308,13 +282,11 @@ print(time())
 - If you fix a bug in parser or scoring behavior, add or update a test when practical
 - Prefer unit tests for parser and logic behavior over manual-only verification
 - Keep tests lightweight and runnable in the local Lua test harness
-- Do not add guards to the code to cover only test scenarios!
 - Consider using `assertContains()` instead of `assertEquals()` when making assertions about a long string
 
 ### Debugging
 
 - Debugging must be performed by the user, as there is no permission for the coding agent to take control of World of Warcraft directly
-- Debugging should be facilitated via a simple `make install` command which installs the addon files
 
 ## Datastores
 
@@ -322,11 +294,7 @@ print(time())
 
 SavedVariables is how WoW persists user configuration and data for the addon.
 
-- The addon uses per-character SavedVariables via `DeathpoolCharacterState`
-- Treat `DeathpoolCharacterState` as persistent user data
-- Initialize SavedVariables through `DeathpoolDatabase.Init(DeathpoolCharacterState)` in the controller and preserve that table identity afterward
-- `DeathpoolDatabase.Init`, migrations, and defaulting mutate the provided table in place and return the same table for convenience
-- Do not persist debug mode in `DeathpoolCharacterState`; debug enablement is session-only state owned by `src/DeathpoolDebug.lua`
+- Treat `DeathpoolCharacterState` as per-character persistent user data
 - When adding fields, initialize missing values defensively in `DeathpoolDatabase`
 - Do not require users to delete SavedVariables for normal addon updates
 - Prefer additive schema changes over breaking renames
@@ -334,13 +302,6 @@ SavedVariables is how WoW persists user configuration and data for the addon.
 ### Migrations
 
 - In `src/DeathpoolMigration.lua` we have a set of migrations for SavedVariables
-- We don't want to litter the code with backward compatibility checks, so keep migration code in this file
-
-## Documentation hygiene
-
-- If behavior, commands, or visible UI changes, update `AGENTS.md` when the change would otherwise surprise the next contributor. Also consider updating `docs/` files if needed 
-- Do not update the `README.md` unless explicitly instructed to do so
-- Prefer correcting stale docs rather than leaving contradictions behind
 
 ## Canonical patterns
 
