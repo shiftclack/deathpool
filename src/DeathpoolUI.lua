@@ -36,10 +36,10 @@ DeathpoolUI.HISTORY_LOG_COLUMNS = {
 DeathpoolUI.HISTORY_SUCCESS_RANK_LABEL = "Rank"
 
 DeathpoolUI.COLLAPSED_LOG_COLUMNS = {
-    { key = "time", label = "Time", x = 0, width = 38, justifyH = "LEFT" },
-    { key = "sourceName", label = "Source", x = 44, width = 102, justifyH = "LEFT" },
+    { key = "time", label = "Time", x = 0, width = 45, justifyH = "LEFT" },
+    { key = "sourceName", label = "Source", x = 47, width = 94, justifyH = "LEFT" },
     { key = "level", label = "Lvl", x = 152, width = 24, justifyH = "LEFT" },
-    { key = "zone", label = "Location", x = 182, width = 80, justifyH = "LEFT" },
+    { key = "zone", label = "Location", x = 182, width = 90, justifyH = "LEFT" },
     { key = "awardedPoints", label = "Pts", x = 266, width = 40, justifyH = "RIGHT" },
 }
 

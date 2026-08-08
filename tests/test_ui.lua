@@ -430,8 +430,11 @@ local function testInitializeReturnsFrames()
     assertEquals(Deathpool.collapsedLogFrame.rows[1]:GetHeight(), DeathpoolLog.rows[1]:GetHeight(), "mini log rows should match history log row height")
     assertTruthy(Deathpool.collapsedLogFrame.rows[1].time, "main frame should create collapsed death time cells")
     assertTruthy(Deathpool.collapsedLogFrame.rows[1].awardedPoints, "main frame should create collapsed death points cells")
+    assertEquals(Deathpool.collapsedLogFrame.rows[1].time:GetWidth(), 45, "mini log should give the time column enough width for scaled fonts")
     assertEquals(Deathpool.collapsedLogFrame.rows[1].awardedPoints.justifyH, "RIGHT", "main frame should right justify collapsed death points")
     assertTruthy(#(Deathpool.collapsedLogHeaders or {}) > 0, "main frame should create collapsed death log headers")
+    assertEquals(Deathpool.collapsedLogHeaders[1]:GetText(), "Time", "mini log should show the time column header")
+    assertEquals(Deathpool.collapsedLogHeaders[1]:GetWidth(), 45, "mini log should give the time header enough width for scaled fonts")
     assertEquals(
         select(5, Deathpool.collapsedLogHeaders[1]:GetPoint(1)),
         layout.collapsedLogHeaderY,
