@@ -1,17 +1,16 @@
 ---
-name: Package
+name: Build
 
 on:
   push:
     branches:
       - main
-      - initial
   pull_request:
   release:
     types: [published]
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 jobs:

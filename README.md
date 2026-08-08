@@ -2,9 +2,9 @@
 
 Hardcore Death Pool is a [World of Warcraft](https://worldofwarcraft.blizzard.com) mini-game addon. Players score points by predicting where and how other players will die.
 
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/shiftclack/deathpool/workflow.yaml)](https://github.com/shiftclack/deathpool/actions) [![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool)](https://github.com/shiftclack/deathpool/releases)
+[![Build](https://github.com/shiftclack/deathpool/actions/workflows/workflow.yaml/badge.svg)](https://github.com/shiftclack/deathpool/actions/workflows/workflow.yaml) [![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool?display_name=tag)](https://github.com/shiftclack/deathpool/releases)
 
-![Demo](https://raw.githubusercontent.com/shiftclack/deathpool/main/docs/demo.png)
+![Demo](./docs/demo.png)
 
 ## Overview
 
