@@ -1,6 +1,6 @@
 # Hardcore Death Pool
 
-Hardcore Death Pool is a [World of Warcraft](https://worldofwarcraft.blizzard.com) mini-game addon. Players score points by predicting where and how other players will die.
+Hardcore Death Pool is a [World of Warcraft](https://worldofwarcraft.blizzard.com) mini-game addon. Players score points by predicting where and how future player deaths will happen.
 
 [![Build](https://github.com/shiftclack/deathpool/actions/workflows/workflow.yaml/badge.svg)](https://github.com/shiftclack/deathpool/actions/workflows/workflow.yaml) [![GitHub Release](https://img.shields.io/github/v/release/shiftclack/deathpool?display_name=tag)](https://github.com/shiftclack/deathpool/releases)
 
@@ -8,11 +8,10 @@ Hardcore Death Pool is a [World of Warcraft](https://worldofwarcraft.blizzard.co
 
 ## Overview
 
-* Watch player deaths in real time
-* Try to predict the next death's zone, level bracket, or death source
+* Watch deaths in real time
+* Try to predict the next death's location, source, or level bracket
 * Earn points if your prediction matches
 * Earn bonus points for streaks and combos
-* Play in the background while you quest or afk in town
 
 ## Commands
 
@@ -29,14 +28,7 @@ Copy this folder into `World of Warcraft\_classic_era_\Interface\AddOns`.
 
 ## Compatibility
 
-The addon is intended for official WoW Hardcore Classic realms. It is not compatible with any other versions of the game.
-
-## Development
-
-- Requires Lua 5.1 and [luacheck](https://github.com/mpeterv/luacheck)
-- Run `make deps` to install development dependencies
-- Run `make check` to lint and run tests
-- Run `make dist` to generate a zipfile for release
+The addon is intended for WoW Hardcore Classic realms. It is not compatible with any other versions of the game.
 
 ## Libraries
 
