@@ -41,7 +41,6 @@ local GetPredictionElementBonus
 ---@class DeathpoolComboDetails
 ---@field predictionText string
 ---@field basePoints integer
----@field levelMultiplier integer
 ---@field sameZoneBonusPoints integer
 ---@field comboMultiplier integer
 ---@field streakMultiplier integer
@@ -89,13 +88,11 @@ end
 
 ---@param key string
 ---@param points integer
----@param multiplier integer
 ---@return table
-local function CreateScoringEntry(key, points, multiplier)
+local function CreateScoringEntry(key, points)
     return {
         key = key,
         points = points,
-        multiplier = multiplier,
     }
 end
 
@@ -136,7 +133,6 @@ local function CreateEmptyScoreResult(selectedElementCount, selectedElements, ma
         combinationCount = 0,
         selectedElements = selectedElements,
         matchedElements = {},
-        levelBonus = 0,
         sameZoneBonusPoints = 0,
         comboBonus = 0,
         streakBonus = 0,
@@ -289,8 +285,7 @@ local function ScoreCommon(elements, death, streakCount, options)
         local previewLevelPoints = DeathpoolLogic.GetLevelPointsForRange(resolvedElements.levelRange)
         selectedElements[#selectedElements + 1] = CreateScoringEntry(
             "levelRange",
-            previewLevelPoints,
-            0
+            previewLevelPoints
         )
         DebugScore(
             "selected levelRange",
@@ -301,8 +296,7 @@ local function ScoreCommon(elements, death, streakCount, options)
     if resolvedElements.source ~= nil then
         selectedElements[#selectedElements + 1] = CreateScoringEntry(
             "source",
-            SCORE_RULES.fixedElementPoints.source,
-            0
+            SCORE_RULES.fixedElementPoints.source
         )
         DebugScore("selected source", "basePoints=", SCORE_RULES.fixedElementPoints.source)
     end
@@ -310,8 +304,7 @@ local function ScoreCommon(elements, death, streakCount, options)
     if resolvedElements.zone ~= nil then
         selectedElements[#selectedElements + 1] = CreateScoringEntry(
             "zone",
-            SCORE_RULES.fixedElementPoints.zone,
-            0
+            SCORE_RULES.fixedElementPoints.zone
         )
         DebugScore("selected zone", "basePoints=", SCORE_RULES.fixedElementPoints.zone)
     end
@@ -326,15 +319,13 @@ local function ScoreCommon(elements, death, streakCount, options)
     local matchState = DeathpoolLogic._GetPredictionMatchState(resolvedElements, death)
     local matchedElements = {}
     local basePoints = 0
-    local levelBonus = 0
 
     if matchState.levelMatched then
         local levelPoints = DeathpoolLogic.GetLevelPointsForLevel(death.level)
         basePoints = basePoints + levelPoints
         matchedElements[#matchedElements + 1] = CreateScoringEntry(
             "levelRange",
-            levelPoints,
-            0
+            levelPoints
         )
         DebugScore("matched levelRange", "basePoints=", levelPoints)
     end
@@ -344,8 +335,7 @@ local function ScoreCommon(elements, death, streakCount, options)
         basePoints = basePoints + sourcePoints
         matchedElements[#matchedElements + 1] = CreateScoringEntry(
             "source",
-            sourcePoints,
-            0
+            sourcePoints
         )
         DebugScore("matched source", "basePoints=", sourcePoints)
     end
@@ -355,8 +345,7 @@ local function ScoreCommon(elements, death, streakCount, options)
         basePoints = basePoints + zonePoints
         matchedElements[#matchedElements + 1] = CreateScoringEntry(
             "zone",
-            zonePoints,
-            0
+            zonePoints
         )
         DebugScore("matched zone", "basePoints=", zonePoints)
     end
@@ -397,7 +386,6 @@ local function ScoreCommon(elements, death, streakCount, options)
         "score summary",
         "basePoints=", basePoints,
         "sameZonePoints=", sameZonePoints,
-        "levelBonus=", levelBonus,
         "comboBonus=", comboBonus,
         "streakBonus=", streakBonus,
         "totalMultiplier=", totalMultiplier,
@@ -417,7 +405,6 @@ local function ScoreCommon(elements, death, streakCount, options)
         combinationCount = 1,
         selectedElements = selectedElements,
         matchedElements = matchedElements,
-        levelBonus = levelBonus,
         sameZoneBonusPoints = sameZonePoints,
         comboBonus = comboBonus,
         streakBonus = streakBonus,
@@ -558,7 +545,6 @@ function DeathpoolLogic.GetComboDetails(prediction, death, streak)
     return {
         predictionText = DeathpoolLogic.FormatLockedPrediction(prediction),
         basePoints = score.basePoints,
-        levelMultiplier = score.levelBonus,
         sameZoneBonusPoints = score.sameZoneBonusPoints,
         comboMultiplier = score.comboBonus,
         streakMultiplier = score.streakBonus,

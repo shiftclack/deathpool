@@ -26,7 +26,6 @@ local STORAGE_RULES = DeathpoolConstants.STORAGE
 ---@field combinationCount integer
 ---@field selectedElements table[]
 ---@field matchedElements table[]
----@field levelBonus integer
 ---@field sameZoneBonusPoints integer
 ---@field comboBonus integer
 ---@field streakBonus integer
