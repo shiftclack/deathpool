@@ -339,11 +339,6 @@ local function BuildStandardizedTooltipDetails(context, showPredictionString, sh
         end
     end
 
-    -- details[#details + 1] = {
-    --     label = "Total",
-    --     value = displayTotalMultiplier,
-    -- }
-
     details[#details + 1] = {
         label = "Score",
         value = GetTooltipScoreDisplay(summary, displayTotalMultiplier, death),

@@ -184,19 +184,6 @@ function DeathpoolUI.CreateDeathLogDisplayCache()
 end
 
 ---@param cache DeathpoolDeathLogDisplayCache
-function DeathpoolUI.InvalidateDeathLogDisplayCache(cache)
-    for _, view in ipairs({
-        cache.recentView,
-        cache.historyView,
-        cache.successfulView,
-    }) do
-        view.sourceRef = nil
-        view.sourceSnapshot = {}
-        view.orderedEntries = {}
-    end
-end
-
----@param cache DeathpoolDeathLogDisplayCache
 ---@param viewKey string
 ---@param sourceDeaths DeathpoolDeath[]
 ---@param options DeathpoolDeathLogViewOptions

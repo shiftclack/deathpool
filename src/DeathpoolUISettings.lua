@@ -124,14 +124,6 @@ local function CreateCategoryFrame()
     title:SetJustifyH("LEFT")
     title:SetText("Hardcore Death Pool")
 
-    -- local description = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    -- description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-    -- description:SetJustifyH("LEFT")
-    -- description:SetWordWrap(true)
-    -- description:SetText(
-    --     "A hardcore death prediction game"
-    -- )
-
     showInCombatCheckbox = CreateCheckbox(frame, "Show in combat", function(self)
         local settingsApi = GetSettingsApi()
         settingsApi.SetShowInCombat(self:GetChecked())

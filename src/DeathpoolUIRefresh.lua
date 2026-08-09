@@ -107,7 +107,6 @@ ns.DeathpoolUI = DeathpoolUI
 ---@field RefreshLockedPrediction fun(self: DeathpoolRefreshControllerFrame)|nil
 ---@field RefreshDeaths fun(self: DeathpoolRefreshControllerFrame)|nil
 ---@field RefreshCollapsedSummary fun(self: DeathpoolRefreshControllerFrame)|nil
----@field InvalidateLogDisplayCaches fun()|nil
 
 ---@class DeathpoolRefreshReadyControllerFrame: DeathpoolRefreshControllerFrame
 ---@field totalPointsValue table
@@ -138,7 +137,6 @@ ns.DeathpoolUI = DeathpoolUI
 ---@field RefreshLockedPrediction fun(self: DeathpoolRefreshReadyControllerFrame)
 ---@field RefreshDeaths fun(self: DeathpoolRefreshReadyControllerFrame)
 ---@field RefreshCollapsedSummary fun(self: DeathpoolRefreshReadyControllerFrame)
----@field InvalidateLogDisplayCaches fun()
 
 ---@class DeathpoolRefreshDebugFrame
 ---@field detailValues DeathpoolRefreshFontStringMap|nil
@@ -656,10 +654,6 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
                 showRank = self.showSuccessfulOnly == true,
             },
         })
-    end
-
-    function Deathpool.InvalidateLogDisplayCaches()
-        DeathpoolUI.InvalidateDeathLogDisplayCache(displayCache)
     end
 
     DeathpoolLog.displayCache = displayCache
