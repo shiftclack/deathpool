@@ -8,10 +8,6 @@ local assertEquals = testContext.assertEquals
 local assertContains = testContext.assertContains
 local assertTruthy = testContext.assertTruthy
 
--- local function getDemoPlaybackState(demoState)
---     return demoState and demoState.demoPlayback or {}
--- end
-
 local function getIntroDemoState(Deathpool)
     local introDemoController = Deathpool and Deathpool.introDemoController or nil
     if introDemoController then
@@ -25,22 +21,6 @@ local function advanceDemoPlayback(Deathpool)
     Deathpool:GetScript("OnUpdate")(Deathpool, 10)
     return getIntroDemoState(Deathpool)
 end
-
--- local function advanceDemoUntilLatestDeath(Deathpool, targetName)
---     local demoState = Deathpool:GetIntroDemoState()
-
---     for _ = 1, 40 do
---         local recentDeaths = demoState and demoState.recentDeaths or {}
---         local latestDeath = recentDeaths[#recentDeaths]
---         if latestDeath and latestDeath.name == targetName then
---             return demoState
---         end
-
---         demoState = advanceDemoPlayback(Deathpool)
---     end
-
---     return demoState
--- end
 
 local function testIntroDemoRefreshUsesMainWindowOnlyState()
     local context = createUIContext(Fixtures.uiDatabase({
@@ -181,29 +161,7 @@ local function testIntroDemoPlaybackAdvancesAndLoops()
     assertEquals(Deathpool.currentStreakValue:GetText(), "2", "demo playback should update the current streak during consecutive matches")
     assertEquals(Deathpool.longestStreakValue:GetText(), "2", "demo playback should raise the longest streak after the early two-hit run")
 
-    -- demoState = advanceDemoUntilLatestDeath(Deathpool, "Nettle")
-    -- assertEquals(demoState.recentDeaths[#demoState.recentDeaths].name, "Nettle", "demo playback should preserve the scripted roster on the mid-demo streak")
-    -- assertEquals(Deathpool.currentStreakValue:GetText(), "5", "demo playback should build the curated four-hit streak by Nettle")
-    -- assertEquals(Deathpool.longestStreakValue:GetText(), "5", "demo playback should keep the longest streak in sync with the live model")
-
-    -- advanceDemoUntilLatestDeath(Deathpool, "Goldshirekid")
-    -- assertEquals(Deathpool.currentStreakValue:GetText(), "1", "demo playback should restart the streak before the final two-hit run")
-
-    -- demoState = advanceDemoUntilLatestDeath(Deathpool, "Greymist")
-    -- assertEquals(demoState.recentDeaths[#demoState.recentDeaths].name, "Greymist", "demo playback should reach the final scripted death before looping")
-    -- assertEquals(Deathpool.deathRows[5].name:GetText(), "Greymist", "demo playback should display the final scripted death in the last visible row")
-    -- assertEquals(
-    --     Deathpool.deathRows[5].awardedPoints:GetText(),
-    --     formatStoredDeathScore(demoState.recentDeaths[#demoState.recentDeaths]).awardedPoints,
-    --     "demo playback should end on a live-scored two-hit streak finale"
-    -- )
-    -- assertEquals(Deathpool.currentStreakValue:GetText(), "2", "demo playback should end with the second hit of the closing streak")
-    -- assertEquals(Deathpool.longestStreakValue:GetText(), "7", "demo playback should preserve the best streak reached across the full live-scored sequence")
-
-    -- demoState = advanceDemoPlayback(Deathpool)
-    -- assertEquals(getDemoPlaybackState(demoState).currentDeathIndex, 1, "demo playback should loop back to the first scripted death after the sequence ends")
     assertEquals(Deathpool.deathRows[1].sourceName:GetText(), "Skeletal Raider", "demo playback should redisplay the first scripted death after the sequence ends")
-    -- assertEquals(Deathpool.totalPointsValue:GetText(), "0", "demo playback should restart the score when looping the scripted sequence")
 end
 
 local function testHelpDemoButtonStartsIntroDemo()

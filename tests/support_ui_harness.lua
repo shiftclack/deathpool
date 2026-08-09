@@ -643,36 +643,6 @@ local function initializeGlobals(options)
 
     SlashCmdList = {}
 
-    UIDropDownMenu_SetWidth = function(dropdown, width)
-        dropdown.dropdownWidth = width
-    end
-
-    UIDropDownMenu_SetText = function(dropdown, text)
-        dropdown.dropdownText = text
-        dropdown.text = text
-    end
-
-    UIDropDownMenu_Initialize = function(dropdown, initializer)
-        dropdown.dropdownInitializer = initializer
-    end
-
-    UIDropDownMenu_CreateInfo = function()
-        return {}
-    end
-
-    UIDropDownMenu_AddButton = function(info, level)
-        if not _G.__dropdownButtons then
-            _G.__dropdownButtons = {}
-        end
-        _G.__dropdownButtons[#_G.__dropdownButtons + 1] = {
-            info = info,
-            level = level,
-        }
-    end
-
-    CloseDropDownMenus = function()
-    end
-
     GameTooltip = {
         lines = {},
         visible = false,
@@ -773,7 +743,6 @@ local function initializeGlobals(options)
         [4] = { r = 0.64, g = 0.21, b = 0.93 },
     }
 
-    _G.__dropdownButtons = nil
     initializeBundledLibs()
 end
 

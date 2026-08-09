@@ -338,21 +338,11 @@ local function testDebugToggleControlsWindowAndPrinting()
     assertEquals(DeathpoolDebug:IsShown(), true, "debug command should show the debug window while enabled")
     assertTruthy(string.find(chatMessages[#chatMessages], "enabled", 1, true), "debug command should print enable message")
 
-
     SlashCmdList.DEATHPOOL("debug")
     assertEquals(context.ns.DeathpoolDebugState.IsEnabled(), false, "debug command should disable shared debug mode")
     assertEquals(DeathpoolCharacterState.debugEnabled, nil, "debug command should keep SavedVariables free of debug mode state")
     assertEquals(DeathpoolDebug:IsShown(), false, "debug command should hide the debug window while disabled")
-    --assertEquals(chatMessages[#chatMessages], "|cffcc3333Deathpool|r: Debug mode disabled.", "debug command should announce disablement")
     assertTruthy(string.find(chatMessages[#chatMessages], "disabled", 1, true), "debug command should announce disablement")
-
---     local messageCountBeforeDisabledDebugDeath = #chatMessages
---     SlashCmdList.DEATHPOOL("debugdeath [Alamo] has been slain by a Defias Bandit in Westfall! They were level 12")
---     assertEquals(
---         #chatMessages,
---         messageCountBeforeDisabledDebugDeath,
---         "debugdeath should not print parsed death details while debug mode is disabled"
---     )
 end
 
 local function testReloadClearsLegacySavedDebugFlagAndSessionDebugMode()
