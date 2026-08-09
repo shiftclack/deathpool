@@ -33,7 +33,6 @@
 ---@field prediction DeathpoolPrediction|nil
 ---@field matchedPrediction boolean|nil
 ---@field points integer|nil
----@field multiplierValue integer|nil Legacy persisted value ignored by current score recomputation
 ---@field streakMultiplier integer|nil
 ---@field awardedPoints integer|nil
 ---@field predictionStreak integer|nil
