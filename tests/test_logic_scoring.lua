@@ -313,9 +313,8 @@ return function(context)
         assertTableLength(missedDetails.combos, 0, "combo details should not emit successful combination rows for misses")
     end
 
-    local function testMultiplierHelpers()
+    local function testScoringMultipliers()
         local streakCases = {
-            { streak = nil, bonus = 0, label = "nil streak should default to no streak bonus" },
             { streak = 0, bonus = 0, label = "zero streak should use no streak bonus" },
             { streak = 1, bonus = 0, label = "the first correct prediction should apply no streak bonus" },
             { streak = 2, bonus = 1 * SCORE_RULES.streakBonusStep, label = "the second correct prediction should apply one streak step" },
@@ -346,213 +345,221 @@ return function(context)
             { streak = SCORE_RULES.maxStreakBonus + 1, bonus = SCORE_RULES.maxStreakBonus, label = "streaks beyond the configured cap should stay capped" },
         }
 
-        local matchedEvaluation = DeathpoolLogic.EvaluatePrediction(
-            Fixtures.prediction({
-                source = false,
-            }),
-            Fixtures.death({
-                sourceName = "Benny Blaanco",
-            })
+        local nilStreakScore = DeathpoolLogic.ScoreDeathEvent(
+            DeathpoolLogic.GetPredictionElements(Fixtures.prediction({
+                levelRange = false,
+                zone = false,
+            })) or {},
+            Fixtures.death(),
+            nil
         )
+        assertEquals(nilStreakScore.streakBonus, 0, "nil streak should default to no streak bonus at the scoring boundary")
 
         for _, case in ipairs(streakCases) do
-            local actual = DeathpoolLogic.GetStreakMultiplierContribution(case.streak, matchedEvaluation)
+            local actual = DeathpoolLogic._CalculateStreakBonus(case.streak)
             assertEquals(actual, case.bonus, case.label)
         end
 
         local multiplierCases = {
             {
                 streak = 1,
-                evaluation = DeathpoolLogic.EvaluatePrediction(
-                    Fixtures.prediction({
-                        source = false,
-                        zone = false,
-                        levelRange = "10-19",
-                    }),
-                    Fixtures.death({
-                        level = 12,
-                    })
-                ),
-                multiplier = SCORE_RULES.predictionElementBonusByCount[1] or 0,
+                prediction = Fixtures.prediction({
+                    source = false,
+                    zone = false,
+                    levelRange = "10-19",
+                }),
+                death = Fixtures.death({
+                    level = 12,
+                }),
+                matched = true,
+                matchedElementCount = 1,
+                comboBonus = SCORE_RULES.predictionElementBonusByCount[1] or 0,
+                streakBonus = 0,
+                totalMultiplier = Helpers.getDisplayMultiplier(1, 1),
                 label = "a matched level prediction should use the one-field combo bonus on the first hit",
             },
             {
                 streak = 1,
-                evaluation = DeathpoolLogic.EvaluatePrediction(
-                    Fixtures.prediction({
-                        zone = false,
-                        levelRange = "10-19",
-                        source = "hogger",
-                    }),
-                    Fixtures.death({
-                        level = 12,
-                        sourceName = "Hogger",
-                    })
-                ),
-                multiplier = SCORE_RULES.predictionElementBonusByCount[2] or 0,
+                prediction = Fixtures.prediction({
+                    zone = false,
+                    levelRange = "10-19",
+                    source = "hogger",
+                }),
+                death = Fixtures.death({
+                    level = 12,
+                    sourceName = "Hogger",
+                }),
+                matched = true,
+                matchedElementCount = 2,
+                comboBonus = SCORE_RULES.predictionElementBonusByCount[2] or 0,
+                streakBonus = 0,
+                totalMultiplier = Helpers.getDisplayMultiplier(2, 1),
                 label = "level plus one matched field should use the two-field combo bonus before any streak bonus",
             },
             {
                 streak = 1,
-                evaluation = DeathpoolLogic.EvaluatePrediction(
-                    Fixtures.prediction(),
-                    Fixtures.death()
-                ),
-                multiplier = SCORE_RULES.predictionElementBonusByCount[3] or 0,
+                prediction = Fixtures.prediction(),
+                death = Fixtures.death(),
+                matched = true,
+                matchedElementCount = 3,
+                comboBonus = SCORE_RULES.predictionElementBonusByCount[3] or 0,
+                streakBonus = 0,
+                totalMultiplier = Helpers.getDisplayMultiplier(3, 1),
                 label = "three matched fields on the first hit should use the three-field combo bonus",
             },
             {
                 streak = 2,
-                evaluation = { sourceMatched = true, matched = true },
-                multiplier = (SCORE_RULES.predictionElementBonusByCount[1] or 0) + SCORE_RULES.streakBonusStep,
+                prediction = Fixtures.prediction({
+                    levelRange = false,
+                    zone = false,
+                    source = "hogger",
+                }),
+                death = Fixtures.death({
+                    sourceName = "Hogger",
+                }),
+                matched = true,
+                matchedElementCount = 1,
+                comboBonus = SCORE_RULES.predictionElementBonusByCount[1] or 0,
+                streakBonus = SCORE_RULES.streakBonusStep,
+                totalMultiplier = Helpers.getDisplayMultiplier(1, 2),
                 label = "one-field winning predictions on the second hit should include the first streak step",
             },
             {
                 streak = 3,
-                evaluation = DeathpoolLogic.EvaluatePrediction(
-                    Fixtures.prediction(),
-                    Fixtures.death()
-                ),
-                multiplier = (SCORE_RULES.predictionElementBonusByCount[3] or 0)
-                    + (2 * SCORE_RULES.streakBonusStep),
+                prediction = Fixtures.prediction(),
+                death = Fixtures.death(),
+                matched = true,
+                matchedElementCount = 3,
+                comboBonus = SCORE_RULES.predictionElementBonusByCount[3] or 0,
+                streakBonus = 2 * SCORE_RULES.streakBonusStep,
+                totalMultiplier = Helpers.getDisplayMultiplier(3, 3),
                 label = "three matched fields on the third hit should combine the combo bonus with the second streak step",
             },
-            { streak = 1, evaluation = { matched = false }, multiplier = 0, label = "an unmatched death should now display x0" },
+            {
+                streak = 3,
+                prediction = Fixtures.prediction({
+                    levelRange = "60",
+                    source = "defias pillager",
+                    zone = "westfall",
+                }),
+                death = Fixtures.death(),
+                matched = false,
+                matchedElementCount = 0,
+                comboBonus = 0,
+                streakBonus = 0,
+                totalMultiplier = 0,
+                label = "an unmatched death should not apply combo or streak multipliers",
+            },
         }
 
         for _, case in ipairs(multiplierCases) do
-            local actual = DeathpoolLogic.GetMultiplierForStreak(case.streak, case.evaluation)
-            assertEquals(actual, case.multiplier, case.label)
+            local elements = DeathpoolLogic.GetPredictionElements(case.prediction) or {}
+            local score = DeathpoolLogic.ScoreDeathEvent(elements, case.death, case.streak)
+
+            assertEquals(score.matched, case.matched, case.label .. " matched state")
             assertEquals(
-                DeathpoolLogic.FormatMultiplier(actual),
-                "x" .. tostring(case.multiplier or case.bonus),
-                case.label .. " when formatted"
+                score.matchedElementCount,
+                case.matchedElementCount,
+                case.label .. " matched element count"
+            )
+            assertEquals(score.comboBonus, case.comboBonus, case.label .. " combo bonus")
+            assertEquals(score.streakBonus, case.streakBonus, case.label .. " streak bonus")
+            assertEquals(score.totalMultiplier, case.totalMultiplier, case.label .. " total multiplier")
+        end
+    end
+
+    local function testPredictionPreviewScoring()
+        local function scorePredictionPreview(prediction)
+            return DeathpoolLogic.ScorePreview(
+                DeathpoolLogic.GetPredictionElements(prediction) or {},
+                DeathpoolLogic.GetPreviewStreak()
             )
         end
 
-        local partialEvaluation = DeathpoolLogic.EvaluatePrediction(
-            Fixtures.prediction({
-                levelRange = "10-19",
-                source = "benny blaanco",
-                zone = "elwynn forest",
-            }),
-            Fixtures.death({
-                level = 12,
-                sourceName = "Benny Blaanco",
-                zone = "Elwynn Forest",
-            })
-        )
-        assertEquals(
-            DeathpoolLogic.GetComboMultiplierContribution(2, partialEvaluation),
-            SCORE_RULES.predictionElementBonusByCount[3] or 0,
-            "combo contribution should isolate the best non-streak multiplier portion"
-        )
-        assertEquals(
-            DeathpoolLogic.GetStreakMultiplierContribution(2, partialEvaluation),
-            SCORE_RULES.streakBonusStep,
-            "streak contribution should apply only one raw streak bonus to the death total"
-        )
+        local emptyBasePoints = 0
+        local sourceBasePoints = Helpers.getExpectedBasePoints({ source = true })
+        local levelBasePoints = DeathpoolLogic.GetLevelPointsForRange("50-59")
+        local levelSourceBasePoints = Helpers.getExpectedBasePoints({
+            levelRange = "20-29",
+            level = 20,
+            source = true,
+        })
+        local fullBasePoints = Helpers.getExpectedBasePoints({
+            levelRange = "10-19",
+            level = 10,
+            source = true,
+            zone = true,
+        })
+        local cases = {
+            {
+                prediction = Fixtures.prediction({
+                    levelRange = false,
+                    source = false,
+                    zone = false,
+                }),
+                basePoints = emptyBasePoints,
+                totalMultiplier = 0,
+                label = "empty prediction previews",
+            },
+            {
+                prediction = Fixtures.prediction({
+                    levelRange = false,
+                    zone = false,
+                }),
+                basePoints = sourceBasePoints,
+                totalMultiplier = Helpers.getDisplayMultiplier(1, SCORE_RULES.previewStreak),
+                label = "source-only prediction previews",
+            },
+            {
+                prediction = Fixtures.prediction({
+                    source = false,
+                    zone = false,
+                    levelRange = "50-59",
+                }),
+                basePoints = levelBasePoints,
+                totalMultiplier = Helpers.getDisplayMultiplier(1, SCORE_RULES.previewStreak),
+                label = "level-only prediction previews",
+            },
+            {
+                prediction = Fixtures.prediction({
+                    levelRange = "20-29",
+                    zone = false,
+                }),
+                basePoints = levelSourceBasePoints,
+                totalMultiplier = Helpers.getDisplayMultiplier(2, SCORE_RULES.previewStreak),
+                label = "two-element prediction previews",
+            },
+            {
+                prediction = Fixtures.prediction(),
+                basePoints = fullBasePoints,
+                totalMultiplier = Helpers.getDisplayMultiplier(3, SCORE_RULES.previewStreak),
+                label = "three-element prediction previews",
+            },
+        }
+
+        for _, case in ipairs(cases) do
+            local score = scorePredictionPreview(case.prediction)
+
+            assertEquals(score.basePoints, case.basePoints, case.label .. " base points")
+            assertEquals(score.totalMultiplier, case.totalMultiplier, case.label .. " total multiplier")
+            assertEquals(
+                score.awardedPoints,
+                case.basePoints * case.totalMultiplier,
+                case.label .. " awarded points"
+            )
+        end
     end
 
-    local function testPredictionPreviewHelpers()
-        assertEquals(
-            DeathpoolLogic.GetBaseMultiplierForPrediction(Fixtures.prediction({
-                levelRange = false,
-                source = false,
-                sourceLabel = false,
-                zone = false,
-                zoneLabel = false,
-            })),
-            0,
-            "base multiplier helper should return x0 when nothing is selected"
-        )
-        assertEquals(
-            DeathpoolLogic.GetBaseMultiplierForPrediction(Fixtures.prediction({
-                levelRange = false,
-                zone = false,
-                zoneLabel = false,
-            })),
-            Helpers.getDisplayMultiplier(1, SCORE_RULES.previewStreak),
-            "base multiplier helper should use the configured one-field preview multiplier"
-        )
-        assertEquals(
-            DeathpoolLogic.GetBaseMultiplierForPrediction(Fixtures.prediction({
-                zone = false,
-                zoneLabel = false,
-            })),
-            Helpers.getDisplayMultiplier(2, SCORE_RULES.previewStreak),
-            "base multiplier helper should use the preview combo bonus for two selected fields"
-        )
-        assertEquals(
-            DeathpoolLogic.GetBaseMultiplierForPrediction(Fixtures.prediction()),
-            Helpers.getDisplayMultiplier(3, SCORE_RULES.previewStreak),
-            "base multiplier helper should use the preview combo bonus for three selected fields"
-        )
-        assertEquals(
-            DeathpoolLogic.GetBasePointsForPrediction(Fixtures.prediction({
-                levelRange = false,
-                source = false,
-                sourceLabel = false,
-                zone = false,
-                zoneLabel = false,
-            })),
-            0,
-            "base points helper should return 0 when nothing is selected"
-        )
-        assertEquals(
-            DeathpoolLogic.GetBasePointsForPrediction(Fixtures.prediction({
-                source = false,
-                sourceLabel = false,
-                zone = false,
-                zoneLabel = false,
-                levelRange = "50-59",
-            })),
-            DeathpoolLogic.GetLevelPointsForRange("50-59"),
-            "base points helper should preview level-only predictions using the configured range points"
-        )
-        assertEquals(
-            DeathpoolLogic.GetBasePointsForPrediction(Fixtures.prediction({
-                levelRange = "20-29",
-                zone = false,
-                zoneLabel = false,
-            })),
-            Helpers.getExpectedBasePoints({ levelRange = "20-29", level = 20, source = true }),
-            "base points helper should include source points when the preview level prediction also hits"
-        )
-        assertEquals(
-            DeathpoolLogic.GetPreviewAwardedPointsForPrediction(Fixtures.prediction({
-                levelRange = false,
-                source = false,
-                sourceLabel = false,
-                zone = false,
-                zoneLabel = false,
-            })),
-            0,
-            "preview awarded points helper should return 0 when nothing is selected"
-        )
-        assertEquals(
-            DeathpoolLogic.GetPreviewAwardedPointsForPrediction(Fixtures.prediction({
-                source = false,
-                sourceLabel = false,
-                zone = false,
-                zoneLabel = false,
-                levelRange = "50-59",
-            })),
-            DeathpoolLogic.GetLevelPointsForRange("50-59") * Helpers.getDisplayMultiplier(1, SCORE_RULES.previewStreak),
-            "preview awarded points helper should use the configured preview range points for level-only predictions"
-        )
-        assertEquals(
-            DeathpoolLogic.GetPreviewAwardedPointsForPrediction(Fixtures.prediction({
-                levelRange = "20-29",
-                source = "hogger",
-                sourceLabel = "Hogger",
-                zone = false,
-                zoneLabel = false,
-            })),
-            Helpers.getExpectedBasePoints({ levelRange = "20-29", level = 20, source = true })
-                * Helpers.getDisplayMultiplier(2, SCORE_RULES.previewStreak),
-            "preview awarded points helper should apply the combo bonus after including fixed points on a matched level prediction"
-        )
+    local function testMultiplierFormatting()
+        local cases = {
+            { multiplier = nil, expected = "x0", label = "missing multiplier should format as x0" },
+            { multiplier = 0, expected = "x0", label = "zero multiplier should format as x0" },
+            { multiplier = 7, expected = "x7", label = "positive multiplier should use xN notation" },
+        }
+
+        for _, case in ipairs(cases) do
+            assertEquals(DeathpoolLogic.FormatMultiplier(case.multiplier), case.expected, case.label)
+        end
     end
 
     local function testPredictionPayoutPreviewRows()
@@ -733,8 +740,9 @@ return function(context)
     testPredictionEvaluation()
     testSameZoneBonusPoints()
     testComboDetails()
-    testMultiplierHelpers()
-    testPredictionPreviewHelpers()
+    testScoringMultipliers()
+    testPredictionPreviewScoring()
+    testMultiplierFormatting()
     testPredictionPayoutPreviewRows()
     testPointColorQuality()
     testPointFormatting()

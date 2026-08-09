@@ -70,19 +70,6 @@ return function(context)
             0,
             "stored death streak contribution should ignore stale persisted values"
         )
-        local missedDeath = Fixtures.storedDeath({
-            awardedPoints = 0,
-            predictionStreak = 0,
-            prediction = false,
-            matchedPrediction = false,
-            points = 0,
-            multiplierValue = 0,
-        })
-        assertEquals(
-            DeathpoolLogic.GetStoredDeathTotalPoints({ death, missedDeath }),
-            fullMatchBasePoints * fullMatchMultiplier,
-            "stored death total points should sum recalculated entry totals"
-        )
 
         local sameZoneDeath = Fixtures.storedDeath({
             sameZoneBonusApplied = true,

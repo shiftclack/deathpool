@@ -149,18 +149,6 @@ function DeathpoolLogic.GetStoredDeathComboDetails(death)
     )
 end
 
----@param deaths DeathpoolDeath[]
----@return integer
-function DeathpoolLogic.GetStoredDeathTotalPoints(deaths)
-    local totalPoints = 0
-
-    for _, death in ipairs(deaths or {}) do
-        totalPoints = totalPoints + DeathpoolLogic.GetStoredDeathAwardedPoints(death)
-    end
-
-    return totalPoints
-end
-
 DeathpoolLogic._CreateStoredDeathEntry = CreateStoredDeathEntry
 
 return DeathpoolLogic

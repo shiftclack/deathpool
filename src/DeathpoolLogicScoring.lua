@@ -74,17 +74,19 @@ local function DebugScore(...)
     DeathpoolDebug.Log(...)
 end
 
----@param streakCount integer|nil
+---@param streakCount integer
 ---@return integer
 local function CalculateStreakBonus(streakCount)
-    local resolvedStreakCount = tonumber(streakCount) or 0
-    if resolvedStreakCount <= 0 then
+    if streakCount <= 0 then
         return 0
     end
 
-    local uncappedBonus = math.max(resolvedStreakCount - 1, 0) * SCORE_RULES.streakBonusStep
+    local uncappedBonus = math.max(streakCount - 1, 0) * SCORE_RULES.streakBonusStep
     return math.min(uncappedBonus, SCORE_RULES.maxStreakBonus)
 end
+
+-- Internal test seam for the pure streak rule; production scoring uses ScoreCommon.
+DeathpoolLogic._CalculateStreakBonus = CalculateStreakBonus
 
 ---@param key string
 ---@param points integer
@@ -461,21 +463,6 @@ function DeathpoolLogic.GetPreviewStreak()
     return SCORE_RULES.previewStreak
 end
 
-function DeathpoolLogic.GetBaseMultiplierForPrediction(prediction)
-    local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
-    return DeathpoolLogic.ScorePreview(elements, SCORE_RULES.previewStreak).totalMultiplier
-end
-
-function DeathpoolLogic.GetBasePointsForPrediction(prediction)
-    local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
-    return DeathpoolLogic.ScorePreview(elements, SCORE_RULES.previewStreak).basePoints
-end
-
-function DeathpoolLogic.GetPreviewAwardedPointsForPrediction(prediction)
-    local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
-    return DeathpoolLogic.ScorePreview(elements, SCORE_RULES.previewStreak).awardedPoints
-end
-
 function DeathpoolLogic.GetPredictionPayoutPreviewRows(prediction)
     local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
     local selectedKeys = GetSelectedPredictionKeys(elements)
@@ -555,43 +542,6 @@ function DeathpoolLogic.GetComboDetails(prediction, death, streak)
         perfectMatch = score.perfectMatch,
         combos = combos,
     }
-end
-
-function DeathpoolLogic.GetMultiplierForStreak(streak, evaluation)
-    if not evaluation or not evaluation.matched then
-        return 0
-    end
-
-    local matchedEntryCount
-
-    if type(evaluation.matchedElements) == "table" and #evaluation.matchedElements > 0 then
-        matchedEntryCount = #evaluation.matchedElements
-    else
-        matchedEntryCount = DeathpoolLogic.GetMatchedPredictionCount(evaluation)
-    end
-
-    return GetPredictionElementBonus(matchedEntryCount)
-        + CalculateStreakBonus(streak)
-end
-
-function DeathpoolLogic.GetComboMultiplierContribution(streak, evaluation)
-    if not evaluation or not evaluation.matched then
-        return 0
-    end
-
-    return math.max(
-        0,
-        DeathpoolLogic.GetMultiplierForStreak(streak, evaluation)
-            - DeathpoolLogic.GetStreakMultiplierContribution(streak, evaluation)
-    )
-end
-
-function DeathpoolLogic.GetStreakMultiplierContribution(streak, evaluation)
-    if not evaluation or not evaluation.matched then
-        return 0
-    end
-
-    return CalculateStreakBonus(streak)
 end
 
 function DeathpoolLogic.FormatMultiplier(multiplier)

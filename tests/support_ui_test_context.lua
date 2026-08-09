@@ -40,15 +40,18 @@ local function buildLevelPointsSummary()
 end
 
 local function formatPredictionPreview(prediction)
-    local basePoints = DeathpoolLogic.GetBasePointsForPrediction(prediction)
     local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
-    local combinationCount = DeathpoolLogic.ScorePreview(
+    local score = DeathpoolLogic.ScorePreview(
         elements,
         DeathpoolLogic.GetPreviewStreak()
-    ).combinationCount
-    local awardedPoints = DeathpoolLogic.GetPreviewAwardedPointsForPrediction(prediction)
+    )
 
-    return string.format("%d base / %d combos = %d total", basePoints, combinationCount, awardedPoints)
+    return string.format(
+        "%d base / %d combos = %d total",
+        score.basePoints,
+        score.combinationCount,
+        score.awardedPoints
+    )
 end
 
 local function formatStoredDeathScore(death)
