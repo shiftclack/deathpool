@@ -296,48 +296,37 @@ local function testInitializeBuildsDefaultPatterns()
     withParserGlobals({
         HARDCORE_CAUSEOFDEATH_CREATURE = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_CREATURE,
     }, function(parser)
-        assertEquals(
-            parser.GetCachedDefaultPatternsSummary(),
-            "cachedDefaultPatterns: not built",
-            "parser initialize test should start before the cache is built"
-        )
-
         parser.Initialize()
+        rawset(_G, "HARDCORE_CAUSEOFDEATH_ZETA", "%s z %d")
 
-        local summary = parser.GetCachedDefaultPatternsSummary()
-        assertContains(summary, "cachedDefaultPatterns: 1 patterns", "parser initialize should build the pattern cache")
-        assertContains(
-            summary,
+        local patterns = parser.GetBlizzardDeathPatterns()
+        assertEquals(#patterns, 1, "parser initialize should build the pattern cache before globals change")
+        assertEquals(
+            patterns[1].name,
             "HARDCORE_CAUSEOFDEATH_CREATURE",
-            "parser initialize should build patterns from Hardcore death globals"
+            "parser initialize should cache patterns from the original Hardcore death globals"
         )
     end)
 end
 
-local function testCachedDefaultPatternsSummary()
+local function testCompiledDefaultPatternMetadata()
     withParserGlobals({
         HARDCORE_CAUSEOFDEATH_CREATURE = OFFICIAL_ENGLISH_HARDCORE_DEATH_FORMATS.HARDCORE_CAUSEOFDEATH_CREATURE,
     }, function(parser)
+        local patterns = parser.GetBlizzardDeathPatterns()
+        local matcher = patterns[1]
+
+        assertEquals(#patterns, 1, "compiled pattern list should include the configured format")
+        assertEquals(matcher.name, "HARDCORE_CAUSEOFDEATH_CREATURE", "compiled matcher should preserve the format name")
+        assertEquals(#matcher.captureRoles, 4, "compiled matcher should include every capture role")
+        assertEquals(matcher.captureRoles[1], "name", "compiled matcher should assign the player name capture")
+        assertEquals(matcher.captureRoles[2], "sourceName", "compiled matcher should assign the death source capture")
+        assertEquals(matcher.captureRoles[3], "zone", "compiled matcher should assign the zone capture")
+        assertEquals(matcher.captureRoles[4], "level", "compiled matcher should assign the level capture")
         assertEquals(
-            parser.GetCachedDefaultPatternsSummary(),
-            "cachedDefaultPatterns: not built",
-            "pattern cache summary should report when the cache has not been built"
-        )
-
-        parser.GetBlizzardDeathPatterns()
-
-        local summary = parser.GetCachedDefaultPatternsSummary()
-        assertContains(summary, "cachedDefaultPatterns: 1 patterns", "pattern cache summary should include the cache size")
-        assertContains(summary, "1. HARDCORE_CAUSEOFDEATH_CREATURE", "pattern cache summary should include pattern names")
-        assertContains(
-            summary,
-            "roles=[1=name, 2=sourceName, 3=zone, 4=level]",
-            "pattern cache summary should include capture roles"
-        )
-        assertContains(
-            summary,
-            "pattern=^%[(.+)%] has been slain by a (.+) in (.+)! They were level (%d+)$",
-            "pattern cache summary should include compiled Lua patterns"
+            matcher.pattern,
+            "^%[(.+)%] has been slain by a (.+) in (.+)! They were level (%d+)$",
+            "compiled matcher should preserve the generated Lua pattern"
         )
     end)
 end
@@ -436,7 +425,7 @@ testBuildPatternEscapesLiteralCharacters()
 testGetBlizzardDeathPatternsFiltersAndSorts()
 testGetBlizzardDeathPatternsCachesCurrentGlobalsUntilReload()
 testInitializeBuildsDefaultPatterns()
-testCachedDefaultPatternsSummary()
+testCompiledDefaultPatternMetadata()
 testSourceMessagePreservesSanitizedText()
 testBlankMessagesReturnNil()
 testMalformedObservedMessagesReturnNil()

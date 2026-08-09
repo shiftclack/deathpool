@@ -1,6 +1,5 @@
 ---@class DeathpoolParser
 ---@field BuildPatternFromFormat fun(formatString: string|nil): string|nil
----@field GetCachedDefaultPatternsSummary fun(): string
 ---@field GetBlizzardDeathPatterns fun(): DeathpoolParserPattern[]
 ---@field Initialize fun()
 ---@field ParseBlizzardDeathMessage fun(message: string): DeathpoolParsedDeathEvent|nil
@@ -192,45 +191,6 @@ local function BuildCaptureRolesFromFormat(formatString, causeType)
     end
 
     return captureRoles
-end
-
----@param captureRoles table<integer, string|nil>
----@return string
-local function BuildCaptureRolesSummary(captureRoles)
-    local roleNames = {}
-
-    for index, role in ipairs(captureRoles) do
-        roleNames[#roleNames + 1] = tostring(index) .. "=" .. tostring(role)
-    end
-
-    if #roleNames == 0 then
-        return "none"
-    end
-
-    return table.concat(roleNames, ", ")
-end
-
----@return string
-function DeathpoolParser.GetCachedDefaultPatternsSummary()
-    if cachedDefaultPatterns == nil then
-        return "cachedDefaultPatterns: not built"
-    end
-
-    local lines = {
-        "cachedDefaultPatterns: " .. tostring(#cachedDefaultPatterns) .. " patterns",
-    }
-
-    for index, matcher in ipairs(cachedDefaultPatterns) do
-        lines[#lines + 1] = tostring(index)
-            .. ". "
-            .. matcher.name
-            .. " roles=["
-            .. BuildCaptureRolesSummary(matcher.captureRoles)
-            .. "] pattern="
-            .. matcher.pattern
-    end
-
-    return table.concat(lines, "\n")
 end
 
 ---@return DeathpoolParserPattern[]
