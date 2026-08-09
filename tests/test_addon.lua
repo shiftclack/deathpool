@@ -45,8 +45,10 @@ local function refreshUiFrames(context)
     context.Deathpool = context.getMainFrame()
     context.DeathpoolDebug = context.getDebugFrame()
     context.DeathpoolLog = context.getLogFrame()
+    ---@type fun(message: string)
+    local slashHandler = SlashCmdList.DEATHPOOL
     context.runSlash = function(message)
-        return context.controller:HandleSlashCommand(message)
+        return slashHandler(message)
     end
     return context
 end
@@ -316,6 +318,7 @@ local function testDebugLogOnlyPrintsWhileDebugModeIsEnabled()
     assertEquals(#chatMessages, 0, "debug log should stay silent while debug mode is disabled")
 
     assertTruthy(type(SlashCmdList.DEATHPOOL) == "function", "slash command should register the global handler")
+    assertEquals(SLASH_DEATHPOOL1, "/deathpool", "slash command should register the expected alias")
     SlashCmdList.DEATHPOOL("debug")
     local messageCountAfterEnable = #chatMessages
 

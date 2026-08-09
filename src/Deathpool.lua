@@ -291,9 +291,3 @@ function Deathpool:PLAYER_REGEN_DISABLED()
 
     DeathpoolUI.SetWindowCollapsed(mainFrame, GetState(), true)
 end
-
----@param message string
-function Deathpool:HandleSlashCommand(message)
-    local _ = self
-    DeathpoolCommands.HandleSlashCommand(message)
-end
