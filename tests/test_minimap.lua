@@ -15,8 +15,20 @@ local assertTruthy = function(value, message)
     suite:assertTruthy(value, message)
 end
 
+local FORMATTED_SCORE_STUB_VALUES = {
+    [1234] = "1,234",
+    [12345] = "12,345",
+}
+
+---@param value number
+---@return string
+local function formatScoreStub(value)
+    return FORMATTED_SCORE_STUB_VALUES[value] or tostring(value)
+end
+
 local function resetEnvironment()
     DeathpoolCharacterState = nil
+    rawset(_G, "FormatLargeNumber", formatScoreStub)
 end
 
 local function createButton(dataObject)

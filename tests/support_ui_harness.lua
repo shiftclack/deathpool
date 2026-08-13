@@ -696,6 +696,8 @@ local function initializeGlobals(options)
         updateFunc()
     end
 
+    rawset(_G, "FormatLargeNumber", options.formatLargeNumber or tostring)
+
     time = function()
         return 24680
     end

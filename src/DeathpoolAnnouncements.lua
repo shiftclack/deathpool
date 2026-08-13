@@ -4,7 +4,6 @@ local _, ns = ...
 local DeathpoolAnnouncements = ns.DeathpoolAnnouncements or {}
 local DeathpoolConstants = ns.DeathpoolConstants
 local DeathpoolDatabase = ns.DeathpoolDatabase
-local DeathpoolLogic = ns.DeathpoolLogic
 ns.DeathpoolAnnouncements = DeathpoolAnnouncements
 
 local ANNOUNCEMENT_RULES = DeathpoolConstants.ANNOUNCEMENTS
@@ -34,7 +33,7 @@ function DeathpoolAnnouncements.AnnouncePlayerLevelUp(state, level)
             "[Hardcore Death Pool] %s has reached level %d! Their score is %s",
             UnitName("player"),
             level,
-            DeathpoolLogic.FormatPoints(DeathpoolDatabase.GetTotalPoints(state))
+            FormatLargeNumber(DeathpoolDatabase.GetTotalPoints(state))
         ),
         "GUILD"
     )
@@ -43,7 +42,7 @@ end
 ---@param state DeathpoolCharacterState
 ---@param printMessage DeathpoolPrint
 function DeathpoolAnnouncements.AnnouncePlayerDeath(state, printMessage)
-    local formattedScore = DeathpoolLogic.FormatPoints(DeathpoolDatabase.GetTotalPoints(state))
+    local formattedScore = FormatLargeNumber(DeathpoolDatabase.GetTotalPoints(state))
     local playerLevel = UnitLevel("player")
 
     printMessage("Your final score is " .. formattedScore .. ".")

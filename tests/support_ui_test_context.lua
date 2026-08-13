@@ -79,6 +79,7 @@ local function createUIContext(state, options)
         faction = options and options.faction or nil,
         hardcoreDeathChatType = options and options.hardcoreDeathChatType or nil,
         hardcoreDeathsJoined = options and options.hardcoreDeathsJoined,
+        formatLargeNumber = options and options.formatLargeNumber or nil,
     })
 
     return {

@@ -18,6 +18,16 @@ local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DeathpoolConstants.DEMO.wai
 local WAITING_FOR_FIRST_DEATH_HELP_TEXT_DELAY_SECONDS =
     DeathpoolConstants.DEMO.waitingForFirstDeathHelpTextDelaySeconds
 
+---@param value number
+---@return string
+local function formatRefreshScoreStub(value)
+    if value == 1234 then
+        return "1,234"
+    end
+
+    return tostring(value)
+end
+
 local function showSetupWindow(Deathpool)
     Deathpool.__testNs.DeathpoolUISetup.Show(Deathpool.setupFrame, Deathpool)
 end
@@ -175,7 +185,9 @@ local function testRefreshMethods()
             }),
             fullPredictionDeath,
         },
-    }))
+    }), {
+        formatLargeNumber = formatRefreshScoreStub,
+    })
     local Deathpool = context.Deathpool
     local DeathpoolDebug = context.DeathpoolDebug
     local DeathpoolLog = context.DeathpoolLog

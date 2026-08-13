@@ -49,6 +49,7 @@ read_globals = {
    "FauxScrollFrame_GetOffset",
    "FauxScrollFrame_OnVerticalScroll",
    "FauxScrollFrame_Update",
+   "FormatLargeNumber",
    "GameFontHighlightLarge",
    "GameTooltip",
    "GetRealmName",

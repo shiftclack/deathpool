@@ -28,6 +28,16 @@ local assertContains = function(text, needle, message)
     suite:assertContains(text, needle, message)
 end
 
+---@param value number
+---@return string
+local function formatFiveDigitTestScore(value)
+    if value == 12345 then
+        return "12,345"
+    end
+
+    return tostring(value)
+end
+
 local function getDefault(key)
     return DATABASE_DEFAULTS[key]
 end
@@ -61,6 +71,7 @@ local function createLoadedAddonContext(options)
         hardcoreDeathChatType = options.hardcoreDeathChatType,
         hardcoreDeathsJoined = options.hardcoreDeathsJoined,
         inGuild = options.inGuild,
+        formatLargeNumber = options.formatLargeNumber,
     })
     local controller = context.controller
     local dispatchEvent = context.dispatchEvent
@@ -771,6 +782,7 @@ local function testPlayerDeathPreservesFinalScoreAndPrintsIt()
                 enabled = true,
             },
         }),
+        formatLargeNumber = formatFiveDigitTestScore,
         login = true,
     })
     local Deathpool = context.Deathpool
@@ -874,6 +886,7 @@ local function testPlayerLevelUpAnnouncesScoreEveryTenLevels()
                 enabled = true,
             },
         }),
+        formatLargeNumber = formatFiveDigitTestScore,
     })
     local dispatchEvent = context.dispatchEvent
     local controller = context.controller
@@ -1542,7 +1555,7 @@ local function testHardcoreDeathsChannelFlowsThroughParserLogicAndUi()
     local comboMultiplier = DeathpoolLogic.GetStoredDeathComboMultiplierValue(storedDeath)
     local totalMultiplier = DeathpoolLogic.GetStoredDeathMultiplierValue(storedDeath)
     local basePoints = DeathpoolLogic.GetStoredDeathBasePoints(storedDeath)
-    local formattedAwardedPoints = DeathpoolLogic.FormatPoints(awardedPoints)
+    local formattedAwardedPoints = FormatLargeNumber(awardedPoints)
 
     assertEquals(storedDeath.name, "Drakedog", "parser flow should persist the parsed player name")
     assertEquals(storedDeath.level, 12, "parser flow should persist the parsed level")

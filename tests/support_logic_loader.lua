@@ -16,6 +16,8 @@ rawset(_G, "wipe", function(values)
     return values
 end)
 
+rawset(_G, "FormatLargeNumber", tostring)
+
 loader:Load("DeathpoolConstants")
 loader:Load("DeathpoolMigration")
 loader:Load("DeathpoolDatabase")

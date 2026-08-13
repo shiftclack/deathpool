@@ -35,7 +35,7 @@ end
 ---@param database DeathpoolCharacterState
 ---@return string
 local function GetTooltipScoreText(database)
-    return DeathpoolLogic.FormatPoints(DeathpoolDatabase.GetTotalPoints(database))
+    return FormatLargeNumber(DeathpoolDatabase.GetTotalPoints(database))
 end
 
 ---@return boolean
