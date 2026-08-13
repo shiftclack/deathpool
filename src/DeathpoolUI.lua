@@ -609,6 +609,28 @@ local function GetLockButtonLabel(frame, predictionInputsLocked)
 end
 
 ---@param frame table
+---@param predictionInputsLocked boolean
+local function ApplyLevelRangeButtonLockState(frame, predictionInputsLocked)
+    local shouldDisableAllLevelButtons = predictionInputsLocked and HasActiveIntroDemo(frame)
+
+    for _, button in ipairs(frame.levelRangeButtons or {}) do
+        if shouldDisableAllLevelButtons then
+            button:Disable()
+        elseif predictionInputsLocked then
+            if button.levelRangeValue == frame.selectedLevelRange then
+                button:Enable()
+            else
+                button:Disable()
+            end
+        elseif button.levelRangeValue == frame.selectedLevelRange then
+            button:Disable()
+        else
+            button:Enable()
+        end
+    end
+end
+
+---@param frame table
 ---@param locked boolean|nil
 function DeathpoolUI.ApplyPredictionInputLockState(frame, locked)
     local predictionInputsLocked = locked == true
@@ -625,19 +647,7 @@ function DeathpoolUI.ApplyPredictionInputLockState(frame, locked)
         frame.lockButton:SetText(GetLockButtonLabel(frame, predictionInputsLocked))
     end
 
-    for _, button in ipairs(frame.levelRangeButtons or {}) do
-        if predictionInputsLocked then
-            if button.levelRangeValue == frame.selectedLevelRange then
-                button:Enable()
-            else
-                button:Disable()
-            end
-        elseif button.levelRangeValue == frame.selectedLevelRange then
-            button:Disable()
-        else
-            button:Enable()
-        end
-    end
+    ApplyLevelRangeButtonLockState(frame, predictionInputsLocked)
 
     if frame.sourceEditBox then
         if predictionInputsLocked then

@@ -201,6 +201,7 @@ local function CreateLevelRangeButtons(frame, layout, logic, levelRanges)
         )
         button:SetText(levelRange)
         button.levelRangeValue = levelRange
+        button:SetMotionScriptsWhileDisabled(true)
         button:SetScript("OnClick", function(self)
             if frame.predictionInputsLocked then
                 return

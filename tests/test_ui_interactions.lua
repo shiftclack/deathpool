@@ -1276,6 +1276,11 @@ local function testGameInfoCalloutShowsExpectedTextForPredictionControls()
     Deathpool:Show()
 
     assertEquals(
+        Deathpool.levelRangeButtons[1]:GetMotionScriptsWhileDisabled(),
+        true,
+        "level range buttons should show tooltip motion scripts while disabled"
+    )
+    assertEquals(
         hoverRegionAndWaitForGameInfoCallout(Deathpool, Deathpool.levelRangeButtons[1]),
         noneLevelPointsText,
         "hovering the none level range should show zero points"

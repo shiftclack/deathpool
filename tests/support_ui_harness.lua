@@ -109,6 +109,14 @@ local function createRegion(regionKind, name, parent, template)
         self.mouseEnabled = value
     end
 
+    function region:SetMotionScriptsWhileDisabled(value)
+        self.motionScriptsWhileDisabled = value == true
+    end
+
+    function region:GetMotionScriptsWhileDisabled()
+        return self.motionScriptsWhileDisabled == true
+    end
+
     function region:RegisterForDrag(button)
         self.dragButton = button
     end
