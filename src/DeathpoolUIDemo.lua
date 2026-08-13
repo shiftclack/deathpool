@@ -1,8 +1,8 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
-ns.DeathpoolUI = DeathpoolUI
+local DeathpoolUIDemo = ns.DeathpoolUIDemo or {}
+ns.DeathpoolUIDemo = DeathpoolUIDemo
 
 local DEMO_DEFAULT_SERVER = "Doomhowl"
 local DEMO_DEFAULT_CAUSE_TYPE = "HARDCORE_CAUSEOFDEATH_CREATURE"
@@ -364,7 +364,7 @@ local function NormalizeDemoDeath(rawDeath)
 end
 
 ---@return DeathpoolPrediction
-function DeathpoolUI.GetIntroDemoPrediction()
+function DeathpoolUIDemo.GetIntroDemoPrediction()
     local prediction = GetIntroDemoPredictionDefinition()
 
     return {
@@ -377,7 +377,7 @@ function DeathpoolUI.GetIntroDemoPrediction()
 end
 
 ---@return DeathpoolIntroDemoDeathEvent[]
-function DeathpoolUI.GetIntroDemoScriptDeaths()
+function DeathpoolUIDemo.GetIntroDemoScriptDeaths()
     ---@type DeathpoolIntroDemoDeathEvent[]
     local scriptDeaths = {}
     local rawScriptDeaths = GetIntroDemoScriptDefinition()
@@ -390,8 +390,8 @@ function DeathpoolUI.GetIntroDemoScriptDeaths()
 end
 
 ---@return string
-function DeathpoolUI.GetIntroDemoAttractModeText()
+function DeathpoolUIDemo.GetIntroDemoAttractModeText()
     return DEMO_ATTRACT_MODE_TEXT
 end
 
-return DeathpoolUI
+return DeathpoolUIDemo

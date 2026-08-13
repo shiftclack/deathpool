@@ -440,7 +440,7 @@ local function testPredictionOnlyTooltipUsesPreviewStreakByDefault()
     })
     local previewSummary = DeathpoolLogic.GetComboDetails(prediction, nil, DeathpoolLogic.GetPreviewStreak())
 
-    DeathpoolUI.ShowStandardizedTooltip(anchor, {
+    context.DeathpoolUITooltip.ShowStandardizedTooltip(anchor, {
         prediction = prediction,
     }, false, false, false)
 
@@ -466,7 +466,6 @@ end
 
 local function testTooltipHidesLowValueMultiplierRows()
     local context = createUIContext()
-    local DeathpoolUI = context.DeathpoolUI
     local anchor = CreateFrame("Frame", nil, UIParent)
     local prediction = Fixtures.prediction({
         levelRange = false,
@@ -479,7 +478,7 @@ local function testTooltipHidesLowValueMultiplierRows()
         zone = "Westfall",
     })
 
-    DeathpoolUI.ShowStandardizedTooltip(anchor, {
+    context.DeathpoolUITooltip.ShowStandardizedTooltip(anchor, {
         prediction = prediction,
         death = death,
         streak = 1,
@@ -1160,7 +1159,7 @@ local function testPredictionButtons()
     local Deathpool = context.Deathpool
     local DeathpoolUI = context.DeathpoolUI
     local findDropdownButtonByText = context.findDropdownButtonByText
-    local targetZone, targetZoneInput = getAutocompleteTargetValue(DeathpoolUI.ZoneList)
+    local targetZone, targetZoneInput = getAutocompleteTargetValue(context.DeathpoolUIAutocomplete.ZoneList)
 
     assertEquals(Deathpool.lockButton:IsEnabled(), false, "lock button should start disabled with no prediction")
     Deathpool.levelRangeButtons[2]:GetScript("OnClick")(Deathpool.levelRangeButtons[2])
@@ -1582,7 +1581,6 @@ end
 
 local function testFlexibleDeathLogListSupportsCustomColumns()
     local context = createUIContext()
-    local DeathpoolUI = context.DeathpoolUI
 
     local flexibleLog = CreateFrame("Frame", nil, UIParent)
     local customColumns = {
@@ -1607,7 +1605,7 @@ local function testFlexibleDeathLogListSupportsCustomColumns()
         predictionStreak = false,
     })
 
-    DeathpoolUI.CreateDeathLogList(flexibleLog, {
+    context.DeathpoolUIDeathLogList.CreateDeathLogList(flexibleLog, {
         columns = customColumns,
         rowCount = 2,
         rowHeight = 18,
@@ -1620,7 +1618,7 @@ local function testFlexibleDeathLogListSupportsCustomColumns()
             showFullCombos = true,
         },
     })
-    DeathpoolUI.RefreshDeathLogRows(flexibleLog, {
+    context.DeathpoolUIDeathLogList.RefreshDeathLogRows(flexibleLog, {
         olderDeath,
         newestDeath,
     }, {
@@ -1647,7 +1645,6 @@ end
 
 local function testDeathLogListSupportsForwardOrderingAndClearsUnusedRows()
     local context = createUIContext()
-    local DeathpoolUI = context.DeathpoolUI
 
     local flexibleLog = CreateFrame("Frame", nil, UIParent)
     local customColumns = {
@@ -1655,14 +1652,14 @@ local function testDeathLogListSupportsForwardOrderingAndClearsUnusedRows()
         { key = "level", label = "Level", x = 84, width = 24 },
     }
 
-    DeathpoolUI.CreateDeathLogList(flexibleLog, {
+    context.DeathpoolUIDeathLogList.CreateDeathLogList(flexibleLog, {
         columns = customColumns,
         rowCount = 3,
         rowHeight = 18,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
-        tooltipOptions = DeathpoolUI.MAIN_LOG_TOOLTIP_OPTIONS,
+        tooltipOptions = context.DeathpoolUITooltip.MAIN_LOG_TOOLTIP_OPTIONS,
     })
 
     local deaths = {
@@ -1683,7 +1680,7 @@ local function testDeathLogListSupportsForwardOrderingAndClearsUnusedRows()
         }),
     }
 
-    DeathpoolUI.RefreshDeathLogRows(flexibleLog, deaths, {
+    context.DeathpoolUIDeathLogList.RefreshDeathLogRows(flexibleLog, deaths, {
         columns = customColumns,
         offset = 1,
         reverseOrder = false,
@@ -1697,7 +1694,6 @@ end
 
 local function testDeathLogListTooltipOptionsCanSwitchContexts()
     local context = createUIContext()
-    local DeathpoolUI = context.DeathpoolUI
 
     local customColumns = {
         { key = "name", label = "Name", x = 0, width = 80 },
@@ -1707,16 +1703,16 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
     local death = Fixtures.storedDeath()
 
     local mainLog = CreateFrame("Frame", nil, UIParent)
-    DeathpoolUI.CreateDeathLogList(mainLog, {
+    context.DeathpoolUIDeathLogList.CreateDeathLogList(mainLog, {
         columns = customColumns,
         rowCount = 1,
         rowHeight = 18,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
-        tooltipOptions = DeathpoolUI.MAIN_LOG_TOOLTIP_OPTIONS,
+        tooltipOptions = context.DeathpoolUITooltip.MAIN_LOG_TOOLTIP_OPTIONS,
     })
-    DeathpoolUI.RefreshDeathLogRows(mainLog, {
+    context.DeathpoolUIDeathLogList.RefreshDeathLogRows(mainLog, {
         death,
     }, {
         columns = customColumns,
@@ -1731,16 +1727,16 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
     leaveDeathLogCell(mainLog.rows[1], "awardedPoints")
 
     local logWindowLog = CreateFrame("Frame", nil, UIParent)
-    DeathpoolUI.CreateDeathLogList(logWindowLog, {
+    context.DeathpoolUIDeathLogList.CreateDeathLogList(logWindowLog, {
         columns = customColumns,
         rowCount = 1,
         rowHeight = 18,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
-        tooltipOptions = DeathpoolUI.LOG_WINDOW_TOOLTIP_OPTIONS,
+        tooltipOptions = context.DeathpoolUITooltip.LOG_WINDOW_TOOLTIP_OPTIONS,
     })
-    DeathpoolUI.RefreshDeathLogRows(logWindowLog, {
+    context.DeathpoolUIDeathLogList.RefreshDeathLogRows(logWindowLog, {
         death,
     }, {
         columns = customColumns,
@@ -1756,16 +1752,16 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
     leaveDeathLogCell(logWindowLog.rows[1], "awardedPoints")
 
     local collapsedStyleLog = CreateFrame("Frame", nil, UIParent)
-    DeathpoolUI.CreateDeathLogList(collapsedStyleLog, {
+    context.DeathpoolUIDeathLogList.CreateDeathLogList(collapsedStyleLog, {
         columns = customColumns,
         rowCount = 1,
         rowHeight = 18,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
-        tooltipOptions = DeathpoolUI.COLLAPSED_LOG_TOOLTIP_OPTIONS,
+        tooltipOptions = context.DeathpoolUITooltip.COLLAPSED_LOG_TOOLTIP_OPTIONS,
     })
-    DeathpoolUI.RefreshDeathLogRows(collapsedStyleLog, {
+    context.DeathpoolUIDeathLogList.RefreshDeathLogRows(collapsedStyleLog, {
         death,
     }, {
         columns = customColumns,
@@ -1782,7 +1778,7 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
     leaveDeathLogCell(collapsedStyleLog.rows[1], "awardedPoints")
 
     local historyStyleLog = CreateFrame("Frame", nil, UIParent)
-    DeathpoolUI.CreateDeathLogList(historyStyleLog, {
+    context.DeathpoolUIDeathLogList.CreateDeathLogList(historyStyleLog, {
         columns = customColumns,
         rowCount = 1,
         rowHeight = 18,
@@ -1795,7 +1791,7 @@ local function testDeathLogListTooltipOptionsCanSwitchContexts()
             showFullCombos = true,
         },
     })
-    DeathpoolUI.RefreshDeathLogRows(historyStyleLog, {
+    context.DeathpoolUIDeathLogList.RefreshDeathLogRows(historyStyleLog, {
         death,
     }, {
         columns = customColumns,

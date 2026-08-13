@@ -3,6 +3,9 @@ local _, ns = ...
 
 local DeathpoolUI = ns.DeathpoolUI
 local DeathpoolLogic = ns.DeathpoolLogic
+local DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList or {}
+local DeathpoolUITooltip = ns.DeathpoolUITooltip
+ns.DeathpoolUIDeathLogList = DeathpoolUIDeathLogList
 local EMPTY_DEATHS = {}
 
 ---@class DeathpoolDeathDisplayFields
@@ -174,7 +177,7 @@ local function GetOrCreateCacheEntry(cache, death)
 end
 
 ---@return DeathpoolDeathLogDisplayCache
-function DeathpoolUI.CreateDeathLogDisplayCache()
+function DeathpoolUIDeathLogList.CreateDeathLogDisplayCache()
     return {
         entriesByDeath = {},
         recentView = CreateCacheView(),
@@ -188,7 +191,7 @@ end
 ---@param sourceDeaths DeathpoolDeath[]
 ---@param options DeathpoolDeathLogViewOptions
 ---@return DeathpoolDeathLogDisplayEntry[]
-function DeathpoolUI.GetOrderedDeathLogViewEntries(cache, viewKey, sourceDeaths, options)
+function DeathpoolUIDeathLogList.GetOrderedDeathLogViewEntries(cache, viewKey, sourceDeaths, options)
     if not cache or not cache.entriesByDeath or not viewKey then
         return {}
     end
@@ -250,7 +253,7 @@ local function ShowDeathLogRowTooltip(row, anchor)
         return
     end
 
-    DeathpoolUI.ShowStandardizedTooltip(anchor or row, {
+    DeathpoolUITooltip.ShowStandardizedTooltip(anchor or row, {
         death = row.death,
     }, row.tooltipOptions.showPredictionString, row.tooltipOptions.showIdentity, row.tooltipOptions.showFullCombos)
 end
@@ -318,7 +321,7 @@ end
 
 ---@param frame table
 ---@param options DeathpoolDeathLogCreateOptions
-function DeathpoolUI.CreateDeathLogList(frame, options)
+function DeathpoolUIDeathLogList.CreateDeathLogList(frame, options)
     local columns = options.columns or {}
     local rowHeight = options.rowHeight or 18
     local rowCount = options.rowCount or 0
@@ -409,7 +412,7 @@ end
 ---@param frame table
 ---@param items (DeathpoolDeath|DeathpoolDeathLogDisplayEntry)[]
 ---@param options DeathpoolDeathLogRefreshOptions
-function DeathpoolUI.RefreshDeathLogRows(frame, items, options)
+function DeathpoolUIDeathLogList.RefreshDeathLogRows(frame, items, options)
     if not frame or not frame.rows then
         return
     end
@@ -439,4 +442,4 @@ function DeathpoolUI.RefreshDeathLogRows(frame, items, options)
     end
 end
 
-return DeathpoolUI
+return DeathpoolUIDeathLogList

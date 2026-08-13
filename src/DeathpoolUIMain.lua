@@ -1,12 +1,22 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete
 local DeathpoolDatabase = ns.DeathpoolDatabase
 local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolUIDebug = ns.DeathpoolUIDebug
+local DeathpoolUIHelp = ns.DeathpoolUIHelp
+local DeathpoolUILog = ns.DeathpoolUILog
+local DeathpoolUIMain = ns.DeathpoolUIMain or {}
+local DeathpoolUIMainCollapsed = ns.DeathpoolUIMainCollapsed
+local DeathpoolUIMainPrediction = ns.DeathpoolUIMainPrediction
+local DeathpoolUIMainRecentDeaths = ns.DeathpoolUIMainRecentDeaths
 local DeathpoolUIMode = ns.DeathpoolUIMode
+local DeathpoolUIRefresh = ns.DeathpoolUIRefresh
 local DeathpoolUISetup = ns.DeathpoolUISetup
-ns.DeathpoolUI = DeathpoolUI
+local DeathpoolUITooltip = ns.DeathpoolUITooltip
+ns.DeathpoolUIMain = DeathpoolUIMain
 local DEMO_RULES = DeathpoolConstants.DEMO
 local WAITING_FOR_FIRST_DEATH_MIN_DURATION_SECONDS = DEMO_RULES.waitingForFirstDeathMinDurationSeconds
 
@@ -188,7 +198,7 @@ end
 local function AttachGameInfoCallout(ctx, region, lines)
     local frame = ctx.frame
 
-    DeathpoolUI.AttachGameInfoCallout(region, {
+    DeathpoolUITooltip.AttachGameInfoCallout(region, {
         callout = function()
             return frame.gameInfoCallout
         end,
@@ -260,7 +270,7 @@ local function AttachMainFrameScripts(frame, ctx)
         if self.githubLinkFrame then
             self.githubLinkFrame:Hide()
         end
-        DeathpoolUI.HideGameInfoCallout(self.gameInfoCallout)
+        DeathpoolUITooltip.HideGameInfoCallout(self.gameInfoCallout)
         if self.RefreshIntroDemoVisibility then
             self:RefreshIntroDemoVisibility()
         end
@@ -368,7 +378,7 @@ local function CreateActionButtons(ctx)
     local frame = ctx.frame
     local layout = ctx.layout
 
-    frame.gameInfoCallout = DeathpoolUI.CreateGameInfoCallout("DeathpoolGameInfoCallout", frame)
+    frame.gameInfoCallout = DeathpoolUITooltip.CreateGameInfoCallout("DeathpoolGameInfoCallout", frame)
 
     local helpButton = CreateFrame("Button", "DeathpoolHelpButton", frame, "GameMenuButtonTemplate")
     helpButton:SetSize(layout.standardButtonWidth, layout.standardButtonHeight)
@@ -409,7 +419,7 @@ local function CreateActionButtons(ctx)
     pauseButton:SetText("PAUSE")
     pauseButton:SetScript("OnClick", function()
         ---@cast frame DeathpoolMainFrame
-        DeathpoolUI.OnMainPredictionPauseButtonClicked(frame, ctx.logic)
+        DeathpoolUIMainPrediction.OnMainPredictionPauseButtonClicked(frame, ctx.logic)
     end)
     frame.pauseButton = pauseButton
     DeathpoolUI.RegisterCollapsibleRegion(frame, pauseButton)
@@ -423,7 +433,7 @@ local function CreateActionButtons(ctx)
     lockButton:SetText("LOCK IN")
     lockButton:SetScript("OnClick", function()
         ---@cast frame DeathpoolMainFrame
-        DeathpoolUI.OnMainPredictionLockButtonClicked(frame, ctx.logic, ctx.levelRanges)
+        DeathpoolUIMainPrediction.OnMainPredictionLockButtonClicked(frame, ctx.logic, ctx.levelRanges)
     end)
     frame.lockButton = lockButton
     DeathpoolUI.RegisterCollapsibleRegion(frame, lockButton)
@@ -537,7 +547,7 @@ end
 ---@return DeathpoolMainFrame
 ---@return DeathpoolRefreshReadyDebugFrame
 ---@return DeathpoolRefreshReadyHistoryFrame
-function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
+function DeathpoolUIMain.Initialize(state, logic, maxRecentDeaths)
     ---@type DeathpoolMainLayout
     local layout = DeathpoolUI.LAYOUT
     maxRecentDeaths = maxRecentDeaths or 5
@@ -570,48 +580,48 @@ function DeathpoolUI.Initialize(state, logic, maxRecentDeaths)
 
     AttachMainFrameScripts(frame, ctx)
 
-    local debugWindow = DeathpoolUI.CreateDebugWindow()
-    local logWindow = DeathpoolUI.CreateHistoryWindow(frame)
-    local helpWindow = DeathpoolUI.CreateHelpWindow(frame)
+    local debugWindow = DeathpoolUIDebug.CreateDebugWindow()
+    local logWindow = DeathpoolUILog.CreateHistoryWindow(frame)
+    local helpWindow = DeathpoolUIHelp.CreateHelpWindow(frame)
     local setupWindow = DeathpoolUISetup.CreateWindow(frame)
     frame.helpFrame = helpWindow
     frame.githubLinkFrame = helpWindow.githubLinkFrame
     frame.logFrame = logWindow
     frame.setupFrame = setupWindow
-    frame.dropdown = DeathpoolUI.CreateSuggestionDropdown(frame)
+    frame.dropdown = DeathpoolUIAutocomplete.CreateSuggestionDropdown(frame)
 
-    DeathpoolUI.AttachRefreshMethods(frame, debugWindow, logWindow, logic)
+    DeathpoolUIRefresh.AttachRefreshMethods(frame, debugWindow, logWindow, logic)
 
     CreateHeaderSection(ctx)
-    DeathpoolUI.CreateMainCollapsedSection(
+    DeathpoolUIMainCollapsed.CreateMainCollapsedSection(
         frame,
         layout,
         maxRecentDeaths,
         DeathpoolUI.COLLAPSED_LOG_COLUMNS
     )
 
-    DeathpoolUI.CreateMainRecentDeathsSection(
+    DeathpoolUIMainRecentDeaths.CreateMainRecentDeathsSection(
         frame,
         layout,
         maxRecentDeaths,
         DeathpoolUI.DEATH_LOG_COLUMNS
     )
     CreateScoreSummarySection(ctx)
-    DeathpoolUI.CreateMainPredictionSection(
+    DeathpoolUIMainPrediction.CreateMainPredictionSection(
         frame,
         layout,
         logic,
         DeathpoolUI.LEVEL_RANGES
     )
     CreateActionButtons(ctx)
-    DeathpoolUI.CreateMainCurrentPredictionSummarySection(frame, layout, logic)
-    DeathpoolUI.AttachMainPredictionMethods(frame, logic)
+    DeathpoolUIMainPrediction.CreateMainCurrentPredictionSummarySection(frame, layout, logic)
+    DeathpoolUIMainPrediction.AttachMainPredictionMethods(frame, logic)
     AttachMainFrameMethods(ctx)
     InitializeMainFrameDefaults(frame)
 
     ---@cast frame DeathpoolMainFrame
     ---@cast ctx DeathpoolMainContext
-    DeathpoolUI.AttachMainPredictionEditBoxHandlers(frame, logic)
+    DeathpoolUIMainPrediction.AttachMainPredictionEditBoxHandlers(frame, logic)
     InitializeMainFrameState(ctx)
     DeathpoolUI.ApplyDesiredLogWindowState(frame, state)
 

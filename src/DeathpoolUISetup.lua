@@ -3,6 +3,7 @@ local _, ns = ...
 
 local DeathpoolUISetup = {}
 local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete
 local DeathpoolDatabase = ns.DeathpoolDatabase
 local DeathpoolSetup = ns.DeathpoolSetup
 ns.DeathpoolUISetup = DeathpoolUISetup
@@ -57,7 +58,7 @@ end
 
 ---@param ownerFrame table
 ---@param active boolean
-function DeathpoolUISetup.ApplyMainWindowState(ownerFrame, active)
+local function ApplyMainWindowState(ownerFrame, active)
     ownerFrame.setupActive = active == true
 
     if ownerFrame.setupActive then
@@ -70,7 +71,7 @@ function DeathpoolUISetup.ApplyMainWindowState(ownerFrame, active)
         ownerFrame.sourceEditBox:SetTextColor(unpack(DeathpoolUI.COLORS.predictionInputLocked))
         ownerFrame.zoneEditBox:SetTextColor(unpack(DeathpoolUI.COLORS.predictionInputLocked))
         ownerFrame.emptyPredictionPrompt:Hide()
-        DeathpoolUI.HideDropdown(ownerFrame)
+        DeathpoolUIAutocomplete.HideDropdown(ownerFrame)
         return
     end
 
@@ -140,7 +141,7 @@ function DeathpoolUISetup.Refresh(setupFrame, ownerFrame, forceHide)
         HideOwnerLogWindow(ownerFrame)
     end
 
-    DeathpoolUISetup.ApplyMainWindowState(ownerFrame, active)
+    ApplyMainWindowState(ownerFrame, active)
     RefreshSetupRows(setupFrame, setupState)
     RefreshSetupCloseButtonState(setupFrame, ownerFrame)
 
@@ -180,7 +181,7 @@ function DeathpoolUISetup.Show(setupFrame, ownerFrame)
 
     DeathpoolUI.ShowExpandedOwnerFrame(ownerFrame)
     HideOwnerLogWindow(ownerFrame)
-    DeathpoolUISetup.ApplyMainWindowState(ownerFrame, setupState.isComplete ~= true)
+    ApplyMainWindowState(ownerFrame, setupState.isComplete ~= true)
     RefreshSetupRows(setupFrame, setupState)
     RefreshSetupCloseButtonState(setupFrame, ownerFrame)
     setupFrame.backdropOverlay:Show()
@@ -211,7 +212,7 @@ function DeathpoolUISetup.CreateWindow(ownerFrame)
     end)
     setupFrame:SetScript("OnHide", function(self)
         self.backdropOverlay:Hide()
-        DeathpoolUISetup.ApplyMainWindowState(ownerFrame, false)
+        ApplyMainWindowState(ownerFrame, false)
     end)
 
     if setupFrame.CloseButton then

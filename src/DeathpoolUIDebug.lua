@@ -2,6 +2,8 @@ local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
 local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIDebug = ns.DeathpoolUIDebug or {}
+ns.DeathpoolUIDebug = DeathpoolUIDebug
 
 ---@param parent table
 ---@param pointX number
@@ -27,7 +29,7 @@ local function CreateRawMessageEditBox(parent, pointX, pointY)
     return editBox
 end
 
-function DeathpoolUI.CreateDebugWindow()
+function DeathpoolUIDebug.CreateDebugWindow()
     local addLabel = DeathpoolUI.AddLabel
     local gutter = DeathpoolUI.LAYOUT.outsideGutter
 

@@ -13,9 +13,8 @@ local DeathpoolLogic = ns.DeathpoolLogic
 local LibStub = _G.LibStub
 ns.DeathpoolUIMinimap = DeathpoolUIMinimap
 
-DeathpoolUIMinimap.ENABLED = true
-DeathpoolUIMinimap.ICON_PATH =  "Interface\\Icons\\INV_Misc_Bone_ElfSkull_01"
-
+local MINIMAP_ENABLED = true
+local MINIMAP_ICON_PATH = "Interface\\Icons\\INV_Misc_Bone_ElfSkull_01"
 local MINIMAP_LAUNCHER_NAME = "Deathpool"
 local LibDataBroker = LibStub("LibDataBroker-1.1")
 local LibDBIcon = LibStub("LibDBIcon-1.0")
@@ -41,7 +40,7 @@ end
 
 ---@return boolean
 function DeathpoolUIMinimap.IsEnabled()
-    return DeathpoolUIMinimap.ENABLED == true and LibDataBroker ~= nil and LibDBIcon ~= nil
+    return MINIMAP_ENABLED == true and LibDataBroker ~= nil and LibDBIcon ~= nil
 end
 
 ---@param _ table|nil
@@ -132,7 +131,7 @@ function DeathpoolUIMinimap.Initialize(frame, database)
             text = GetTooltipScoreText(database),
             value = GetTooltipScoreText(database),
             suffix = "",
-            icon = DeathpoolUIMinimap.ICON_PATH,
+            icon = MINIMAP_ICON_PATH,
             OnClick = function()
                 DeathpoolUIMinimap.Toggle(activeFrame, activeDatabase)
             end,

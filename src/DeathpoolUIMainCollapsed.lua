@@ -1,14 +1,17 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
-ns.DeathpoolUI = DeathpoolUI
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList
+local DeathpoolUIMainCollapsed = ns.DeathpoolUIMainCollapsed or {}
+local DeathpoolUITooltip = ns.DeathpoolUITooltip
+ns.DeathpoolUIMainCollapsed = DeathpoolUIMainCollapsed
 
 ---@param frame DeathpoolMainFrameShell
 ---@param layout DeathpoolMainLayout
 ---@param maxRecentDeaths integer
 ---@param collapsedLogColumns DeathpoolDeathLogColumn[]
-function DeathpoolUI.CreateMainCollapsedSection(frame, layout, maxRecentDeaths, collapsedLogColumns)
+function DeathpoolUIMainCollapsed.CreateMainCollapsedSection(frame, layout, maxRecentDeaths, collapsedLogColumns)
     local gutter = layout.outsideGutter
     local footerGutter = layout.footerGutter
 
@@ -32,14 +35,14 @@ function DeathpoolUI.CreateMainCollapsedSection(frame, layout, maxRecentDeaths, 
     collapsedLogFrame:Hide()
     frame.collapsedLogFrame = collapsedLogFrame
     DeathpoolUI.RegisterCollapsedVisibleRegion(frame, collapsedLogFrame)
-    DeathpoolUI.CreateDeathLogList(collapsedLogFrame, {
+    DeathpoolUIDeathLogList.CreateDeathLogList(collapsedLogFrame, {
         columns = collapsedLogColumns,
         rowCount = math.min(maxRecentDeaths, layout.collapsedLogVisibleRows),
         rowHeight = layout.collapsedLogRowHeight,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
-        tooltipOptions = DeathpoolUI.COLLAPSED_LOG_TOOLTIP_OPTIONS,
+        tooltipOptions = DeathpoolUITooltip.COLLAPSED_LOG_TOOLTIP_OPTIONS,
     })
 
     for _, row in ipairs(collapsedLogFrame.rows) do

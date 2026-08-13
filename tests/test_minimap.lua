@@ -222,7 +222,7 @@ local function testInitializeRegistersOnceAndThenRefreshes()
     assertEquals(state.lastDataObject.value, "0", "initialization should expose the current score value for broker displays")
     assertEquals(
         state.button.icon.texturePath,
-        minimap.ICON_PATH,
+        "Interface\\Icons\\INV_Misc_Bone_ElfSkull_01",
         "initialization should use the configured minimap icon asset"
     )
 

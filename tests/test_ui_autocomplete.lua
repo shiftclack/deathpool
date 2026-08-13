@@ -42,9 +42,8 @@ local function testAutocompleteMergesHistoryWithDefaultsWithoutDuplicates()
             }),
         },
     }))
-    local DeathpoolUI = context.DeathpoolUI
-    local sourceSuggestions = DeathpoolUI.GetSourceSuggestions(DeathpoolCharacterState)
-    local zoneSuggestions = DeathpoolUI.GetZoneSuggestions(DeathpoolCharacterState)
+    local sourceSuggestions = context.DeathpoolUIAutocomplete.GetSourceSuggestions(DeathpoolCharacterState)
+    local zoneSuggestions = context.DeathpoolUIAutocomplete.GetZoneSuggestions(DeathpoolCharacterState)
     local hoggerCount = 0
     local uldamanCount = 0
 

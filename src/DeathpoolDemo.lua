@@ -5,7 +5,7 @@ local DeathpoolDemo = ns.DeathpoolDemo or {}
 local DeathpoolConstants = ns.DeathpoolConstants
 local DeathpoolDatabase = ns.DeathpoolDatabase
 local DeathpoolLogic = ns.DeathpoolLogic
-local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIDemo = ns.DeathpoolUIDemo
 ns.DeathpoolDemo = DeathpoolDemo
 
 local STORAGE_RULES = DeathpoolConstants.STORAGE
@@ -20,7 +20,7 @@ local function BuildDemoPlayback()
         currentDeathIndex = 0,
         elapsedSeconds = 0,
         nextAdvanceDelaySeconds = DEMO_CONFIG.minDelaySeconds,
-        scriptDeaths = DeathpoolUI.GetIntroDemoScriptDeaths(),
+        scriptDeaths = DeathpoolUIDemo.GetIntroDemoScriptDeaths(),
     }
 end
 
@@ -35,7 +35,7 @@ end
 ---@param demoState DeathpoolCharacterState
 local function ResetDemoState(demoState)
     DeathpoolDatabase.ResetGameplayState(demoState)
-    DeathpoolLogic.ApplyLockedPrediction(demoState, DeathpoolUI.GetIntroDemoPrediction())
+    DeathpoolLogic.ApplyLockedPrediction(demoState, DeathpoolUIDemo.GetIntroDemoPrediction())
 end
 
 ---@param database DeathpoolCharacterState

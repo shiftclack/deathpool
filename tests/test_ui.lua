@@ -13,10 +13,21 @@ local function testModuleSurface()
     local DeathpoolUISetup = context.ns.DeathpoolUISetup
     local DeathpoolUIMode = context.ns.DeathpoolUIMode
 
-    assertTruthy(DeathpoolUI.Initialize, "UI module should expose Initialize")
+    assertTruthy(context.DeathpoolUIAutocomplete.GetSourceSuggestions, "autocomplete UI should expose source suggestions")
+    assertTruthy(context.DeathpoolUIAutocomplete.CreateSuggestionDropdown, "autocomplete UI should expose dropdown creation")
     assertTruthy(DeathpoolUI.SetWindowCollapsed, "UI module should expose SetWindowCollapsed")
-    assertTruthy(DeathpoolUI.CreateDeathLogList, "UI module should expose the flexible death log list builder")
-    assertTruthy(DeathpoolUI.RefreshDeathLogRows, "UI module should expose the flexible death log list refresher")
+    assertTruthy(context.DeathpoolUIDeathLogList.CreateDeathLogList, "death log list UI should expose the flexible list builder")
+    assertTruthy(context.DeathpoolUIDeathLogList.RefreshDeathLogRows, "death log list UI should expose the flexible list refresher")
+    assertTruthy(context.DeathpoolUIDebug.CreateDebugWindow, "debug UI should expose debug window creation")
+    assertTruthy(context.DeathpoolUIDemo.GetIntroDemoPrediction, "demo UI should expose intro prediction data")
+    assertTruthy(context.DeathpoolUIHelp.CreateHelpWindow, "help UI should expose help window creation")
+    assertTruthy(context.DeathpoolUILog.CreateHistoryWindow, "history UI should expose history window creation")
+    assertTruthy(context.DeathpoolUIMain.Initialize, "main UI should expose Initialize")
+    assertTruthy(context.DeathpoolUIMainCollapsed.CreateMainCollapsedSection, "collapsed main UI should expose section creation")
+    assertTruthy(context.DeathpoolUIMainPrediction.CreateMainPredictionSection, "prediction main UI should expose section creation")
+    assertTruthy(context.DeathpoolUIMainRecentDeaths.CreateMainRecentDeathsSection, "recent deaths main UI should expose section creation")
+    assertTruthy(context.DeathpoolUIRefresh.AttachRefreshMethods, "refresh UI should expose refresh attachment")
+    assertTruthy(context.DeathpoolUITooltip.ShowStandardizedTooltip, "tooltip UI should expose standardized tooltip display")
     assertTruthy(DeathpoolUI.GetStoredDeathTime, "UI module should expose stored death time formatting")
     assertTruthy(DeathpoolUI.GetStoredDeathDate, "UI module should expose stored death date formatting")
     assertTruthy(DeathpoolUI.GetStoredDeathDateTime, "UI module should expose stored death date/time formatting")
@@ -793,7 +804,7 @@ local function testHelpWindowText()
     )
     assertEquals(
         Deathpool.githubLinkFrame.urlBox:GetText(),
-        DeathpoolUI.GetDownloadUrl(),
+        context.DeathpoolUIHelp.GetDownloadUrl(),
         "GitHub link field should contain the releases URL"
     )
     assertEquals(Deathpool.githubLinkFrame.okButton:GetText(), "OK", "GitHub link dialog should have an OK button")
@@ -819,7 +830,7 @@ local function testHelpWindowText()
     Deathpool.helpFrame.downloadLink:GetScript("OnClick")()
     assertEquals(
         Deathpool.githubLinkFrame.urlBox:GetText(),
-        DeathpoolUI.GetDownloadUrl(),
+        context.DeathpoolUIHelp.GetDownloadUrl(),
         "GitHub link field should reset to the canonical URL each open"
     )
     Deathpool.githubLinkFrame.CloseButton:GetScript("OnClick")()

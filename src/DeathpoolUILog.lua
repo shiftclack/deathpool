@@ -3,6 +3,10 @@ local _, ns = ...
 
 local DeathpoolUI = ns.DeathpoolUI
 local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList
+local DeathpoolUILog = ns.DeathpoolUILog or {}
+local DeathpoolUITooltip = ns.DeathpoolUITooltip
+ns.DeathpoolUILog = DeathpoolUILog
 
 ---@class DeathpoolHistoryParentFrame: DeathpoolMainFrameShell
 ---@field [string] any
@@ -21,7 +25,7 @@ local DeathpoolDatabase = ns.DeathpoolDatabase
 
 ---@param parentFrame DeathpoolHistoryParentFrame
 ---@return DeathpoolHistoryFrame
-function DeathpoolUI.CreateHistoryWindow(parentFrame)
+function DeathpoolUILog.CreateHistoryWindow(parentFrame)
     ---@type DeathpoolDeathLogColumn[]
     local historyColumns = DeathpoolUI.HISTORY_LOG_COLUMNS
     ---@type DeathpoolMainLayout
@@ -119,14 +123,14 @@ function DeathpoolUI.CreateHistoryWindow(parentFrame)
     logScrollFrame:SetPoint("BOTTOMRIGHT", DeathpoolLog, "BOTTOMRIGHT", -(layout.outsideGutter + layout.scrollbarInset), 50)
     DeathpoolLog.scrollFrame = logScrollFrame
 
-    DeathpoolUI.CreateDeathLogList(DeathpoolLog, {
+    DeathpoolUIDeathLogList.CreateDeathLogList(DeathpoolLog, {
         columns = historyColumns,
         rowCount = visibleRows,
         rowHeight = rowHeight,
         rowLeft = rowLeft,
         rowTop = rowTop,
         rowRight = -(layout.outsideGutter + layout.historyScrollbarGap + layout.scrollbarInset),
-        tooltipOptions = DeathpoolUI.LOG_WINDOW_TOOLTIP_OPTIONS,
+        tooltipOptions = DeathpoolUITooltip.LOG_WINDOW_TOOLTIP_OPTIONS,
     })
 
     local filterButton = CreateFrame("Button", "DeathpoolLogFilterButton", DeathpoolLog, "GameMenuButtonTemplate")

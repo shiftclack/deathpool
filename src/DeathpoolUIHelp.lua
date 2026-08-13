@@ -2,7 +2,9 @@ local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
 local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIHelp = ns.DeathpoolUIHelp or {}
 local DeathpoolConstants = ns.DeathpoolConstants
+ns.DeathpoolUIHelp = DeathpoolUIHelp
 local HELP_RULES = DeathpoolConstants.HELP
 local DOWNLOAD_AREA_WIDTH = 204
 local GITHUB_LINK_DIALOG_WIDTH = 430
@@ -60,12 +62,7 @@ end
 
 
 ---@return string
-function DeathpoolUI.GetHelpWindowText()
-    return BuildHelpWindowText()
-end
-
----@return string
-function DeathpoolUI.GetDownloadUrl()
+function DeathpoolUIHelp.GetDownloadUrl()
     return HELP_RULES.downloadUrl
 end
 
@@ -119,7 +116,7 @@ local function CreateGitHubLinkDialog(ownerFrame)
     urlBox:SetSize(GITHUB_LINK_DIALOG_WIDTH - (layout.outsideGutter * 2), 20)
     urlBox:SetPoint("TOPLEFT", githubLinkFrame, "TOPLEFT", layout.outsideGutter, -42)
     urlBox:SetFontObject("GameFontHighlightSmall")
-    urlBox:SetText(DeathpoolUI.GetDownloadUrl())
+    urlBox:SetText(DeathpoolUIHelp.GetDownloadUrl())
     urlBox:SetCursorPosition(0)
     ---@param self table
     urlBox:SetScript("OnEditFocusGained", function(self)
@@ -147,7 +144,7 @@ end
 
 ---@param ownerFrame DeathpoolHelpOwnerFrame
 ---@return DeathpoolHelpFrame
-function DeathpoolUI.CreateHelpWindow(ownerFrame)
+function DeathpoolUIHelp.CreateHelpWindow(ownerFrame)
     local layout = DeathpoolUI.LAYOUT
     local helpFrame = CreateFrame("Frame", "DeathpoolHelpFrame", UIParent, "BasicFrameTemplateWithInset")
     ---@cast helpFrame DeathpoolHelpFrame
@@ -193,7 +190,7 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
     helpText:SetWordWrap(true)
     helpText:SetNonSpaceWrap(false)
     helpText:SetWidth(content:GetWidth())
-    helpText:SetText(DeathpoolUI.GetHelpWindowText())
+    helpText:SetText(BuildHelpWindowText())
 
     content:SetHeight(helpText:GetStringHeight() + 12)
     helpFrame.scrollContent = content
@@ -230,7 +227,7 @@ function DeathpoolUI.CreateHelpWindow(ownerFrame)
     local githubLinkFrame = CreateGitHubLinkDialog(ownerFrame)
     downloadLink:SetScript("OnClick", function()
         helpFrame:Hide()
-        githubLinkFrame.urlBox:SetText(DeathpoolUI.GetDownloadUrl())
+        githubLinkFrame.urlBox:SetText(DeathpoolUIHelp.GetDownloadUrl())
         githubLinkFrame.urlBox:SetCursorPosition(0)
         githubLinkFrame:Show()
         githubLinkFrame:Raise()

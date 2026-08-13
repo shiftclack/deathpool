@@ -658,7 +658,7 @@ function DeathpoolUI.ApplyPredictionInputLockState(frame, locked)
     end
 
     if predictionInputsLocked then
-        DeathpoolUI.HideDropdown(frame)
+        ns.DeathpoolUIAutocomplete.HideDropdown(frame)
     end
 end
 
@@ -859,7 +859,7 @@ function DeathpoolUI.SetWindowCollapsed(frame, database, collapsed)
     UpdateCollapseButton(frame)
     DeathpoolUI.SetEscapeClosable(frame, not frame.isCollapsed)
     ApplyCollapsedChildWindowState(frame)
-    DeathpoolUI.HideGameInfoCallout(frame.gameInfoCallout)
+    ns.DeathpoolUITooltip.HideGameInfoCallout(frame.gameInfoCallout)
 
     DeathpoolDatabase.SetCollapsed(database, frame.isCollapsed)
     RefreshWindowAfterCollapseStateChange(frame)

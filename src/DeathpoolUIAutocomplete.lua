@@ -1,9 +1,9 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete or {}
 local DeathpoolDatabase = ns.DeathpoolDatabase
-ns.DeathpoolUI = DeathpoolUI
+ns.DeathpoolUIAutocomplete = DeathpoolUIAutocomplete
 
 ---@class DeathpoolAutocompleteButton: DeathpoolWidget
 ---@field rowBackground table
@@ -53,7 +53,7 @@ local ZONE_VALUES = {
 
 -- some common prediction options
 ---@type string[]
-DeathpoolUI.SourceList = {
+DeathpoolUIAutocomplete.SourceList = {
     "Benny Blaanco",
     "Bloodfeather Harpy",
     "Bristleback Battleboar",
@@ -167,7 +167,7 @@ local function BuildDefaultZoneSuggestions()
 end
 
 ---@type string[]
-DeathpoolUI.ZoneList = BuildDefaultZoneSuggestions()
+DeathpoolUIAutocomplete.ZoneList = BuildDefaultZoneSuggestions()
 
 ---@param defaultValues string[]
 ---@param historyValues string[]
@@ -196,25 +196,25 @@ end
 
 ---@param database DeathpoolCharacterState
 ---@return string[]
-function DeathpoolUI.GetSourceSuggestions(database)
+function DeathpoolUIAutocomplete.GetSourceSuggestions(database)
     return MergeSuggestionValues(
-        DeathpoolUI.SourceList,
+        DeathpoolUIAutocomplete.SourceList,
         DeathpoolDatabase.GetDeathHistorySourceNames(database)
     )
 end
 
 ---@param database DeathpoolCharacterState
 ---@return string[]
-function DeathpoolUI.GetZoneSuggestions(database)
+function DeathpoolUIAutocomplete.GetZoneSuggestions(database)
     return MergeSuggestionValues(
-        DeathpoolUI.ZoneList,
+        DeathpoolUIAutocomplete.ZoneList,
         DeathpoolDatabase.GetDeathHistoryZones(database)
     )
 end
 
 ---@param parent table
 ---@return DeathpoolSuggestionDropdown
-function DeathpoolUI.CreateSuggestionDropdown(parent)
+function DeathpoolUIAutocomplete.CreateSuggestionDropdown(parent)
     local dropdown = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     ---@cast dropdown DeathpoolSuggestionDropdown
     dropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
@@ -248,7 +248,7 @@ function DeathpoolUI.CreateSuggestionDropdown(parent)
 end
 
 ---@param frame table|nil
-function DeathpoolUI.HideDropdown(frame)
+function DeathpoolUIAutocomplete.HideDropdown(frame)
     if frame and frame.dropdown then
         frame.dropdown:Hide()
     end
@@ -268,7 +268,7 @@ local function ShowDropdown(frame, matches)
     local visibleCount = math.min(#matches, 10)
 
     if visibleCount <= 0 then
-        DeathpoolUI.HideDropdown(frame)
+        DeathpoolUIAutocomplete.HideDropdown(frame)
         return
     end
 
@@ -333,7 +333,7 @@ local function ShowDropdown(frame, matches)
             if frame.activeEditBox then
                 frame.activeEditBox:SetText(value)
             end
-            DeathpoolUI.HideDropdown(frame)
+            DeathpoolUIAutocomplete.HideDropdown(frame)
             if frame.RefreshPredictionActionButtonState then
                 frame:RefreshPredictionActionButtonState()
             end
@@ -353,12 +353,12 @@ end
 
 ---@param frame table|nil
 ---@param input string|nil
-function DeathpoolUI.UpdateSuggestions(frame, input)
+function DeathpoolUIAutocomplete.UpdateSuggestions(frame, input)
     ---@type string[]
     local matches = {}
 
     if not input or input == "" or not frame or not frame.suggestionList then
-        DeathpoolUI.HideDropdown(frame)
+        DeathpoolUIAutocomplete.HideDropdown(frame)
         return
     end
 
@@ -372,4 +372,4 @@ function DeathpoolUI.UpdateSuggestions(frame, input)
     ShowDropdown(frame, matches)
 end
 
-return DeathpoolUI
+return DeathpoolUIAutocomplete

@@ -11,6 +11,7 @@ local DeathpoolAnnouncements = ns.DeathpoolAnnouncements
 local DeathpoolCommands = ns.DeathpoolCommands
 local DeathpoolSettings = ns.DeathpoolSettings
 local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIMain = ns.DeathpoolUIMain
 local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
 local DeathpoolUISetup = ns.DeathpoolUISetup
 local DeathpoolUISettings = ns.DeathpoolUISettings
@@ -116,7 +117,7 @@ function Deathpool:ADDON_LOADED(addonName)
     self.state = DeathpoolCharacterState
     self.isShuttingDown = false
 
-    self.mainFrame, self.debugFrame, self.logFrame = DeathpoolUI.Initialize(
+    self.mainFrame, self.debugFrame, self.logFrame = DeathpoolUIMain.Initialize(
         self.state,
         DeathpoolLogic,
         STORAGE_RULES.maxRecentDeaths

@@ -1,11 +1,15 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete
 local DeathpoolDatabase = ns.DeathpoolDatabase
+local DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList
 local DeathpoolUIMode = ns.DeathpoolUIMode
+local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
+local DeathpoolUIRefresh = ns.DeathpoolUIRefresh or {}
 local DeathpoolUISetup = ns.DeathpoolUISetup
-ns.DeathpoolUI = DeathpoolUI
+ns.DeathpoolUIRefresh = DeathpoolUIRefresh
 
 ---@alias DeathpoolRefreshFontStringMap table<string, table>
 
@@ -168,11 +172,10 @@ ns.DeathpoolUI = DeathpoolUI
 ---@param DeathpoolDebug DeathpoolRefreshReadyDebugFrame
 ---@param DeathpoolLog DeathpoolRefreshReadyHistoryFrame
 ---@param logic DeathpoolRefreshLogic
-function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLog, logic)
+function DeathpoolUIRefresh.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLog, logic)
     local deathLogColumns = DeathpoolUI.DEATH_LOG_COLUMNS
     local historyLogColumns = DeathpoolUI.HISTORY_LOG_COLUMNS
-    local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
-    local displayCache = DeathpoolUI.CreateDeathLogDisplayCache()
+    local displayCache = DeathpoolUIDeathLogList.CreateDeathLogDisplayCache()
     local FIRST_RUN_PROMPT_TEXT = "Make your prediction"
     local WAITING_FOR_FIRST_DEATH_TEXT = "Waiting for first death"
     local WAITING_FOR_FIRST_DEATH_HELP_TEXT = "Click HELP if you are missing deaths"
@@ -186,7 +189,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
     ---@param viewOptions table
     ---@return DeathpoolDeathLogDisplayEntry[]
     local function GetCachedViewEntries(viewKey, sourceDeaths, viewOptions)
-        return DeathpoolUI.GetOrderedDeathLogViewEntries(displayCache, viewKey, sourceDeaths, viewOptions)
+        return DeathpoolUIDeathLogList.GetOrderedDeathLogViewEntries(displayCache, viewKey, sourceDeaths, viewOptions)
     end
 
     ---@param state DeathpoolDisplayState
@@ -531,7 +534,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
             self.waitingPromptDisplayDuration = 0
         end
 
-        DeathpoolUI.RefreshDeathLogRows(self.recentDeathsFrame, recentEntries, {
+        DeathpoolUIDeathLogList.RefreshDeathLogRows(self.recentDeathsFrame, recentEntries, {
             columns = deathLogColumns,
             reverseOrder = false,
         })
@@ -588,7 +591,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
 
         self.ApplyPredictionInputState(inputPrediction)
 
-        DeathpoolUI.HideDropdown(self)
+        DeathpoolUIAutocomplete.HideDropdown(self)
 
         self.SetPredictionInputsLocked(uiMode.inputsLocked)
 
@@ -608,7 +611,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
         local visibleRowCount = DeathpoolUI.GetCollapsedVisibleRowCount(self:GetHeight())
         local offset = math.max(#deaths - visibleRowCount, 0)
 
-        DeathpoolUI.RefreshDeathLogRows(self.collapsedLogFrame, recentEntries, {
+        DeathpoolUIDeathLogList.RefreshDeathLogRows(self.collapsedLogFrame, recentEntries, {
             columns = DeathpoolUI.COLLAPSED_LOG_COLUMNS,
             offset = offset,
             reverseOrder = false,
@@ -646,7 +649,7 @@ function DeathpoolUI.AttachRefreshMethods(Deathpool, DeathpoolDebug, DeathpoolLo
         )
 
         local offset = FauxScrollFrame_GetOffset(self.scrollFrame)
-        DeathpoolUI.RefreshDeathLogRows(self, history, {
+        DeathpoolUIDeathLogList.RefreshDeathLogRows(self, history, {
             columns = historyLogColumns,
             offset = offset,
             reverseOrder = true,

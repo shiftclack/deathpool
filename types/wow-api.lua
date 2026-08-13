@@ -14,8 +14,20 @@
 ---@field DeathpoolSettings table
 ---@field DeathpoolSetup table
 ---@field DeathpoolUI table
+---@field DeathpoolUIAutocomplete table
+---@field DeathpoolUIDeathLogList table
+---@field DeathpoolUIDebug table
+---@field DeathpoolUIDemo table
+---@field DeathpoolUIHelp table
+---@field DeathpoolUILog table
+---@field DeathpoolUIMain table
+---@field DeathpoolUIMainCollapsed table
+---@field DeathpoolUIMainPrediction table
+---@field DeathpoolUIMainRecentDeaths table
+---@field DeathpoolUIRefresh table
 ---@field DeathpoolUISettings table
 ---@field DeathpoolUISetup table
+---@field DeathpoolUITooltip table
 ---@field DeathpoolUIMinimap table
 ---@field DeathpoolUIMode table
 

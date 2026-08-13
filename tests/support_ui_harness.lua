@@ -781,7 +781,7 @@ local function loadUiModules()
     loader:Load("DeathpoolUIMainPrediction")
     loader:Load("DeathpoolUIMain")
 
-    return loader, loader.ns.DeathpoolUI, loader.ns.DeathpoolUIMinimap
+    return loader, loader.ns.DeathpoolUI, loader.ns.DeathpoolUIMain, loader.ns.DeathpoolUIMinimap
 end
 
 local UIHarness = {}
@@ -791,10 +791,10 @@ function UIHarness.Create(options)
     initializeGlobals(options)
 
     local printedMessages = {}
-    local loader, DeathpoolUI, DeathpoolUIMinimap = loadUiModules()
+    local loader, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules()
     local ns = loader.ns
     DeathpoolCharacterState = ns.DeathpoolDatabase.Init(options.state)
-    local Deathpool, DeathpoolDebug, DeathpoolLog = DeathpoolUI.Initialize(
+    local Deathpool, DeathpoolDebug, DeathpoolLog = DeathpoolUIMain.Initialize(
         DeathpoolCharacterState,
         ns.DeathpoolLogic,
         ns.DeathpoolConstants.STORAGE.maxRecentDeaths
@@ -814,7 +814,19 @@ function UIHarness.Create(options)
         loader = loader,
         ns = ns,
         DeathpoolUI = DeathpoolUI,
+        DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete,
+        DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList,
+        DeathpoolUIDebug = ns.DeathpoolUIDebug,
+        DeathpoolUIDemo = ns.DeathpoolUIDemo,
+        DeathpoolUIHelp = ns.DeathpoolUIHelp,
+        DeathpoolUILog = ns.DeathpoolUILog,
+        DeathpoolUIMain = DeathpoolUIMain,
+        DeathpoolUIMainCollapsed = ns.DeathpoolUIMainCollapsed,
+        DeathpoolUIMainPrediction = ns.DeathpoolUIMainPrediction,
+        DeathpoolUIMainRecentDeaths = ns.DeathpoolUIMainRecentDeaths,
         DeathpoolUIMinimap = DeathpoolUIMinimap,
+        DeathpoolUIRefresh = ns.DeathpoolUIRefresh,
+        DeathpoolUITooltip = ns.DeathpoolUITooltip,
         DeathpoolConstants = ns.DeathpoolConstants,
         DeathpoolDatabase = ns.DeathpoolDatabase,
         DeathpoolLogic = ns.DeathpoolLogic,
@@ -839,7 +851,7 @@ function UIHarness.CreateAddon(options)
     options = options or {}
     initializeGlobals(options)
 
-    local loader, DeathpoolUI, DeathpoolUIMinimap = loadUiModules()
+    local loader, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules()
     local ns = loader.ns
     DeathpoolCharacterState = options.state
     loader:Load("DeathpoolCommands")
@@ -865,7 +877,19 @@ function UIHarness.CreateAddon(options)
         loader = loader,
         ns = ns,
         DeathpoolUI = DeathpoolUI,
+        DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete,
+        DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList,
+        DeathpoolUIDebug = ns.DeathpoolUIDebug,
+        DeathpoolUIDemo = ns.DeathpoolUIDemo,
+        DeathpoolUIHelp = ns.DeathpoolUIHelp,
+        DeathpoolUILog = ns.DeathpoolUILog,
+        DeathpoolUIMain = DeathpoolUIMain,
+        DeathpoolUIMainCollapsed = ns.DeathpoolUIMainCollapsed,
+        DeathpoolUIMainPrediction = ns.DeathpoolUIMainPrediction,
+        DeathpoolUIMainRecentDeaths = ns.DeathpoolUIMainRecentDeaths,
         DeathpoolUIMinimap = DeathpoolUIMinimap,
+        DeathpoolUIRefresh = ns.DeathpoolUIRefresh,
+        DeathpoolUITooltip = ns.DeathpoolUITooltip,
         DeathpoolConstants = ns.DeathpoolConstants,
         DeathpoolDatabase = ns.DeathpoolDatabase,
         DeathpoolDebug = ns.DeathpoolDebug,

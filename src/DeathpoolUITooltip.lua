@@ -3,6 +3,8 @@ local _, ns = ...
 
 local DeathpoolUI = ns.DeathpoolUI
 local DeathpoolLogic = ns.DeathpoolLogic
+local DeathpoolUITooltip = ns.DeathpoolUITooltip or {}
+ns.DeathpoolUITooltip = DeathpoolUITooltip
 local TOOLTIP_WHITE = { 1, 1, 1 }
 local TOOLTIP_GREEN = { 0.12, 1.0, 0.0 }
 local TOOLTIP_YELLOW = { 1, 0.82, 0 }
@@ -50,7 +52,7 @@ local GAME_INFO_CALLOUT_BORDER_COLOR = { 1, 0.95, 0.2, 1.0 }
 ---@field lines string[]|fun():string[]
 
 ---@type DeathpoolLogTooltipOptions
-DeathpoolUI.COLLAPSED_LOG_TOOLTIP_OPTIONS = {
+DeathpoolUITooltip.COLLAPSED_LOG_TOOLTIP_OPTIONS = {
     showPredictionString = false,
     showIdentity = false,
     showFullCombos = true,
@@ -60,7 +62,7 @@ DeathpoolUI.COLLAPSED_LOG_TOOLTIP_OPTIONS = {
 }
 
 ---@type DeathpoolLogTooltipOptions
-DeathpoolUI.LOG_WINDOW_TOOLTIP_OPTIONS = {
+DeathpoolUITooltip.LOG_WINDOW_TOOLTIP_OPTIONS = {
     showPredictionString = true,
     showIdentity = true,
     showFullCombos = true,
@@ -70,7 +72,7 @@ DeathpoolUI.LOG_WINDOW_TOOLTIP_OPTIONS = {
 }
 
 ---@type DeathpoolLogTooltipOptions
-DeathpoolUI.MAIN_LOG_TOOLTIP_OPTIONS = {
+DeathpoolUITooltip.MAIN_LOG_TOOLTIP_OPTIONS = {
     showPredictionString = false,
     showIdentity = false,
     showFullCombos = true,
@@ -354,7 +356,7 @@ end
 ---@param showPredictionString boolean
 ---@param showIdentity boolean
 ---@param showFullCombos boolean
-function DeathpoolUI.ShowStandardizedTooltip(anchor, context, showPredictionString, showIdentity, showFullCombos)
+function DeathpoolUITooltip.ShowStandardizedTooltip(anchor, context, showPredictionString, showIdentity, showFullCombos)
     GameTooltip:SetOwner(anchor, "ANCHOR_CURSOR")
     AddTooltipDetailLines(
         BuildStandardizedTooltipDetails(
@@ -397,7 +399,7 @@ end
 ---@param name string
 ---@param parentFrame table
 ---@return table
-function DeathpoolUI.CreateGameInfoCallout(name, parentFrame)
+function DeathpoolUITooltip.CreateGameInfoCallout(name, parentFrame)
     local callout = CreateFrame("GameTooltip", name, parentFrame, "GameTooltipTemplate")
     ApplyGameInfoCalloutStyle(callout)
     callout:Hide()
@@ -405,7 +407,7 @@ function DeathpoolUI.CreateGameInfoCallout(name, parentFrame)
 end
 
 ---@param callout DeathpoolOptionalGameInfoResolvableWidget
-function DeathpoolUI.HideGameInfoCallout(callout)
+function DeathpoolUITooltip.HideGameInfoCallout(callout)
     callout = ResolveGameInfoCalloutValue(callout)
 
     if callout then
@@ -416,7 +418,7 @@ end
 ---@param callout DeathpoolOptionalGameInfoResolvableWidget
 ---@param lines string[]|fun():string[]
 ---@param options DeathpoolGameInfoCalloutOptions
-function DeathpoolUI.ShowGameInfoCallout(callout, lines, options)
+local function ShowGameInfoCallout(callout, lines, options)
     callout = ResolveGameInfoCalloutValue(callout)
     local owner = ResolveGameInfoCalloutValue(options.owner) or ResolveGameInfoCalloutValue(options.relativeTo)
     local relativeTo = ResolveGameInfoCalloutValue(options.relativeTo) or owner
@@ -440,7 +442,7 @@ end
 
 ---@param region table
 ---@param options DeathpoolGameInfoCalloutOptions
-function DeathpoolUI.AttachGameInfoCallout(region, options)
+function DeathpoolUITooltip.AttachGameInfoCallout(region, options)
     if region.EnableMouse then
         region:EnableMouse(true)
     end
@@ -450,15 +452,15 @@ function DeathpoolUI.AttachGameInfoCallout(region, options)
             return
         end
 
-        DeathpoolUI.ShowGameInfoCallout(
+        ShowGameInfoCallout(
             options.callout,
             options.lines,
             options
         )
     end)
     region:SetScript("OnLeave", function()
-        DeathpoolUI.HideGameInfoCallout(options.callout)
+        DeathpoolUITooltip.HideGameInfoCallout(options.callout)
     end)
 end
 
-return DeathpoolUI
+return DeathpoolUITooltip

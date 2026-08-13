@@ -1,13 +1,17 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIAutocomplete = ns.DeathpoolUIAutocomplete
 local DeathpoolDatabase = ns.DeathpoolDatabase
 local DeathpoolDebug = ns.DeathpoolDebug
 local DeathpoolConstants = ns.DeathpoolConstants
+local DeathpoolUIDemo = ns.DeathpoolUIDemo
+local DeathpoolUIMainPrediction = ns.DeathpoolUIMainPrediction or {}
 local DeathpoolUIMode = ns.DeathpoolUIMode
 local DeathpoolUISetup = ns.DeathpoolUISetup
-ns.DeathpoolUI = DeathpoolUI
+local DeathpoolUITooltip = ns.DeathpoolUITooltip
+ns.DeathpoolUIMainPrediction = DeathpoolUIMainPrediction
 
 local SCORE_RULES = DeathpoolConstants.SCORING
 local PREDICTION_CONTROL_HEIGHT = 24
@@ -42,7 +46,7 @@ end
 ---@param region DeathpoolWidget
 ---@param lines string[]|fun(): string[]
 local function AttachPredictionGameInfoCallout(frame, region, lines)
-    DeathpoolUI.AttachGameInfoCallout(region, {
+    DeathpoolUITooltip.AttachGameInfoCallout(region, {
         callout = function()
             return frame.gameInfoCallout
         end,
@@ -282,7 +286,7 @@ local function CreateIntroDemoAttractPanel(frame, layout)
     text:SetWordWrap(true)
     text:SetTextColor(1, 0.82, 0, 1)
     text:SetFontObject(GameFontHighlightLarge)
-    text:SetText(DeathpoolUI.GetIntroDemoAttractModeText())
+    text:SetText(DeathpoolUIDemo.GetIntroDemoAttractModeText())
     panel.text = text
 
     frame.introDemoAttractPanel = panel
@@ -293,7 +297,7 @@ end
 ---@param layout DeathpoolMainLayout
 ---@param logic DeathpoolMainLogic
 ---@param levelRanges string[]
-function DeathpoolUI.CreateMainPredictionSection(frame, layout, logic, levelRanges)
+function DeathpoolUIMainPrediction.CreateMainPredictionSection(frame, layout, logic, levelRanges)
     local predictionTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     predictionTitle:SetPoint("TOPLEFT", frame, "TOPLEFT", layout.predictionLabelX, layout.predictionSectionTop)
     predictionTitle:SetText("Prediction")
@@ -394,7 +398,7 @@ end
 ---@param frame DeathpoolMainFrameShell
 ---@param layout DeathpoolMainLayout
 ---@param logic DeathpoolMainLogic
-function DeathpoolUI.CreateMainCurrentPredictionSummarySection(frame, layout, logic)
+function DeathpoolUIMainPrediction.CreateMainCurrentPredictionSummarySection(frame, layout, logic)
     local currentPredictionTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     currentPredictionTitle:SetPoint(
         "TOPLEFT",
@@ -427,7 +431,7 @@ end
 ---@param frame DeathpoolMainFrame
 ---@param logic DeathpoolMainLogic
 ---@param levelRanges string[]
-function DeathpoolUI.OnMainPredictionLockButtonClicked(frame, logic, levelRanges)
+function DeathpoolUIMainPrediction.OnMainPredictionLockButtonClicked(frame, logic, levelRanges)
     if IsIntroDemoActive(frame) then
         if frame.introDemoController and frame.introDemoController.Dismiss then
             frame.introDemoController:Dismiss()
@@ -463,12 +467,12 @@ end
 
 ---@param frame DeathpoolMainFrame
 ---@param logic DeathpoolMainLogic
-function DeathpoolUI.OnMainPredictionPauseButtonClicked(frame, logic)
+function DeathpoolUIMainPrediction.OnMainPredictionPauseButtonClicked(frame, logic)
     local preservedSourceText = frame.sourceEditBox:GetText()
     local preservedZoneText = frame.zoneEditBox:GetText()
 
     logic.ClearLockedPrediction(DeathpoolUI.GetState(frame))
-    DeathpoolUI.HideDropdown(frame)
+    DeathpoolUIAutocomplete.HideDropdown(frame)
     DeathpoolUI.ApplyPredictionInputLockState(frame, false)
     frame:RefreshLockedPrediction()
     frame.sourceEditBox:SetText(preservedSourceText or "")
@@ -487,9 +491,9 @@ local function AttachPredictionEditBoxHandler(frame, logic, editBox, suggestionK
         frame.activeEditBox = activeEditBox
         frame.suggestionKind = suggestionKind
         if suggestionKind == "source" then
-            frame.suggestionList = DeathpoolUI.GetSourceSuggestions(DeathpoolUI.GetState(frame))
+            frame.suggestionList = DeathpoolUIAutocomplete.GetSourceSuggestions(DeathpoolUI.GetState(frame))
         else
-            frame.suggestionList = DeathpoolUI.GetZoneSuggestions(DeathpoolUI.GetState(frame))
+            frame.suggestionList = DeathpoolUIAutocomplete.GetZoneSuggestions(DeathpoolUI.GetState(frame))
         end
     end
 
@@ -501,9 +505,9 @@ local function AttachPredictionEditBoxHandler(frame, logic, editBox, suggestionK
         end
         SetActiveSuggestionInput(self)
         if userInput then
-            DeathpoolUI.UpdateSuggestions(frame, self:GetText())
+            DeathpoolUIAutocomplete.UpdateSuggestions(frame, self:GetText())
         else
-            DeathpoolUI.HideDropdown(frame)
+            DeathpoolUIAutocomplete.HideDropdown(frame)
         end
         UpdateDraftPrediction(frame, logic)
         if frame.RefreshRecentDeathLogState then
@@ -520,25 +524,25 @@ local function AttachPredictionEditBoxHandler(frame, logic, editBox, suggestionK
     end)
 
     editBox:SetScript("OnEditFocusLost", function()
-        DeathpoolUI.HideDropdown(frame)
+        DeathpoolUIAutocomplete.HideDropdown(frame)
     end)
 
     editBox:SetScript("OnEscapePressed", function(self)
         self:ClearFocus()
-        DeathpoolUI.HideDropdown(frame)
+        DeathpoolUIAutocomplete.HideDropdown(frame)
     end)
 end
 
 ---@param frame DeathpoolMainFrame
 ---@param logic DeathpoolMainLogic
-function DeathpoolUI.AttachMainPredictionEditBoxHandlers(frame, logic)
+function DeathpoolUIMainPrediction.AttachMainPredictionEditBoxHandlers(frame, logic)
     AttachPredictionEditBoxHandler(frame, logic, frame.sourceEditBox, "source")
     AttachPredictionEditBoxHandler(frame, logic, frame.zoneEditBox, "zone")
 end
 
 ---@param frame DeathpoolMainFrameShell
 ---@param logic DeathpoolMainLogic
-function DeathpoolUI.AttachMainPredictionMethods(frame, logic)
+function DeathpoolUIMainPrediction.AttachMainPredictionMethods(frame, logic)
     frame.ApplyPredictionInputState = function(prediction)
         DeathpoolUI.ApplyPredictionInputState(frame, logic, prediction)
     end

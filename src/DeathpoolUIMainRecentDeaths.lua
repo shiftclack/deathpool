@@ -1,8 +1,11 @@
 local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
-local DeathpoolUI = ns.DeathpoolUI or {}
-ns.DeathpoolUI = DeathpoolUI
+local DeathpoolUI = ns.DeathpoolUI
+local DeathpoolUIDeathLogList = ns.DeathpoolUIDeathLogList
+local DeathpoolUIMainRecentDeaths = ns.DeathpoolUIMainRecentDeaths or {}
+local DeathpoolUITooltip = ns.DeathpoolUITooltip
+ns.DeathpoolUIMainRecentDeaths = DeathpoolUIMainRecentDeaths
 
 local EMPTY_PREDICTION_PROMPT_TEXT = "Make your prediction"
 
@@ -10,7 +13,7 @@ local EMPTY_PREDICTION_PROMPT_TEXT = "Make your prediction"
 ---@param layout DeathpoolMainLayout
 ---@param maxRecentDeaths integer
 ---@param deathLogColumns DeathpoolDeathLogColumn[]
-function DeathpoolUI.CreateMainRecentDeathsSection(frame, layout, maxRecentDeaths, deathLogColumns)
+function DeathpoolUIMainRecentDeaths.CreateMainRecentDeathsSection(frame, layout, maxRecentDeaths, deathLogColumns)
     local gutter = layout.outsideGutter
     local promptWidth = math.floor(((layout.expandedWindowWidth - (gutter * 2)) * 2) / 3)
 
@@ -87,14 +90,14 @@ function DeathpoolUI.CreateMainRecentDeathsSection(frame, layout, maxRecentDeath
     recentDeathsFrame.waitingPromptHelpText = waitingPromptHelpText
     frame.waitingPromptHelpText = waitingPromptHelpText
 
-    DeathpoolUI.CreateDeathLogList(recentDeathsFrame, {
+    DeathpoolUIDeathLogList.CreateDeathLogList(recentDeathsFrame, {
         columns = deathLogColumns,
         rowCount = maxRecentDeaths,
         rowHeight = layout.deathLogRowHeight,
         rowLeft = 0,
         rowTop = 0,
         rowRight = 0,
-        tooltipOptions = DeathpoolUI.MAIN_LOG_TOOLTIP_OPTIONS,
+        tooltipOptions = DeathpoolUITooltip.MAIN_LOG_TOOLTIP_OPTIONS,
     })
 
     frame.deathRows = recentDeathsFrame.rows
