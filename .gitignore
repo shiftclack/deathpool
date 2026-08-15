@@ -6,5 +6,6 @@ Thumbs.db
 Desktop.ini
 
 dist/
+data/
 luacov.*
 tests/fixtures/testdb*.lua
