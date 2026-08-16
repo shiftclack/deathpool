@@ -557,7 +557,8 @@ function DeathpoolUIMain.Initialize(state, logic, maxRecentDeaths)
     frame.state = state
     frame:SetSize(layout.expandedWindowWidth, layout.mainWindowHeight)
     frame:SetPoint("CENTER")
-    frame:SetFrameStrata("MEDIUM")
+    frame.frameStrata = "MEDIUM"
+    frame:SetFrameStrata(frame.frameStrata)
     frame:SetFrameLevel(10)
     frame:SetMovable(true)
     frame:SetResizable(false)

@@ -11,6 +11,7 @@ ns.DeathpoolUILog = DeathpoolUILog
 ---@class DeathpoolHistoryParentFrame: DeathpoolMainFrameShell
 ---@field [string] any
 ---@field frameStrata string|nil
+---@field GetFrameLevel fun(self: DeathpoolHistoryParentFrame): number
 
 ---@class DeathpoolHistoryFrame: DeathpoolRefreshHistoryFrame
 ---@field [string] any
@@ -44,7 +45,8 @@ function DeathpoolUILog.CreateHistoryWindow(parentFrame)
     DeathpoolLog:SetSize(layout.logWindowWidth, layout.logWindowHeight)
     DeathpoolLog:SetPoint("TOPLEFT", parentFrame, "TOPRIGHT", 12, 0)
     DeathpoolLog:SetFrameStrata(parentFrame.frameStrata or "MEDIUM")
-    DeathpoolLog:SetToplevel(true)
+    DeathpoolLog:SetFrameLevel(parentFrame:GetFrameLevel())
+    DeathpoolLog:SetToplevel(false)
     DeathpoolLog:SetMovable(false)
     DeathpoolLog:EnableMouse(true)
     DeathpoolLog:Hide()
