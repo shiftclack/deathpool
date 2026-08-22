@@ -45,7 +45,7 @@ local DeathpoolConstants = {
             -- Minimum score treated as the uncommon display color tier.
             uncommon = 99,
             -- Minimum score treated as the rare display color tier.
-            rare = 499,
+            rare = 999,
         },
         levelRanges = {
             -- Ordered list of selectable level buckets used by predictions and scoring lookup.
