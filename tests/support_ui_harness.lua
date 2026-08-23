@@ -768,6 +768,7 @@ local function loadUiModules()
     loader:Load("DeathpoolLogicScoring")
     loader:Load("DeathpoolLogicDeaths")
     loader:Load("DeathpoolLogicState")
+    loader:Load("DeathpoolStats")
     loader:Load("DeathpoolMigration")
     loader:Load("DeathpoolSettings")
     loader:Load("DeathpoolSetup")
@@ -840,6 +841,7 @@ function UIHarness.Create(options)
         DeathpoolConstants = ns.DeathpoolConstants,
         DeathpoolDatabase = ns.DeathpoolDatabase,
         DeathpoolLogic = ns.DeathpoolLogic,
+        DeathpoolStats = ns.DeathpoolStats,
         DeathpoolDemo = ns.DeathpoolDemo,
         Deathpool = Deathpool,
         DeathpoolDebug = DeathpoolDebug,

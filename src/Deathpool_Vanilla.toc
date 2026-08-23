@@ -21,6 +21,7 @@ DeathpoolLogicPrediction.lua
 DeathpoolLogicScoring.lua
 DeathpoolLogicDeaths.lua
 DeathpoolLogicState.lua
+DeathpoolStats.lua
 DeathpoolMigration.lua
 DeathpoolSettings.lua
 DeathpoolSetup.lua

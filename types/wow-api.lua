@@ -13,6 +13,7 @@
 ---@field DeathpoolParser table
 ---@field DeathpoolSettings table
 ---@field DeathpoolSetup table
+---@field DeathpoolStats DeathpoolStats
 ---@field DeathpoolUI table
 ---@field DeathpoolUIAutocomplete table
 ---@field DeathpoolUIDeathLogList table

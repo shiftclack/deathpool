@@ -15,6 +15,7 @@ local DeathpoolDatabase = ns.DeathpoolDatabase
 local DeathpoolDebug = ns.DeathpoolDebug
 local DeathpoolDebugState = ns.DeathpoolDebugState
 local DeathpoolSettings = ns.DeathpoolSettings
+local DeathpoolStats = ns.DeathpoolStats
 local DeathpoolUI = ns.DeathpoolUI
 local DeathpoolUISetup = ns.DeathpoolUISetup
 local DeathpoolUIMinimap = ns.DeathpoolUIMinimap
@@ -51,10 +52,82 @@ local function NormalizeSlashCommand(message)
 end
 
 local function PrintSlashHelp()
-    Print("Commands: /deathpool show, /deathpool hide, /deathpool toggle, /deathpool minimap")
+    Print("Commands: /deathpool show, /deathpool hide, /deathpool toggle, /deathpool summary, /deathpool minimap")
     Print("Windows: /deathpool log, /deathpool demo, /deathpool setup, /deathpool showincombat")
     Print("Debug: /deathpool debug, /deathpool testdeath, /deathpool debugdeath <deathstring>")
     Print("Dangerous: /deathpool resetintro, /deathpool reset")
+end
+
+---@param value number
+---@return string
+local function FormatPercent(value)
+    if value == math.floor(value) then
+        return tostring(value) .. "%"
+    end
+
+    return string.format("%.1f%%", value)
+end
+
+---@param entry DeathpoolStatEntry|nil
+---@return string
+local function FormatStatEntry(entry)
+    if not entry then
+        return "none yet"
+    end
+
+    return entry.label .. " (" .. tostring(entry.count) .. ", " .. FormatPercent(entry.percent) .. ")"
+end
+
+---@param trend DeathpoolTrendEntry|nil
+---@return string
+local function FormatTrendEntry(trend)
+    if not trend then
+        return "none yet"
+    end
+
+    local deltaPrefix = trend.deltaPercent >= 0 and "+" or ""
+    return trend.label
+        .. " ("
+        .. trend.trend
+        .. ", "
+        .. deltaPrefix
+        .. FormatPercent(trend.deltaPercent)
+        .. ")"
+end
+
+---@param cluster DeathpoolRecentCluster|nil
+---@return string
+local function FormatRecentCluster(cluster)
+    if not cluster then
+        return "none yet"
+    end
+
+    return cluster.label .. " repeated " .. tostring(cluster.count) .. " times recently"
+end
+
+local function SummaryCommand()
+    local state = GetState()
+    if not state then
+        return
+    end
+
+    local summary = DeathpoolStats.GetDeathSummary(state, {
+        topLimit = 3,
+        trendLimit = 1,
+        recentWindowSize = 5,
+    })
+
+    if summary.sampleSize <= 0 then
+        Print("Summary: no retained deaths yet.")
+        return
+    end
+
+    Print("Summary: " .. tostring(summary.sampleSize) .. " retained deaths, " .. tostring(summary.recentSampleSize) .. " recent.")
+    Print("Deadliest source: " .. FormatStatEntry(summary.deadliestSource))
+    Print("Deadliest location: " .. FormatStatEntry(summary.deadliestLocation))
+    Print("Deadliest level: " .. FormatStatEntry(summary.deadliestLevelBracket))
+    Print("Recent trend: " .. FormatTrendEntry(summary.recentTrend))
+    Print("Recent pattern: " .. FormatRecentCluster(summary.recentRepeat))
 end
 
 ---@param hidden boolean
@@ -202,6 +275,7 @@ local SLASH_COMMAND_HANDLERS = {
     reset = ResetCommand,
     showincombat = ToggleShowInCombatCommand,
     minimap = ToggleMinimapCommand,
+    summary = SummaryCommand,
     toggle = ToggleWindowCommand,
     [""] = ToggleWindowCommand,
     help = PrintSlashHelp,

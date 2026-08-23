@@ -19,6 +19,7 @@ loader:Load("DeathpoolLogicPrediction")
 loader:Load("DeathpoolLogicScoring")
 loader:Load("DeathpoolLogicDeaths")
 loader:Load("DeathpoolLogicState")
+loader:Load("DeathpoolStats")
 local DeathpoolLogic = loader.ns.DeathpoolLogic
 local TestHelpers = require("tests.support_helpers")
 local UIHarness = require("tests.support_ui_harness")

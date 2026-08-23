@@ -14,6 +14,7 @@ local DeathpoolUITooltip = ns.DeathpoolUITooltip
 ns.DeathpoolUIMainPrediction = DeathpoolUIMainPrediction
 
 local SCORE_RULES = DeathpoolConstants.SCORING
+local CURRENT_PREDICTION_BONUS_TITLE = "Bonus Multipliers"
 local PREDICTION_CONTROL_HEIGHT = 24
 local PREDICTION_EDIT_CONTROL_OFFSET_X = 7
 local PREDICTION_LEVEL_CONTROL_ROW_OFFSET_Y = 8
@@ -117,7 +118,9 @@ local function UpdateDraftPrediction(frame, logic)
         return nil
     end
 
-    return logic.UpdateDraftPrediction(DeathpoolUI.GetState(frame), BuildDraftPrediction(frame, logic))
+    local draftPrediction = logic.UpdateDraftPrediction(DeathpoolUI.GetState(frame), BuildDraftPrediction(frame, logic))
+
+    return draftPrediction
 end
 
 ---@param frame DeathpoolMainFrameShell
@@ -378,7 +381,7 @@ local function GetCurrentPredictionGameInfoCalloutLines(frame, logic)
     local displayState
     local prediction
     local lines = {
-        "Bonus Multipliers",
+        CURRENT_PREDICTION_BONUS_TITLE,
     }
 
     if IsIntroDemoActive(frame) then

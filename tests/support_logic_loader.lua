@@ -30,6 +30,7 @@ loader:Load("DeathpoolLogicPrediction")
 loader:Load("DeathpoolLogicScoring")
 loader:Load("DeathpoolLogicDeaths")
 loader:Load("DeathpoolLogicState")
+loader:Load("DeathpoolStats")
 
 return {
     loader = loader,
@@ -38,4 +39,5 @@ return {
     DeathpoolDatabase = loader.ns.DeathpoolDatabase,
     DeathpoolMigration = loader.ns.DeathpoolMigration,
     DeathpoolLogic = loader.ns.DeathpoolLogic,
+    DeathpoolStats = loader.ns.DeathpoolStats,
 }

@@ -1359,6 +1359,8 @@ local function testCurrentPredictionSummaryAnchorsBelowLocation()
     assertEquals(valueRelativePoint, "BOTTOMLEFT", "current prediction text should align to the label's bottom left")
     assertEquals(valueXOffset, 0, "current prediction text should stay left aligned with its label")
     assertEquals(valueYOffset, -6, "current prediction text should preserve the existing label-to-text spacing")
+
+    assertEquals(Deathpool.currentPredictionBonusSummary, nil, "main frame should not show a visible bonus multiplier summary")
 end
 
 local function testGameInfoCalloutShowsExpectedTextForLabelsAndBottomButtons()

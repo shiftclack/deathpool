@@ -90,7 +90,7 @@ end
 
 ---@param level integer|string
 ---@return string|nil
-local function GetLevelRangeForLevel(level)
+function DeathpoolLogic.GetLevelRangeForLevel(level)
     for _, levelRange in ipairs(SCORE_RULES.levelRanges) do
         if DeathpoolLogic.IsLevelInRange(level, levelRange) then
             return levelRange
@@ -107,7 +107,7 @@ function DeathpoolLogic.GetLevelPointsForLevel(level)
         return 0
     end
 
-    local levelRange = GetLevelRangeForLevel(numericLevel)
+    local levelRange = DeathpoolLogic.GetLevelRangeForLevel(numericLevel)
     if not levelRange then
         return 0
     end

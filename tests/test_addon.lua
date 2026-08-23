@@ -1026,6 +1026,26 @@ local function testSlashCommandsReachTheirExpectedBranches()
             hasSeenIntroDemo = true,
             showInCombat = true,
             recentDeaths = {},
+            deathHistory = {
+                Fixtures.storedDeath({
+                    timestamp = 100,
+                    sourceName = "Hogger",
+                    zone = "Elwynn Forest",
+                    level = 12,
+                }),
+                Fixtures.storedDeath({
+                    timestamp = 200,
+                    sourceName = "Murloc Forager",
+                    zone = "Darkshore",
+                    level = 22,
+                }),
+                Fixtures.storedDeath({
+                    timestamp = 300,
+                    sourceName = "Murloc Forager",
+                    zone = "Darkshore",
+                    level = 24,
+                }),
+            },
         }),
         login = true,
     })
@@ -1085,6 +1105,15 @@ local function testSlashCommandsReachTheirExpectedBranches()
     assertEquals(DeathpoolCharacterState.minimap.hide, false, "minimap command should show the minimap icon again")
     assertContains(chatMessages[#chatMessages], "Minimap icon enabled", "minimap command should announce enablement")
 
+    local messageCountBeforeSummary = #chatMessages
+    context.runSlash("summary")
+    assertEquals(#chatMessages, messageCountBeforeSummary + 6, "summary command should print a compact summary")
+    assertContains(chatMessages[messageCountBeforeSummary + 1], "Summary: 3 retained deaths", "summary command should print sample size")
+    assertContains(chatMessages[messageCountBeforeSummary + 2], "Murloc Forager", "summary command should print deadliest source")
+    assertContains(chatMessages[messageCountBeforeSummary + 3], "Darkshore", "summary command should print deadliest location")
+    assertContains(chatMessages[messageCountBeforeSummary + 4], "20-29", "summary command should print deadliest level")
+    assertContains(chatMessages[messageCountBeforeSummary + 6], "Darkshore repeated", "summary command should print recent pattern")
+
     context.runSlash("demo")
     assertTruthy(getIntroDemoState(Deathpool) ~= nil, "demo command should reach the intro demo branch")
 
@@ -1092,6 +1121,7 @@ local function testSlashCommandsReachTheirExpectedBranches()
     context.runSlash("help")
     local sawIntroHelp = false
     local sawSetupHelp = false
+    local sawSummaryHelp = false
     for messageIndex = messageCountBeforeHelp + 1, #chatMessages do
         if string.find(chatMessages[messageIndex], "/deathpool resetintro", 1, true) then
             sawIntroHelp = true
@@ -1099,9 +1129,13 @@ local function testSlashCommandsReachTheirExpectedBranches()
         if string.find(chatMessages[messageIndex], "/deathpool setup", 1, true) then
             sawSetupHelp = true
         end
+        if string.find(chatMessages[messageIndex], "/deathpool summary", 1, true) then
+            sawSummaryHelp = true
+        end
     end
     assertEquals(sawIntroHelp, true, "help command should list the resetintro command")
     assertEquals(sawSetupHelp, true, "help command should list the setup command")
+    assertEquals(sawSummaryHelp, true, "help command should list the summary command")
 
     local messageCountBeforeMissingDebugDeath = #chatMessages
     context.runSlash("debugdeath")

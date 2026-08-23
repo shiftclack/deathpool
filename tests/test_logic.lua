@@ -8,6 +8,7 @@ local context = {
     DeathpoolLogic = DeathpoolLogic,
     DeathpoolDatabase = loadedLogic.DeathpoolDatabase,
     DeathpoolMigration = loadedLogic.DeathpoolMigration,
+    DeathpoolStats = loadedLogic.DeathpoolStats,
     Fixtures = Fixtures,
     suite = suite,
     SCORE_RULES = loadedLogic.DeathpoolConstants.SCORING,
@@ -18,6 +19,7 @@ local context = {
 require("tests.test_logic_prediction")(context)
 require("tests.test_logic_scoring")(context)
 require("tests.test_logic_deaths")(context)
+require("tests.test_logic_stats")(context)
 require("tests.test_logic_database")(context)
 
 suite:finish()

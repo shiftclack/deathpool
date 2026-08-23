@@ -15,6 +15,16 @@ return function(context)
         assertTruthy(DeathpoolLogic.IsLevelInRange(10, "10-19"), "10 should fall in the 10-19 range")
         assertEquals(DeathpoolLogic.IsLevelInRange(20, "10-19"), false, "20 should not fall in the 10-19 range")
         assertTruthy(DeathpoolLogic.IsLevelInRange(60, "60"), "60 should match the capped 60 range")
+        assertEquals(
+            DeathpoolLogic.GetLevelRangeForLevel(27),
+            "20-29",
+            "level range lookup should return the configured bucket label"
+        )
+        assertEquals(
+            DeathpoolLogic.GetLevelRangeForLevel(9),
+            nil,
+            "level range lookup should return nil for levels outside configured buckets"
+        )
     end
 
     local function testLevelPointTiers()
