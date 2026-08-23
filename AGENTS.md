@@ -119,7 +119,7 @@ Support files:
 - `Makefile` should contain reusable commands for building, testing and static analysis. It should be compatible with Windows systems for development and Linux for CI.
 - `.luacheckrc` should contain our `luacheck` configuration. Keep changes focused and only update it when project lint rules or recognized WoW globals genuinely need to change
 - `luacov.*.out` contain `luacheck` output
-- `src/Deathpool.toc` and `src/Deathpool_Vanilla.toc` are the WoW TOC files for this project that control file load order
+- `src/Deathpool_Vanilla.toc` is the WoW TOC file for this project that controls file load order
 
 ### .toc files
 
