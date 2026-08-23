@@ -125,8 +125,7 @@ Support files:
 
 When adding new files, they must be added to two `.toc` files in order for the game to load them. Order is important. They are:
 
-1. `src/Deathpool.toc`
-2. `src/Deathpool_Vanilla.toc`
+1. `src/Deathpool_Vanilla.toc`
 
 ### Model-View-Controller (MVC)
 
