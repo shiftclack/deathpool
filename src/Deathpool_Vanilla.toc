@@ -4,7 +4,7 @@
 ## Category: Minigames
 ## IconTexture: Interface\Icons\INV_Misc_Bone_ElfSkull_01
 ## Author: shiftclack
-## Version: 0.13.0
+## Version: 0.14.0
 ## SavedVariablesPerCharacter: DeathpoolCharacterState
 
 libs\LibStub\LibStub.lua
