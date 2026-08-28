@@ -440,21 +440,6 @@ local function GetScoreColor(points)
     return GetItemQualityColor(4, colors.epicMatchDeath)
 end
 
----@param value any
----@return string|nil
-function DeathpoolUI.TrimText(value)
-    if value == nil then
-        return nil
-    end
-
-    local trimmed = tostring(value):gsub("^%s+", ""):gsub("%s+$", "")
-    if trimmed == "" then
-        return nil
-    end
-
-    return trimmed
-end
-
 ---@param frame table
 ---@return DeathpoolFrameAnchor|nil
 local function GetFrameAnchor(frame)

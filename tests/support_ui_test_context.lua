@@ -7,6 +7,9 @@ package.path = table.concat({
 
 local AddonLoader = require("tests.support_addon_loader")
 local loader = AddonLoader.GetDefault()
+rawset(_G, "strtrim", function(text)
+    return (tostring(text):gsub("^%s+", ""):gsub("%s+$", ""))
+end)
 loader:Load("DeathpoolConstants")
 loader:Load("DeathpoolMigration")
 loader:Load("DeathpoolDatabase")

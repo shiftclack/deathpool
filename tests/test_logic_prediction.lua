@@ -131,9 +131,19 @@ return function(context)
             "prediction normalization should lowercase real values"
         )
         assertEquals(
+            DeathpoolLogic.NormalizePredictionValue("  Hogger  ", "No Source Prediction"),
+            "hogger",
+            "prediction normalization should trim real values"
+        )
+        assertEquals(
             DeathpoolLogic.NormalizePredictionValue("No Source Prediction", "No Source Prediction"),
             nil,
             "prediction normalization should treat the placeholder as unset"
+        )
+        assertEquals(
+            DeathpoolLogic.NormalizePredictionValue("  No Source Prediction  ", "No Source Prediction"),
+            nil,
+            "prediction normalization should trim placeholders before treating them as unset"
         )
         assertEquals(
             DeathpoolLogic.ToDisplayText("elwynn forest"),

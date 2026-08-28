@@ -17,6 +17,9 @@ rawset(_G, "wipe", function(values)
 end)
 
 rawset(_G, "FormatLargeNumber", tostring)
+rawset(_G, "strtrim", function(text)
+    return (tostring(text):gsub("^%s+", ""):gsub("%s+$", ""))
+end)
 
 loader:Load("DeathpoolConstants")
 loader:Load("DeathpoolMigration")

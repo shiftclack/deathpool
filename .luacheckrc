@@ -64,6 +64,7 @@ read_globals = {
    "UnitLevel",
    "UnitName",
    "date",
+   "strtrim",
    "time",
    "wipe",
    SlashCmdList = {

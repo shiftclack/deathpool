@@ -55,17 +55,6 @@ local NORMALIZED_CAUSE_TYPE_BY_CAUSE_TYPE = {
 ---@type DeathpoolParserPattern[]|nil
 local cachedDefaultPatterns = nil
 
----@param text string
----@return string|nil
-local function TrimText(text)
-    local trimmed = string.match(text, "^%s*(.-)%s*$")
-    if trimmed == "" then
-        return nil
-    end
-
-    return trimmed
-end
-
 ---@param message string
 ---@return string|nil
 local function SanitizeDeathMessage(message)
@@ -84,17 +73,17 @@ end
 ---@param text string
 ---@return string|nil
 local function StripLeadingArticle(text)
-    local stripped = TrimText(text)
-    if not stripped then
+    if text == "" then
         return nil
     end
 
+    local stripped = text
     stripped = string.gsub(stripped, "^%[(.-)%]$", "%1")
     stripped = string.gsub(stripped, "^a%s+", "", 1)
     stripped = string.gsub(stripped, "^an%s+", "", 1)
     stripped = string.gsub(stripped, "^the%s+", "", 1)
 
-    return TrimText(stripped)
+    return stripped ~= "" and stripped or nil
 end
 
 ---@param text string
@@ -262,11 +251,11 @@ local function AssignCapturedValue(parsedDeath, role, value)
     if role == "level" then
         parsedDeath.level = tonumber(value)
     elseif role == "name" then
-        parsedDeath.name = TrimText(value)
+        parsedDeath.name = value ~= "" and value or nil
     elseif role == "sourceName" then
         parsedDeath.sourceName = StripLeadingArticle(value)
     elseif role == "zone" then
-        parsedDeath.zone = TrimText(value)
+        parsedDeath.zone = value ~= "" and value or nil
     end
 end
 

@@ -29,6 +29,9 @@ end
 local function resetEnvironment()
     DeathpoolCharacterState = nil
     rawset(_G, "FormatLargeNumber", formatScoreStub)
+    rawset(_G, "strtrim", function(text)
+        return (tostring(text):gsub("^%s+", ""):gsub("%s+$", ""))
+    end)
 end
 
 local function createButton(dataObject)

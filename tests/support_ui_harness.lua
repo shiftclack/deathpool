@@ -698,6 +698,10 @@ local function initializeGlobals(options)
 
     rawset(_G, "FormatLargeNumber", options.formatLargeNumber or tostring)
 
+    rawset(_G, "strtrim", function(text)
+        return (tostring(text):gsub("^%s+", ""):gsub("%s+$", ""))
+    end)
+
     time = function()
         return 24680
     end

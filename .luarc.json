@@ -39,6 +39,7 @@
       "UnitLevel",
       "UnitName",
       "date",
+      "strtrim",
       "time",
       "wipe"
   ]

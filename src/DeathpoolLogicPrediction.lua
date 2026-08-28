@@ -19,14 +19,14 @@ local function CountTruthyValues(...)
     return count
 end
 
----@param value string|number
+---@param value string|nil
 ---@return string|nil
 local function NormalizeComparableText(value)
     if value == nil then
         return nil
     end
 
-    local normalizedValue = tostring(value):gsub("^%s+", ""):gsub("%s+$", "")
+    local normalizedValue = strtrim(value)
     if normalizedValue == "" then
         return nil
     end
@@ -143,11 +143,17 @@ end
 ---@return string|nil
 function DeathpoolLogic.NormalizePredictionValue(value, anyValue)
     -- normalize so comparisons stay simple
-    if value == nil or value == "" or value == anyValue then
+    if value == nil then
         return nil
     end
 
-    return string.lower(tostring(value))
+    local normalizedValue = strtrim(tostring(value))
+    local normalizedAnyValue = anyValue ~= nil and strtrim(tostring(anyValue)) or nil
+    if normalizedValue == "" or normalizedValue == normalizedAnyValue then
+        return nil
+    end
+
+    return string.lower(normalizedValue)
 end
 
 ---@param value string|number|nil

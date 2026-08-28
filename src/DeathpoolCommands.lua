@@ -41,7 +41,7 @@ end
 ---@param message string
 ---@return DeathpoolSlashCommand
 local function NormalizeSlashCommand(message)
-    local trimmedMessage = DeathpoolUI.TrimText(message) or ""
+    local trimmedMessage = message ~= nil and strtrim(tostring(message)) or ""
     local loweredMessage = string.lower(trimmedMessage)
 
     return {

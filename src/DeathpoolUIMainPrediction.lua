@@ -74,12 +74,10 @@ end
 ---@param logic DeathpoolMainLogic
 ---@return DeathpoolPredictionElements
 local function BuildPredictionElements(frame, logic)
-    local trimText = DeathpoolUI.TrimText
-
     return {
         levelRange = DeathpoolUI.NormalizeLevelRangeValue(frame.selectedLevelRange),
-        source = logic.NormalizePredictionValue(trimText(frame.sourceEditBox:GetText())),
-        zone = logic.NormalizePredictionValue(trimText(frame.zoneEditBox:GetText())),
+        source = logic.NormalizePredictionValue(frame.sourceEditBox:GetText()),
+        zone = logic.NormalizePredictionValue(frame.zoneEditBox:GetText()),
     }
 end
 
@@ -108,6 +106,21 @@ local function BuildDraftPrediction(frame, logic)
     return {
         elements = BuildPredictionElements(frame, logic),
     }
+end
+
+---@param value any
+---@return string|nil
+local function GetTrimmedInputText(value)
+    if value == nil then
+        return nil
+    end
+
+    local trimmed = strtrim(tostring(value))
+    if trimmed == "" then
+        return nil
+    end
+
+    return trimmed
 end
 
 ---@param frame DeathpoolMainFrameShell
@@ -446,9 +459,8 @@ function DeathpoolUIMainPrediction.OnMainPredictionLockButtonClicked(frame, logi
         return
     end
 
-    local trimText = DeathpoolUI.TrimText
-    local sourceText = trimText(frame.sourceEditBox:GetText())
-    local zoneText = trimText(frame.zoneEditBox:GetText())
+    local sourceText = GetTrimmedInputText(frame.sourceEditBox:GetText())
+    local zoneText = GetTrimmedInputText(frame.zoneEditBox:GetText())
     local lockedPrediction = BuildLockedPrediction(frame, logic)
     logic.ApplyLockedPrediction(DeathpoolUI.GetState(frame), lockedPrediction)
     DeathpoolDatabase.SetHasSeenFirstRun(DeathpoolUI.GetState(frame), true)
