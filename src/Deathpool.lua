@@ -1,3 +1,7 @@
+-- Copyright © 2026 Shiftclack. Licensed under the PolyForm Strict License 1.0.0; see LICENSE.md.
+-- You should have received a copy of the PolyForm Strict License 1.0.0 along with this program.
+-- If not, see https://github.com/shiftclack/deathpool/blob/main/LICENSE.md.
+
 ---@alias DeathpoolPrint fun(message: string|number)
 
 local ADDON_NAME, ns = ...

@@ -95,3 +95,5 @@ The goal of the game is to accumulate as many points as possible from the deaths
 ### Bonuses
 
 - The `same-zone bonus` grants additional points if the zone of the death is the same as the user's current zone.
+
+_Copyright © 2026 Shiftclack. Licensed under the PolyForm Strict License 1.0.0; see [LICENSE.md](https://github.com/shiftclack/deathpool/blob/main/LICENSE.md)._

@@ -128,3 +128,5 @@ The addon exposes core functionality through slash commands ("/-commands"). This
 - There is also a Debug window that can be used to help debug the addon. 
 - Debug mode is disabled by default. 
 - The "/deathpool debug" command toggles a session-only debug flag for the addon. When enabled, it both shows the Debug window and allows debug messages to be printed. When disabled, it hides the Debug window and suppresses debug prints.
+
+_Copyright © 2026 Shiftclack. Licensed under the PolyForm Strict License 1.0.0; see [LICENSE.md](https://github.com/shiftclack/deathpool/blob/main/LICENSE.md)._
