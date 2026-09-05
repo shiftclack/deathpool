@@ -65,11 +65,14 @@ coverage-summary: coverage-report
 dist: test clean build
 	cd /D dist && zip -r Deathpool.zip Deathpool
 
-dist-ci: test clean-ci build-ci minify-ci
+dist-ci: version-check test clean-ci build-ci minify-ci
 	cd dist && zip -r Deathpool.zip Deathpool
 
 dist-docker:
 	docker run -v $(CURDIR):$(DOCKER_SRC_DIR) -e SRC_DIR=$(DOCKER_SRC_DIR) $(DOCKER_TEST_IMAGE) make dist-ci
+
+version-check:
+	bash ./scripts/version.sh "$(TAG)" "src/Deathpool_Vanilla.toc"
 
 build:
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path dist,dist\Deathpool,dist\Deathpool\libs | Out-Null"
@@ -109,4 +112,3 @@ install: build
 
 install-macos: build-ci
 	cp -r "dist/Deathpool" "$(DEATHPOOL_INSTALL_DIR_MACOS)"
-	
