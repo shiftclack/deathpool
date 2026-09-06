@@ -31,7 +31,7 @@ The goal of the game is to accumulate as many points as possible from the deaths
 ## Modes
 
 - `Attract mode`: When the addon starts for the first time, it is in `attract mode`. In this mode a demo of incoming deaths and scoring is displayed
-- `Intro mode`: When the user is inputing their first prediction and has not locked in yet
+- `Intro mode`: When the user is inputting their first prediction and has not locked in yet
 - `Live mode`: When the addon is running and the player is able to receive points or change their existing prediction
 
 ## Predictions
@@ -66,7 +66,7 @@ The goal of the game is to accumulate as many points as possible from the deaths
 
 ### Location prediction
 
-- Location predictions match on the `location` assocated with an accepted death
+- Location predictions match on the `location` associated with an accepted death
 - The `location` is often, but not always, the zone of the death
 - A successful location prediction awards a fixed amount of points
 
@@ -78,10 +78,10 @@ The goal of the game is to accumulate as many points as possible from the deaths
 
 ### Multipliers
 
-- A matched prediction with multiple correct prediction elements award a multipler (combo)
+- A matched prediction with multiple correct prediction elements awards a multiplier (combo)
 - The more elements that are concurrently predicted correctly, the higher the combo bonus.
-- Multipliers are notated in the form `xN` where `N` is an integer. `x2` means multiply the points by 2, and `x4` means multiple the points by 4
-- Multiplers are additive: `x2` and `x4` add to a `x6` multipler
+- Multipliers are notated in the form `xN` where `N` is an integer. `x2` means multiply the points by 2, and `x4` means multiply the points by 4
+- Multipliers are additive: `x2` and `x4` add to a `x6` multiplier
 
 ### Streaks
 
@@ -90,7 +90,7 @@ The goal of the game is to accumulate as many points as possible from the deaths
 - A death with no locked prediction also resets the current streak
 - Locking in a different prediction resets the current streak
 - Re-locking the same prediction does not reset the current streak
-- Streaks award a multipler which grows with each successive successful prediction
+- Streaks award a multiplier which grows with each successive successful prediction
 
 ### Bonuses
 
