@@ -1,208 +1,204 @@
-return function(context)
-    local DeathpoolLogic = context.DeathpoolLogic
-    local Fixtures = context.Fixtures
-    local SCORE_RULES = context.SCORE_RULES
-    local Helpers = context.Helpers
-    local suite = context.suite
-    local assertEquals = function(actual, expected, message)
-        suite:assertEquals(actual, expected, message)
-    end
-    local assertTruthy = function(value, message)
-        suite:assertTruthy(value, message)
-    end
+local assert = require("luassert")
+describe("Prediction logic", function()
+    local LogicTestContext = require("tests.support_logic_test_context")
+    local context
+    local DeathpoolLogic
+    local Fixtures
+    local SCORE_RULES
+    local Helpers
 
-    local function testLevelRanges()
-        assertTruthy(DeathpoolLogic.IsLevelInRange(10, "10-19"), "10 should fall in the 10-19 range")
-        assertEquals(DeathpoolLogic.IsLevelInRange(20, "10-19"), false, "20 should not fall in the 10-19 range")
-        assertTruthy(DeathpoolLogic.IsLevelInRange(60, "60"), "60 should match the capped 60 range")
-        assertEquals(
-            DeathpoolLogic.GetLevelRangeForLevel(27),
-            "20-29",
-            "level range lookup should return the configured bucket label"
-        )
-        assertEquals(
-            DeathpoolLogic.GetLevelRangeForLevel(9),
-            nil,
-            "level range lookup should return nil for levels outside configured buckets"
-        )
-    end
+    before_each(function()
+        context = LogicTestContext.Create()
+        DeathpoolLogic = context.DeathpoolLogic
+        Fixtures = context.Fixtures
+        SCORE_RULES = context.SCORE_RULES
+        Helpers = context.Helpers
+    end)
 
-    local function testLevelPointTiers()
-        local cases = {
-            { level = 9, points = 0, label = "levels below 10 should not award level points" },
-        }
+    describe("level scoring", function()
+        it("defines level ranges", function()
+            assert.is_truthy(DeathpoolLogic.IsLevelInRange(10, "10-19"), "10 should fall in the 10-19 range")
+            assert.equals(false, DeathpoolLogic.IsLevelInRange(20, "10-19"), "20 should not fall in the 10-19 range")
+            assert.is_truthy(DeathpoolLogic.IsLevelInRange(60, "60"), "60 should match the capped 60 range")
+            assert.equals(
+                "20-29",
+                DeathpoolLogic.GetLevelRangeForLevel(27),
+                "level range lookup should return the configured bucket label"
+            )
+            assert.equals(
+                nil,
+                DeathpoolLogic.GetLevelRangeForLevel(9),
+                "level range lookup should return nil for levels outside configured buckets"
+            )
+        end)
 
-        for _, levelRange in ipairs(SCORE_RULES.levelRanges) do
-            local level = Helpers.getRepresentativeLevelForRange(levelRange)
-            cases[#cases + 1] = {
-                level = level,
-                points = SCORE_RULES.levelPointMode == "fixedRange"
-                    and (tonumber(SCORE_RULES.fixedLevelRangePoints[levelRange]) or 0)
-                    or level,
-                label = levelRange .. " should award the configured level points for a matched death",
+        it("assigns level point tiers", function()
+            local cases = {
+                { level = 9, points = 0, label = "levels below 10 should not award level points" },
             }
-        end
 
-        for _, case in ipairs(cases) do
-            assertEquals(DeathpoolLogic.GetLevelPointsForLevel(case.level), case.points, case.label)
-        end
-    end
-
-    local function testLevelRangePointTiers()
-        local cases = {
-            { levelRange = nil, points = 0, label = "missing level ranges should award zero preview points" },
-        }
-
-        for _, levelRange in ipairs(SCORE_RULES.levelRanges) do
-            local expectedPoints
-
-            if SCORE_RULES.levelPointMode == "fixedRange" then
-                expectedPoints = tonumber(SCORE_RULES.fixedLevelRangePoints[levelRange]) or 0
-            elseif levelRange == "60" then
-                expectedPoints = 60
-            else
-                expectedPoints = tonumber(string.match(levelRange, "^(%d+)%-%d+$")) or 0
+            for _, levelRange in ipairs(SCORE_RULES.levelRanges) do
+                local level = Helpers.getRepresentativeLevelForRange(levelRange)
+                cases[#cases + 1] = {
+                    level = level,
+                    points = SCORE_RULES.levelPointMode == "fixedRange"
+                        and (tonumber(SCORE_RULES.fixedLevelRangePoints[levelRange]) or 0)
+                        or level,
+                    label = levelRange .. " should award the configured level points for a matched death",
+                }
             end
 
-            cases[#cases + 1] = {
-                levelRange = levelRange,
-                points = expectedPoints,
-                label = levelRange .. " should preview the configured base points for that range",
+            for _, case in ipairs(cases) do
+                assert.equals(case.points, DeathpoolLogic.GetLevelPointsForLevel(case.level), case.label)
+            end
+        end)
+
+        it("assigns level-range point tiers", function()
+            local cases = {
+                { levelRange = nil, points = 0, label = "missing level ranges should award zero preview points" },
             }
-        end
 
-        for _, case in ipairs(cases) do
-            assertEquals(DeathpoolLogic.GetLevelPointsForRange(case.levelRange), case.points, case.label)
-        end
-    end
+            for _, levelRange in ipairs(SCORE_RULES.levelRanges) do
+                local expectedPoints
 
-    local function testFixedRangeLevelPointMode()
-        local originalMode = SCORE_RULES.levelPointMode
-        local originalPoints = SCORE_RULES.fixedLevelRangePoints["50-59"]
+                if SCORE_RULES.levelPointMode == "fixedRange" then
+                    expectedPoints = tonumber(SCORE_RULES.fixedLevelRangePoints[levelRange]) or 0
+                elseif levelRange == "60" then
+                    expectedPoints = 60
+                else
+                    expectedPoints = tonumber(string.match(levelRange, "^(%d+)%-%d+$")) or 0
+                end
 
-        SCORE_RULES.levelPointMode = "fixedRange"
-        SCORE_RULES.fixedLevelRangePoints["50-59"] = 77
+                cases[#cases + 1] = {
+                    levelRange = levelRange,
+                    points = expectedPoints,
+                    label = levelRange .. " should preview the configured base points for that range",
+                }
+            end
 
-        assertEquals(
-            DeathpoolLogic.GetLevelPointsForLevel(58),
-            77,
-            "fixed-range mode should use the configured bucket points for matched deaths"
-        )
-        assertEquals(
-            DeathpoolLogic.GetLevelPointsForRange("50-59"),
-            77,
-            "fixed-range mode should use the configured bucket points for previews"
-        )
+            for _, case in ipairs(cases) do
+                assert.equals(case.points, DeathpoolLogic.GetLevelPointsForRange(case.levelRange), case.label)
+            end
+        end)
 
-        SCORE_RULES.levelPointMode = originalMode
-        SCORE_RULES.fixedLevelRangePoints["50-59"] = originalPoints
-    end
+        it("uses fixed points for configured level ranges", function()
+            SCORE_RULES.levelPointMode = "fixedRange"
+            SCORE_RULES.fixedLevelRangePoints["50-59"] = 77
 
-    local function testPredictionFormatting()
-        assertEquals(
-            DeathpoolLogic.FormatLockedPrediction(nil),
-            "Prediction not locked in yet.",
-            "empty prediction should have the placeholder summary"
-        )
+            assert.equals(
+                77,
+                DeathpoolLogic.GetLevelPointsForLevel(58),
+                "fixed-range mode should use the configured bucket points for matched deaths"
+            )
+            assert.equals(
+                77,
+                DeathpoolLogic.GetLevelPointsForRange("50-59"),
+                "fixed-range mode should use the configured bucket points for previews"
+            )
+        end)
+    end)
 
-        assertEquals(
-            DeathpoolLogic.FormatLockedPrediction(Fixtures.prediction({
-                levelRange = "20-29",
-            })),
-            "Level 20-29, source Hogger, or zone Elwynn Forest.",
-            "locked prediction should render labels directly"
-        )
+    describe("formatting", function()
+        it("formats predictions", function()
+            assert.equals(
+                "Prediction not locked in yet.",
+                DeathpoolLogic.FormatLockedPrediction(nil),
+                "empty prediction should have the placeholder summary"
+            )
 
-        assertEquals(
-            DeathpoolLogic.FormatLockedPrediction(Fixtures.prediction({
-                levelRange = false,
-                source = false,
-                zone = false,
-            })),
-            "Level none, source none, or zone none.",
-            "locked prediction should show that level can be intentionally unset"
-        )
-    end
+            assert.equals(
+                "Level 20-29, source Hogger, or zone Elwynn Forest.",
+                DeathpoolLogic.FormatLockedPrediction(Fixtures.prediction({
+                    levelRange = "20-29",
+                })),
+                "locked prediction should render labels directly"
+            )
 
-    local function testPredictionNormalizationHelpers()
-        assertEquals(
-            DeathpoolLogic.NormalizePredictionValue("Hogger", "No Source Prediction"),
-            "hogger",
-            "prediction normalization should lowercase real values"
-        )
-        assertEquals(
-            DeathpoolLogic.NormalizePredictionValue("  Hogger  ", "No Source Prediction"),
-            "hogger",
-            "prediction normalization should trim real values"
-        )
-        assertEquals(
-            DeathpoolLogic.NormalizePredictionValue("No Source Prediction", "No Source Prediction"),
-            nil,
-            "prediction normalization should treat the placeholder as unset"
-        )
-        assertEquals(
-            DeathpoolLogic.NormalizePredictionValue("  No Source Prediction  ", "No Source Prediction"),
-            nil,
-            "prediction normalization should trim placeholders before treating them as unset"
-        )
-        assertEquals(
-            DeathpoolLogic.ToDisplayText("elwynn forest"),
-            "Elwynn Forest",
-            "display text should title-case lowercase values"
-        )
-    end
+            assert.equals(
+                "Level none, source none, or zone none.",
+                DeathpoolLogic.FormatLockedPrediction(Fixtures.prediction({
+                    levelRange = false,
+                    source = false,
+                    zone = false,
+                })),
+                "locked prediction should show that level can be intentionally unset"
+            )
+        end)
+    end)
 
-    local function testPredictionHelperUtilities()
-        assertEquals(
-            DeathpoolLogic.GetSelectedPredictionCount(Fixtures.prediction()),
-            3,
-            "selected prediction helper should count all chosen fields"
-        )
-        assertEquals(
-            DeathpoolLogic.GetSelectedPredictionCount(Fixtures.prediction({
-                levelRange = false,
-                zone = false,
-                zoneLabel = false,
-            })),
-            1,
-            "selected prediction helper should ignore omitted fields"
-        )
-        assertEquals(
-            DeathpoolLogic.GetMatchedPredictionCount({
-                levelMatched = true,
-                sourceMatched = true,
-                zoneMatched = false,
-            }),
-            2,
-            "matched prediction helper should count only matched fields"
-        )
-        assertEquals(
-            DeathpoolLogic.GetMatchedPredictionCount(nil),
-            0,
-            "matched prediction helper should default nil evaluations to zero"
-        )
-        assertTruthy(
-            DeathpoolLogic.ArePredictionsEquivalent(
-                Fixtures.prediction(),
-                Fixtures.prediction()
-            ),
-            "prediction equivalence should treat identical normalized predictions as equal"
-        )
-        assertEquals(
-            DeathpoolLogic.ArePredictionsEquivalent(
-                Fixtures.prediction(),
-                Fixtures.prediction({ source = "defias", sourceLabel = "Defias" })
-            ),
-            false,
-            "prediction equivalence should detect changed prediction fields"
-        )
-    end
+    describe("normalization and helpers", function()
+        it("normalizes prediction values", function()
+            assert.equals(
+                "hogger",
+                DeathpoolLogic.NormalizePredictionValue("Hogger", "No Source Prediction"),
+                "prediction normalization should lowercase real values"
+            )
+            assert.equals(
+                "hogger",
+                DeathpoolLogic.NormalizePredictionValue("  Hogger  ", "No Source Prediction"),
+                "prediction normalization should trim real values"
+            )
+            assert.equals(
+                nil,
+                DeathpoolLogic.NormalizePredictionValue("No Source Prediction", "No Source Prediction"),
+                "prediction normalization should treat the placeholder as unset"
+            )
+            assert.equals(
+                nil,
+                DeathpoolLogic.NormalizePredictionValue("  No Source Prediction  ", "No Source Prediction"),
+                "prediction normalization should trim placeholders before treating them as unset"
+            )
+            assert.equals(
+                "Elwynn Forest",
+                DeathpoolLogic.ToDisplayText("elwynn forest"),
+                "display text should title-case lowercase values"
+            )
+        end)
 
-    testLevelRanges()
-    testLevelPointTiers()
-    testLevelRangePointTiers()
-    testFixedRangeLevelPointMode()
-    testPredictionFormatting()
-    testPredictionNormalizationHelpers()
-    testPredictionHelperUtilities()
-end
+        it("provides prediction helper utilities", function()
+            assert.equals(
+                3,
+                DeathpoolLogic.GetSelectedPredictionCount(Fixtures.prediction()),
+                "selected prediction helper should count all chosen fields"
+            )
+            assert.equals(
+                1,
+                DeathpoolLogic.GetSelectedPredictionCount(Fixtures.prediction({
+                    levelRange = false,
+                    zone = false,
+                    zoneLabel = false,
+                })),
+                "selected prediction helper should ignore omitted fields"
+            )
+            assert.equals(
+                2,
+                DeathpoolLogic.GetMatchedPredictionCount({
+                    levelMatched = true,
+                    sourceMatched = true,
+                    zoneMatched = false,
+                }),
+                "matched prediction helper should count only matched fields"
+            )
+            assert.equals(
+                0,
+                DeathpoolLogic.GetMatchedPredictionCount(nil),
+                "matched prediction helper should default nil evaluations to zero"
+            )
+            assert.is_truthy(
+                DeathpoolLogic.ArePredictionsEquivalent(
+                    Fixtures.prediction(),
+                    Fixtures.prediction()
+                ),
+                "prediction equivalence should treat identical normalized predictions as equal"
+            )
+            assert.equals(
+                false,
+                DeathpoolLogic.ArePredictionsEquivalent(
+                    Fixtures.prediction(),
+                    Fixtures.prediction({ source = "defias", sourceLabel = "Defias" })
+                ),
+                "prediction equivalence should detect changed prediction fields"
+            )
+        end)
+    end)
+end)

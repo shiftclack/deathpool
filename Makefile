@@ -1,9 +1,11 @@
 DEATHPOOL_INSTALL_DIR ?= C:\Program Files (x86)\World of Warcraft\_classic_era_\Interface\AddOns\Deathpool
 DEATHPOOL_INSTALL_DIR_MACOS ?= /Applications/World of Warcraft/_classic_era_/Interface/AddOns
-DEATHPOOL_SOURCES := src/*.lua tests/*.lua
+DEATHPOOL_SOURCES := src/*.lua tests/*.lua tests/fixtures/*.lua .busted .luacov
 DOCKER_SRC_DIR ?= /lua
 DOCKER_TEST_IMAGE ?= ghcr.io/shiftclack/lua-wow:1.3.0
 LUA ?= lua
+BUSTED ?= busted
+TEST_ARGS ?=
 LUA_LANGUAGE_SERVER ?= lua-language-server
 LUAC ?= luac
 LUACHECK ?= luacheck
@@ -34,26 +36,11 @@ luals-ci:
 	[ -d "${DOCKER_SRC_DIR}" ] && $(LUA_LANGUAGE_SERVER) --check $(DOCKER_SRC_DIR) || $(LUA_LANGUAGE_SERVER) --check .
 
 test:
-	$(LUA) tests/test_addon.lua
-	$(LUA) tests/test_logic.lua
-	$(LUA) tests/test_minimap.lua
-	$(LUA) tests/test_migration.lua
-	$(LUA) tests/test_parser.lua
-	$(LUA) tests/test_ui.lua
-	$(LUA) tests/test_ui_interactions.lua
-	$(LUA) tests/test_ui_autocomplete.lua
-	$(LUA) tests/test_ui_demo.lua
+	"$(BUSTED)" --lua="$(LUA)" $(TEST_ARGS)
 
 coverage:
-	$(LUA) -lluacov tests/test_addon.lua
-	$(LUA) -lluacov tests/test_logic.lua
-	$(LUA) -lluacov tests/test_minimap.lua
-	$(LUA) -lluacov tests/test_migration.lua
-	$(LUA) -lluacov tests/test_parser.lua
-	$(LUA) -lluacov tests/test_ui.lua
-	$(LUA) -lluacov tests/test_ui_interactions.lua
-	$(LUA) -lluacov tests/test_ui_autocomplete.lua
-	$(LUA) -lluacov tests/test_ui_demo.lua
+	$(LUA) -e "os.remove('luacov.stats.out'); os.remove('luacov.report.out')"
+	"$(BUSTED)" --lua="$(LUA)" --coverage $(TEST_ARGS)
 
 coverage-report: coverage
 	$(LUA) -e "require('luacov.reporter').report()"

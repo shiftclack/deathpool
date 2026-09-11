@@ -1,152 +1,125 @@
-package.path = table.concat({
-    "./src/?.lua",
-    "./?.lua",
-    "./?/init.lua",
-    package.path,
-}, ";")
-
-local AddonLoader = require("tests.support_addon_loader")
-local loader = AddonLoader.GetDefault()
-rawset(_G, "strtrim", function(text)
-    return (tostring(text):gsub("^%s+", ""):gsub("%s+$", ""))
-end)
-loader:Load("DeathpoolConstants")
-loader:Load("DeathpoolMigration")
-loader:Load("DeathpoolDatabase")
-loader:Load("DeathpoolDebug")
-rawset(_G, "GetZoneText", function()
-    return "Test UI Zone"
-end)
-loader:Load("DeathpoolLogic")
-loader:Load("DeathpoolLogicPrediction")
-loader:Load("DeathpoolLogicScoring")
-loader:Load("DeathpoolLogicDeaths")
-loader:Load("DeathpoolLogicState")
-loader:Load("DeathpoolStats")
-local DeathpoolLogic = loader.ns.DeathpoolLogic
-local TestHelpers = require("tests.support_helpers")
+local LogicContext = require("tests.support_logic_context")
 local UIHarness = require("tests.support_ui_harness")
-local Fixtures = require("tests.support_fixtures")
-local SCORE_RULES = loader.ns.DeathpoolConstants.SCORING
+local FixtureFactory = require("tests.support_fixtures")
 
-local function buildLevelPointsSummary()
-    local visibleRanges = {}
+---@return table
+local function Create()
+    local loadedLogic = LogicContext.Create({ zoneText = "Test UI Zone" })
+    local DeathpoolLogic = loadedLogic.DeathpoolLogic
+    local Fixtures = FixtureFactory.Create(loadedLogic.DeathpoolConstants, loadedLogic.DeathpoolDatabase)
+    local SCORE_RULES = loadedLogic.DeathpoolConstants.SCORING
 
-    for index = 1, #SCORE_RULES.levelRanges - 1 do
-        visibleRanges[#visibleRanges + 1] = tostring(SCORE_RULES.levelRanges[index])
+    ---@return string
+    local function buildLevelPointsSummary()
+        local visibleRanges = {}
+
+        for index = 1, #SCORE_RULES.levelRanges - 1 do
+            visibleRanges[#visibleRanges + 1] = tostring(SCORE_RULES.levelRanges[index])
+        end
+
+        return "Level ranges can be locked as "
+            .. table.concat(visibleRanges, ", ")
+            .. ", and "
+            .. tostring(SCORE_RULES.levelRanges[#SCORE_RULES.levelRanges])
+            .. "."
     end
 
-    return "Level ranges can be locked as "
-        .. table.concat(visibleRanges, ", ")
-        .. ", and "
-        .. tostring(SCORE_RULES.levelRanges[#SCORE_RULES.levelRanges])
-        .. "."
-end
+    ---@param prediction DeathpoolPrediction
+    ---@return string
+    local function formatPredictionPreview(prediction)
+        local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
+        local score = DeathpoolLogic.ScorePreview(
+            elements,
+            DeathpoolLogic.GetPreviewStreak()
+        )
 
-local function formatPredictionPreview(prediction)
-    local elements = DeathpoolLogic.GetPredictionElements(prediction) or {}
-    local score = DeathpoolLogic.ScorePreview(
-        elements,
-        DeathpoolLogic.GetPreviewStreak()
-    )
+        return string.format(
+            "%d base / %d combos = %d total",
+            score.basePoints,
+            score.combinationCount,
+            score.awardedPoints
+        )
+    end
 
-    return string.format(
-        "%d base / %d combos = %d total",
-        score.basePoints,
-        score.combinationCount,
-        score.awardedPoints
-    )
-end
+    ---@param death DeathpoolDeath
+    ---@return table<string, string>
+    local function formatStoredDeathScore(death)
+        local basePoints = DeathpoolLogic.GetStoredDeathBasePoints(death)
+        local sameZoneBonusPoints = DeathpoolLogic.GetStoredDeathSameZoneBonusPoints(death)
+        local comboMultiplier = DeathpoolLogic.GetStoredDeathComboMultiplierValue(death)
+        local streakMultiplier = DeathpoolLogic.GetStoredDeathStreakMultiplierValue(death)
+        local comboSum = DeathpoolLogic.GetStoredDeathMultiplierValue(death)
+        local awardedPoints = DeathpoolLogic.GetStoredDeathAwardedPoints(death)
+        return {
+            basePoints = tostring(basePoints),
+            comboMultiplier = "x" .. tostring(comboMultiplier),
+            streakMultiplier = "x" .. tostring(streakMultiplier),
+            comboSum = "x" .. tostring(comboSum),
+            sameZoneBonusPoints = tostring(sameZoneBonusPoints),
+            awardedPoints = tostring(awardedPoints),
+            formula = string.format("%d x%d = %d", basePoints + sameZoneBonusPoints, comboSum, awardedPoints),
+        }
+    end
 
-local function formatStoredDeathScore(death)
-    local basePoints = DeathpoolLogic.GetStoredDeathBasePoints(death)
-    local sameZoneBonusPoints = DeathpoolLogic.GetStoredDeathSameZoneBonusPoints(death)
-    local comboMultiplier = DeathpoolLogic.GetStoredDeathComboMultiplierValue(death)
-    local streakMultiplier = DeathpoolLogic.GetStoredDeathStreakMultiplierValue(death)
-    local comboSum = DeathpoolLogic.GetStoredDeathMultiplierValue(death)
-    local awardedPoints = DeathpoolLogic.GetStoredDeathAwardedPoints(death)
-    return {
-        basePoints = tostring(basePoints),
-        comboMultiplier = "x" .. tostring(comboMultiplier),
-        streakMultiplier = "x" .. tostring(streakMultiplier),
-        comboSum = "x" .. tostring(comboSum),
-        sameZoneBonusPoints = tostring(sameZoneBonusPoints),
-        awardedPoints = tostring(awardedPoints),
-        formula = string.format("%d x%d = %d", basePoints + sameZoneBonusPoints, comboSum, awardedPoints),
-    }
-end
+    ---@param state table|nil
+    ---@param options table|nil
+    ---@return table
+    local function createUIContext(state, options)
+        -- Each UI test gets a fresh harness so frame state, globals, and printed messages cannot bleed across cases.
+        local ui = UIHarness.Create({
+            state = state,
+            faction = options and options.faction or nil,
+            hardcoreDeathChatType = options and options.hardcoreDeathChatType or nil,
+            hardcoreDeathsJoined = options and options.hardcoreDeathsJoined,
+            formatLargeNumber = options and options.formatLargeNumber or nil,
+        })
 
-local function createUIContext(state, options)
-    -- Each UI test gets a fresh harness so frame state, globals, and printed messages cannot bleed across cases.
-    local ui = UIHarness.Create({
-        state = state,
-        faction = options and options.faction or nil,
-        hardcoreDeathChatType = options and options.hardcoreDeathChatType or nil,
-        hardcoreDeathsJoined = options and options.hardcoreDeathsJoined,
-        formatLargeNumber = options and options.formatLargeNumber or nil,
-    })
-
-    return {
-        ns = ui.ns,
-        DeathpoolUI = ui.DeathpoolUI,
-        DeathpoolUIAutocomplete = ui.DeathpoolUIAutocomplete,
-        DeathpoolUIDeathLogList = ui.DeathpoolUIDeathLogList,
-        DeathpoolUIDebug = ui.DeathpoolUIDebug,
-        DeathpoolUIDemo = ui.DeathpoolUIDemo,
-        DeathpoolUIHelp = ui.DeathpoolUIHelp,
-        DeathpoolUILog = ui.DeathpoolUILog,
-        DeathpoolUIMain = ui.DeathpoolUIMain,
-        DeathpoolUIMainCollapsed = ui.DeathpoolUIMainCollapsed,
-        DeathpoolUIMainPrediction = ui.DeathpoolUIMainPrediction,
-        DeathpoolUIMainRecentDeaths = ui.DeathpoolUIMainRecentDeaths,
-        DeathpoolUIRefresh = ui.DeathpoolUIRefresh,
-        DeathpoolUITooltip = ui.DeathpoolUITooltip,
-        DeathpoolConstants = ui.DeathpoolConstants,
-        DeathpoolDatabase = ui.DeathpoolDatabase,
-        DeathpoolLogic = ui.DeathpoolLogic,
-        Deathpool = ui.Deathpool,
-        DeathpoolDebug = ui.DeathpoolDebug,
-        DeathpoolLog = ui.DeathpoolLog,
-        printedMessages = ui.printedMessages,
-        cvars = ui.cvars,
-        setCVarCalls = ui.setCVarCalls,
-        joinedChannels = ui.joinedChannels,
-        joinedChannelNames = ui.joinedChannelNames,
-        pressEscape = ui.pressEscape,
-        findRegionText = ui.findRegionText,
-        findDropdownButtonByText = ui.findDropdownButtonByText,
-    }
-end
-
-local function Create()
-    local suite = TestHelpers.CreateSuite()
+        return {
+            env = ui.env,
+            ns = ui.ns,
+            DeathpoolUI = ui.DeathpoolUI,
+            DeathpoolUIAutocomplete = ui.DeathpoolUIAutocomplete,
+            DeathpoolUIDeathLogList = ui.DeathpoolUIDeathLogList,
+            DeathpoolUIDebug = ui.DeathpoolUIDebug,
+            DeathpoolUIDemo = ui.DeathpoolUIDemo,
+            DeathpoolUIHelp = ui.DeathpoolUIHelp,
+            DeathpoolUILog = ui.DeathpoolUILog,
+            DeathpoolUIMain = ui.DeathpoolUIMain,
+            DeathpoolUIMainCollapsed = ui.DeathpoolUIMainCollapsed,
+            DeathpoolUIMainPrediction = ui.DeathpoolUIMainPrediction,
+            DeathpoolUIMainRecentDeaths = ui.DeathpoolUIMainRecentDeaths,
+            DeathpoolUIRefresh = ui.DeathpoolUIRefresh,
+            DeathpoolUITooltip = ui.DeathpoolUITooltip,
+            DeathpoolConstants = ui.DeathpoolConstants,
+            DeathpoolDatabase = ui.DeathpoolDatabase,
+            DeathpoolLogic = ui.DeathpoolLogic,
+            Deathpool = ui.Deathpool,
+            DeathpoolDebug = ui.DeathpoolDebug,
+            DeathpoolLog = ui.DeathpoolLog,
+            printedMessages = ui.printedMessages,
+            sendChatMessage = ui.sendChatMessage,
+            cvars = ui.cvars,
+            libDBIcon = ui.libDBIcon,
+            setCVar = ui.setCVar,
+            joinedChannels = ui.joinedChannels,
+            joinPermanentChannel = ui.joinPermanentChannel,
+            pressEscape = ui.pressEscape,
+            findRegionText = ui.findRegionText,
+            findDropdownButtonByText = ui.findDropdownButtonByText,
+        }
+    end
 
     return {
         Fixtures = Fixtures,
-        suite = suite,
-        ns = loader.ns,
-        DeathpoolConstants = loader.ns.DeathpoolConstants,
-        DeathpoolDatabase = loader.ns.DeathpoolDatabase,
+        ns = loadedLogic.ns,
+        DeathpoolConstants = loadedLogic.DeathpoolConstants,
+        DeathpoolDatabase = loadedLogic.DeathpoolDatabase,
         DeathpoolLogic = DeathpoolLogic,
         createUIContext = createUIContext,
         buildLevelPointsSummary = buildLevelPointsSummary,
         formatPredictionPreview = formatPredictionPreview,
         formatStoredDeathScore = formatStoredDeathScore,
-        assertEquals = function(actual, expected, message)
-            suite:assertEquals(actual, expected, message)
-        end,
-        assertTruthy = function(value, message)
-            suite:assertTruthy(value, message)
-        end,
-        assertContains = function(text, needle, message)
-            suite:assertContains(text, needle, message)
-        end,
-        assertTableLength = function(tbl, expected, message)
-            suite:assertTableLength(tbl, expected, message)
-        end,
     }
 end
 
-return {
-    Create = Create,
-}
+return { Create = Create }

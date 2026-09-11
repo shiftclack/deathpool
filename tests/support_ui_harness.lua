@@ -1,11 +1,5 @@
-package.path = table.concat({
-    "./src/?.lua",
-    "./?.lua",
-    "./?/init.lua",
-    package.path,
-}, ";")
-
 local AddonLoader = require("tests.support_addon_loader")
+local spy = require("luassert.spy")
 
 local function createRegion(regionKind, name, parent, template)
     local region = {
@@ -395,7 +389,7 @@ local function createRegion(regionKind, name, parent, template)
     return region
 end
 
-local function attachBasicFrameCloseButton(frame, name)
+local function attachBasicFrameCloseButton(env, frame, name)
     local closeButtonName = name and (name .. "CloseButton") or nil
     local closeButton = createRegion("Button", closeButtonName, frame, "UIPanelCloseButton")
     closeButton:SetScript("OnClick", function()
@@ -405,7 +399,7 @@ local function attachBasicFrameCloseButton(frame, name)
     frame.children[#frame.children + 1] = closeButton
     frame.CloseButton = closeButton
     if closeButtonName then
-        _G[closeButtonName] = closeButton
+        env[closeButtonName] = closeButton
     end
 end
 
@@ -442,7 +436,7 @@ local function findDropdownButtonByText(dropdown, text)
     return nil
 end
 
-local function dispatchEvent(frame, eventName, ...)
+local function dispatchEvent(env, frame, eventName, ...)
     if not frame or not eventName then
         return false
     end
@@ -472,16 +466,16 @@ local function dispatchEvent(frame, eventName, ...)
 
     fireFrame(frame)
 
-    for _, createdFrame in ipairs(_G.__frames or {}) do
+    for _, createdFrame in ipairs(env.__frames or {}) do
         fireFrame(createdFrame)
     end
 
     return fired
 end
 
-local function pressEscape()
-    for _, frameName in ipairs(_G.UISpecialFrames or {}) do
-        local frame = _G[frameName]
+local function pressEscape(env)
+    for _, frameName in ipairs(env.UISpecialFrames or {}) do
+        local frame = env[frameName]
         if frame and frame:IsShown() then
             frame:Hide()
             return true
@@ -491,35 +485,27 @@ local function pressEscape()
     return false
 end
 
-local function initializeBundledLibs()
+---@param env table
+---@return table<string, LuassertSpy>
+local function initializeBundledLibs(env)
     local libDataBroker = {}
-    local libDBIcon = {}
-    local libDBIconState = {
-        hideCalls = {},
-        showCalls = {},
+    local libDBIcon = {
+        Register = spy.new(),
+        Refresh = spy.new(),
+        Hide = spy.new(),
+        Show = spy.new(),
     }
-
-    _G.__libDBIconState = libDBIconState
 
     function libDataBroker.NewDataObject(_, _, dataObject)
         return dataObject
     end
 
-    function libDBIcon.Register()
-    end
-
-    function libDBIcon.Refresh()
-    end
-
-    function libDBIcon.Hide(_, name)
-        libDBIconState.hideCalls[#libDBIconState.hideCalls + 1] = name
-    end
-
-    function libDBIcon.Show(_, name)
-        libDBIconState.showCalls[#libDBIconState.showCalls + 1] = name
-    end
-
-    _G.LibStub = function(libraryName, silent)
+    ---@param libraryName string
+    ---@param silent boolean|nil
+    ---@return LibDataBrokerApi|LibDBIconApi|nil
+    ---@overload fun(libraryName: "LibDataBroker-1.1", silent?: boolean): LibDataBrokerApi
+    ---@overload fun(libraryName: "LibDBIcon-1.0", silent?: boolean): LibDBIconApi
+    env.LibStub = function(libraryName, silent)
         if libraryName == "LibDataBroker-1.1" then
             return libDataBroker
         end
@@ -534,20 +520,24 @@ local function initializeBundledLibs()
 
         return nil
     end
+
+    return libDBIcon
 end
 
+---@param env table
 ---@param options table|nil
-local function initializeGlobals(options)
+---@return table
+local function initializeGlobals(env, options)
     options = options or {}
-    UIParent = createRegion("Frame", "UIParent", nil, nil)
-    UIParent:SetSize(1024, 768)
-    DeathpoolCharacterState = nil
-    _G.LibStub = nil
-    _G.UISpecialFrames = {}
-    _G.__frames = {}
+    env.UIParent = createRegion("Frame", "UIParent", nil, nil)
+    env.UIParent:SetSize(1024, 768)
+    env.DeathpoolCharacterState = nil
+    env.LibStub = nil
+    env.UISpecialFrames = {}
+    env.__frames = {}
     local function registerCanvasLayoutCategory(frame, name)
         local category = {
-            ID = _G.Settings.nextCategoryId,
+            ID = env.Settings.nextCategoryId,
             name = name,
             frame = frame,
         }
@@ -556,113 +546,105 @@ local function initializeGlobals(options)
             return self.ID
         end
 
-        _G.Settings.nextCategoryId = _G.Settings.nextCategoryId + 1
-        _G.Settings.registeredCanvasCategories[#_G.Settings.registeredCanvasCategories + 1] = category
+        env.Settings.nextCategoryId = env.Settings.nextCategoryId + 1
+        env.Settings.registeredCanvasCategories[#env.Settings.registeredCanvasCategories + 1] = category
         return category
     end
 
     local function registerAddOnCategory(category)
-        _G.Settings.registeredAddOnCategories[#_G.Settings.registeredAddOnCategories + 1] = category
+        env.Settings.registeredAddOnCategories[#env.Settings.registeredAddOnCategories + 1] = category
         return category
     end
 
-    _G.Settings = {
+    env.Settings = {
         registeredCanvasCategories = {},
         registeredAddOnCategories = {},
         nextCategoryId = 1,
         RegisterCanvasLayoutCategory = registerCanvasLayoutCategory,
         RegisterAddOnCategory = registerAddOnCategory,
     }
-    rawset(_G, "wipe", function(values)
+    env.wipe = function(values)
         for key in pairs(values) do
             values[key] = nil
         end
 
         return values
-    end)
+    end
 
-    CreateFrame = function(kind, name, parent, template)
+    env.CreateFrame = function(kind, name, parent, template)
         local frame = createRegion(kind, name, parent, template)
-        _G.__frames[#_G.__frames + 1] = frame
+        env.__frames[#env.__frames + 1] = frame
         if parent then
             parent.children[#parent.children + 1] = frame
         end
         if name then
-            _G[name] = frame
+            env[name] = frame
         end
         if template == "BasicFrameTemplateWithInset" then
-            attachBasicFrameCloseButton(frame, name)
+            attachBasicFrameCloseButton(env, frame, name)
         end
         return frame
     end
 
-    DEFAULT_CHAT_FRAME = {
+    env.DEFAULT_CHAT_FRAME = {
         messages = {},
     }
 
-    function DEFAULT_CHAT_FRAME:AddMessage(message)
+    function env.DEFAULT_CHAT_FRAME:AddMessage(message)
         self.messages[#self.messages + 1] = message
     end
 
-    _G.__sentChatMessages = {}
-
-    rawset(_G, "SendChatMessage", function(message, chatType, language, target)
-        _G.__sentChatMessages[#_G.__sentChatMessages + 1] = {
-            message = message,
-            chatType = chatType,
-            language = language,
-            target = target,
-        }
-    end)
-    rawset(_G, "IsInGuild", function()
+    local sendChatMessage = spy.new()
+    env.SendChatMessage = sendChatMessage
+    env.IsInGuild = function()
         return options.inGuild ~= false
-    end)
+    end
 
-    _G.__cvars = {
+    local cvars = {
         hardcoreDeathChatType = options.hardcoreDeathChatType or "1",
     }
-    _G.__setCVarCalls = {}
-    rawset(_G, "GetCVar", function(name)
-        return _G.__cvars[name]
+    env.GetCVar = function(name)
+        return cvars[name]
+    end
+    ---@param name string
+    ---@param value string
+    ---@return nil
+    local setCVar = spy.new(function(name, value)
+        cvars[name] = value
     end)
-    rawset(_G, "SetCVar", function(name, value)
-        _G.__setCVarCalls[#_G.__setCVarCalls + 1] = {
-            name = name,
-            value = value,
-        }
-        _G.__cvars[name] = value
-    end)
+    env.SetCVar = setCVar
 
-    _G.__joinedChannels = {
+    local joinedChannels = {
         HardcoreDeaths = options.hardcoreDeathsJoined ~= false,
     }
-    _G.__joinedChannelNames = {}
-    rawset(_G, "GetChannelName", function(name)
-        if _G.__joinedChannels[name] then
+    env.GetChannelName = function(name)
+        if joinedChannels[name] then
             return 1, name
         end
 
         return 0, nil
+    end
+    ---@param name string
+    ---@return nil
+    local joinPermanentChannel = spy.new(function(name)
+        joinedChannels[name] = true
     end)
-    rawset(_G, "JoinPermanentChannel", function(name)
-        _G.__joinedChannelNames[#_G.__joinedChannelNames + 1] = name
-        _G.__joinedChannels[name] = true
-    end)
+    env.JoinPermanentChannel = joinPermanentChannel
 
-    SlashCmdList = {}
+    env.SlashCmdList = {}
 
-    GameTooltip = {
+    env.GameTooltip = {
         lines = {},
         visible = false,
     }
 
-    function GameTooltip:SetOwner(owner, anchor)
+    function env.GameTooltip:SetOwner(owner, anchor)
         self.owner = owner
         self.anchor = anchor
         self.lines = {}
     end
 
-    function GameTooltip:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
+    function env.GameTooltip:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
         self.lines[#self.lines + 1] = {
             left = leftText,
             right = rightText,
@@ -671,15 +653,15 @@ local function initializeGlobals(options)
         }
     end
 
-    function GameTooltip:Show()
+    function env.GameTooltip:Show()
         self.visible = true
     end
 
-    function GameTooltip:Hide()
+    function env.GameTooltip:Hide()
         self.visible = false
     end
 
-    FauxScrollFrame_Update = function(frame, totalItems, visibleItems, itemHeight)
+    env.FauxScrollFrame_Update = function(frame, totalItems, visibleItems, itemHeight)
         frame.lastUpdate = {
             totalItems = totalItems,
             visibleItems = visibleItems,
@@ -687,26 +669,26 @@ local function initializeGlobals(options)
         }
     end
 
-    FauxScrollFrame_GetOffset = function(frame)
+    env.FauxScrollFrame_GetOffset = function(frame)
         return frame.offset or 0
     end
 
-    FauxScrollFrame_OnVerticalScroll = function(frame, offset, itemHeight, updateFunc)
+    env.FauxScrollFrame_OnVerticalScroll = function(frame, offset, itemHeight, updateFunc)
         frame.offset = math.floor(offset / itemHeight)
         updateFunc()
     end
 
-    rawset(_G, "FormatLargeNumber", options.formatLargeNumber or tostring)
+    env.FormatLargeNumber = options.formatLargeNumber or tostring
 
-    rawset(_G, "strtrim", function(text)
+    env.strtrim = function(text)
         return (tostring(text):gsub("^%s+", ""):gsub("%s+$", ""))
-    end)
+    end
 
-    time = function()
+    env.time = function()
         return 24680
     end
 
-    date = function(formatString)
+    env.date = function(formatString)
         if formatString == "%H:%M:%S" then
             return "12:34:56"
         end
@@ -716,40 +698,40 @@ local function initializeGlobals(options)
         return "10:05"
     end
 
-    UnitName = function(_)
+    env.UnitName = function(_)
         return "HarnessPlayer"
     end
 
-    UnitLevel = function(_)
+    env.UnitLevel = function(_)
         return 17
     end
 
-    GetZoneText = function()
+    env.GetZoneText = function()
         return "Elwynn Forest"
     end
 
-    GetRealmName = function()
+    env.GetRealmName = function()
         return "Defias Pillager"
     end
 
     -- https://wago.tools/db2/GlobalStrings?build=1.15.5.57979&filter%5BBaseTag%5D=HARDCORE_CAUSEOFDEATH&page=1&sort%5BBaseTag%5D=asc
     -- not all of these are used, we include everything to ensure proper testing
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_CREATURE", "|Hplayer:%s|h[%s]|h has been slain by a %s in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_DROWNING", "|Hplayer:%s|h[%s]|h drowned to death in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_DUEL", "|Hplayer:%s|h[%s]|h has been slain in a duel by %s in $s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_FALLING", "|Hplayer:%s|h[%s]|h fell to their death in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_FATIGUE", "|Hplayer:%s|h[%s]|h died of fatigue in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_FIRE", "|Hplayer:%s|h[%s]|h was burnt to death by fire in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_LAVA", "|Hplayer:%s|h[%s]|h was burnt to a crisp by lava in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_NONE", "|Hplayer:%s|h[%s]|h has died at level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_PVP", "|Hplayer:%s|h[%s]|h has been slain by %s in %s! They were level %d")
-    rawset(_G, "HARDCORE_CAUSEOFDEATH_SLIME", "|Hplayer:%s|h[%s]|h was slimed to death in %s! They w")
+    env.HARDCORE_CAUSEOFDEATH_CREATURE = "|Hplayer:%s|h[%s]|h has been slain by a %s in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_DROWNING = "|Hplayer:%s|h[%s]|h drowned to death in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_DUEL = "|Hplayer:%s|h[%s]|h has been slain in a duel by %s in $s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_FALLING = "|Hplayer:%s|h[%s]|h fell to their death in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_FATIGUE = "|Hplayer:%s|h[%s]|h died of fatigue in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_FIRE = "|Hplayer:%s|h[%s]|h was burnt to death by fire in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_LAVA = "|Hplayer:%s|h[%s]|h was burnt to a crisp by lava in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_NONE = "|Hplayer:%s|h[%s]|h has died at level %d"
+    env.HARDCORE_CAUSEOFDEATH_PVP = "|Hplayer:%s|h[%s]|h has been slain by %s in %s! They were level %d"
+    env.HARDCORE_CAUSEOFDEATH_SLIME = "|Hplayer:%s|h[%s]|h was slimed to death in %s! They w"
 
-    rawset(_G, "UnitFactionGroup", function(_)
+    env.UnitFactionGroup = function(_)
         return options.faction or "Alliance"
-    end)
+    end
 
-    _G.ITEM_QUALITY_COLORS = {
+    env.ITEM_QUALITY_COLORS = {
         [0] = { r = 0.62, g = 0.62, b = 0.62 },
         [1] = { r = 1.0, g = 1.0, b = 1.0 },
         [2] = { r = 0.12, g = 1.0, b = 0.0 },
@@ -757,44 +739,18 @@ local function initializeGlobals(options)
         [4] = { r = 0.64, g = 0.21, b = 0.93 },
     }
 
-    initializeBundledLibs()
+    return {
+        libDBIcon = initializeBundledLibs(env),
+        sendChatMessage = sendChatMessage,
+        cvars = cvars,
+        setCVar = setCVar,
+        joinedChannels = joinedChannels,
+        joinPermanentChannel = joinPermanentChannel,
+    }
 end
 
-local function loadUiModules()
-    local loader = AddonLoader.Create()
-
-    loader:Load("DeathpoolConstants")
-    loader:Load("DeathpoolDebug")
-    loader:Load("DeathpoolDatabase")
-    loader:Load("DeathpoolParser")
-    loader:Load("DeathpoolLogic")
-    loader:Load("DeathpoolLogicPrediction")
-    loader:Load("DeathpoolLogicScoring")
-    loader:Load("DeathpoolLogicDeaths")
-    loader:Load("DeathpoolLogicState")
-    loader:Load("DeathpoolStats")
-    loader:Load("DeathpoolMigration")
-    loader:Load("DeathpoolSettings")
-    loader:Load("DeathpoolSetup")
-    loader:Load("DeathpoolAnnouncements")
-    loader:Load("DeathpoolUI")
-    loader:Load("DeathpoolUITooltip")
-    loader:Load("DeathpoolUIDeathLogList")
-    loader:Load("DeathpoolUIMinimap")
-    loader:Load("DeathpoolUIAutocomplete")
-    loader:Load("DeathpoolUIHelp")
-    loader:Load("DeathpoolUISetup")
-    loader:Load("DeathpoolUIMode")
-    loader:Load("DeathpoolUIRefresh")
-    loader:Load("DeathpoolUILog")
-    loader:Load("DeathpoolUISettings")
-    loader:Load("DeathpoolUIDemo")
-    loader:Load("DeathpoolDemo")
-    loader:Load("DeathpoolUIDebug")
-    loader:Load("DeathpoolUIMainCollapsed")
-    loader:Load("DeathpoolUIMainRecentDeaths")
-    loader:Load("DeathpoolUIMainPrediction")
-    loader:Load("DeathpoolUIMain")
+local function loadUiModules(loader)
+    loader:LoadThrough("DeathpoolUIMain")
 
     return loader, loader.ns.DeathpoolUI, loader.ns.DeathpoolUIMain, loader.ns.DeathpoolUIMinimap
 end
@@ -803,20 +759,21 @@ local UIHarness = {}
 
 function UIHarness.Create(options)
     options = options or {}
-    initializeGlobals(options)
+    local loader = AddonLoader.Create()
+    local environment = initializeGlobals(loader.env, options)
 
     local printedMessages = {}
-    local loader, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules()
+    local _, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules(loader)
     local ns = loader.ns
-    DeathpoolCharacterState = ns.DeathpoolDatabase.Init(options.state)
+    loader.env.DeathpoolCharacterState = ns.DeathpoolDatabase.Init(options.state)
     local Deathpool, DeathpoolDebug, DeathpoolLog = DeathpoolUIMain.Initialize(
-        DeathpoolCharacterState,
+        loader.env.DeathpoolCharacterState,
         ns.DeathpoolLogic,
         ns.DeathpoolConstants.STORAGE.maxRecentDeaths
     )
     Deathpool.__testNs = ns
     local introDemoController = ns.DeathpoolDemo.Initialize(
-        DeathpoolCharacterState,
+        loader.env.DeathpoolCharacterState,
         function()
             Deathpool:RefreshDeaths()
             Deathpool:RefreshLockedPrediction()
@@ -826,6 +783,7 @@ function UIHarness.Create(options)
     introDemoController:AttachFrame(Deathpool)
 
     return {
+        env = loader.env,
         loader = loader,
         ns = ns,
         DeathpoolUI = DeathpoolUI,
@@ -852,12 +810,18 @@ function UIHarness.Create(options)
         DeathpoolLog = DeathpoolLog,
         introDemoController = introDemoController,
         printedMessages = printedMessages,
-        cvars = _G.__cvars,
-        setCVarCalls = _G.__setCVarCalls,
-        joinedChannels = _G.__joinedChannels,
-        joinedChannelNames = _G.__joinedChannelNames,
-        dispatchEvent = dispatchEvent,
-        pressEscape = pressEscape,
+        sendChatMessage = environment.sendChatMessage,
+        libDBIcon = environment.libDBIcon,
+        cvars = environment.cvars,
+        setCVar = environment.setCVar,
+        joinedChannels = environment.joinedChannels,
+        joinPermanentChannel = environment.joinPermanentChannel,
+        dispatchEvent = function(frame, eventName, ...)
+            return dispatchEvent(loader.env, frame, eventName, ...)
+        end,
+        pressEscape = function()
+            return pressEscape(loader.env)
+        end,
         findRegionText = findRegionText,
         findDropdownButtonByText = findDropdownButtonByText,
     }
@@ -865,31 +829,32 @@ end
 
 function UIHarness.CreateAddon(options)
     options = options or {}
-    initializeGlobals(options)
+    local loader = AddonLoader.Create()
+    local environment = initializeGlobals(loader.env, options)
 
-    local loader, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules()
+    local _, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules(loader)
     local ns = loader.ns
-    DeathpoolCharacterState = options.state
-    loader:Load("DeathpoolCommands")
-    loader:Load("Deathpool")
+    loader.env.DeathpoolCharacterState = options.state
+    loader:LoadAll()
 
     local function getController()
-        return rawget(_G, "DeathpoolAddonFrame")
+        return rawget(loader.env, "DeathpoolAddonFrame")
     end
 
     local function getMainFrame()
-        return rawget(_G, "DeathpoolFrame")
+        return rawget(loader.env, "DeathpoolFrame")
     end
 
     local function getDebugFrame()
-        return rawget(_G, "DeathpoolDebugFrame")
+        return rawget(loader.env, "DeathpoolDebugFrame")
     end
 
     local function getLogFrame()
-        return rawget(_G, "DeathpoolLogFrame")
+        return rawget(loader.env, "DeathpoolLogFrame")
     end
 
     return {
+        env = loader.env,
         loader = loader,
         ns = ns,
         DeathpoolUI = DeathpoolUI,
@@ -917,11 +882,19 @@ function UIHarness.CreateAddon(options)
         getMainFrame = getMainFrame,
         getDebugFrame = getDebugFrame,
         getLogFrame = getLogFrame,
-        chatMessages = DEFAULT_CHAT_FRAME.messages,
-        sentChatMessages = _G.__sentChatMessages,
-        libDBIconState = _G.__libDBIconState,
-        dispatchEvent = dispatchEvent,
-        pressEscape = pressEscape,
+        chatMessages = loader.env.DEFAULT_CHAT_FRAME.messages,
+        sendChatMessage = environment.sendChatMessage,
+        libDBIcon = environment.libDBIcon,
+        cvars = environment.cvars,
+        setCVar = environment.setCVar,
+        joinedChannels = environment.joinedChannels,
+        joinPermanentChannel = environment.joinPermanentChannel,
+        dispatchEvent = function(frame, eventName, ...)
+            return dispatchEvent(loader.env, frame, eventName, ...)
+        end,
+        pressEscape = function()
+            return pressEscape(loader.env)
+        end,
     }
 end
 

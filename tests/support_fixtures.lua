@@ -1,9 +1,10 @@
+local FixtureFactory = {}
+
+---@param DeathpoolConstants table
+---@param DeathpoolDatabase table
+---@return table
+function FixtureFactory.Create(DeathpoolConstants, DeathpoolDatabase)
 local Fixtures = {}
-local AddonLoader = require("tests.support_addon_loader")
-local loader = AddonLoader.GetDefault()
-local DeathpoolConstants = loader:Load("DeathpoolConstants")
-loader:Load("DeathpoolMigration")
-local DeathpoolDatabase = loader:Load("DeathpoolDatabase")
 local SCORE_RULES = DeathpoolConstants.SCORING
 local DATABASE_DEFAULTS = DeathpoolDatabase.DEFAULTS or {}
 
@@ -165,7 +166,7 @@ end
 
 function Fixtures.death(overrides)
     return normalizeFalseAsNil(merge({
-        timestamp = time(),
+        timestamp = os.time(),
         name = "Drakedog",
         level = 12,
         causeType = "HARDCORE_CAUSEOFDEATH_CREATURE",
@@ -395,3 +396,6 @@ function Fixtures.introDemoState(overrides)
 end
 
 return Fixtures
+end
+
+return FixtureFactory

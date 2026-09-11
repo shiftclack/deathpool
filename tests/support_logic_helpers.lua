@@ -1,14 +1,9 @@
-package.path = table.concat({
-    "./src/?.lua",
-    "./?.lua",
-    "./?/init.lua",
-    package.path,
-}, ";")
+local LogicHelpers = {}
 
-local AddonLoader = require("tests.support_addon_loader")
-local Fixtures = require("tests.support_fixtures")
-local SCORE_RULES = AddonLoader.GetDefault().ns.DeathpoolConstants.SCORING
-
+---@param SCORE_RULES table
+---@param Fixtures table
+---@return table
+function LogicHelpers.Create(SCORE_RULES, Fixtures)
 local Helpers = {}
 
 local function isLevelMatched(options)
@@ -102,3 +97,6 @@ function Helpers.getDisplayMultiplier(matchCount, streak)
 end
 
 return Helpers
+end
+
+return LogicHelpers

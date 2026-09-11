@@ -69,7 +69,7 @@ The death feed parser is intentionally conservative. The addon listens only to `
 
 ### Use of third party libraries
 
-No third-party libraries or addons are to be used, with the sole exception of libraries used for minimap integration in `src/DeathpoolUIMinimap.lua`:
+No third-party libraries or addons are to be used in production code, with the sole exception of libraries used for minimap integration in `src/DeathpoolUIMinimap.lua`:
   - LibDBIcon
   - LibDataBroker
   - CallbackHandler
@@ -143,8 +143,7 @@ World of Warcraft uses a restricted Lua 5.1 runtime with significant differences
 
 - If you fix a bug in parser or scoring behavior, add or update a test when practical
 - Prefer unit tests for parser and logic behavior over manual-only verification
-- Keep tests lightweight and runnable in the local Lua test harness
-- Consider using `assertContains()` instead of `assertEquals()` when making assertions about a long string
+- Run tests with Busted under Lua 5.1 through `make test`. Use `TEST_ARGS` for file paths, filters, or shuffle options.
 
 ## Datastores
 

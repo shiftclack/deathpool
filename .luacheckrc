@@ -7,33 +7,10 @@ max_string_line_length = 200
 max_comment_line_length = 200
 max_cyclomatic_complexity = 13
 
--- Tests intentionally stub WoW globals and use busted assertions.
+-- Tests use Busted assertions.
 files["tests/**"] = {
   std = "lua51+busted",
   max_cyclomatic_complexity = 13,
-  globals = {
-     "_G",
-     "CreateFrame",
-     "DEFAULT_CHAT_FRAME",
-     "FauxScrollFrame_GetOffset",
-     "FauxScrollFrame_OnVerticalScroll",
-     "FauxScrollFrame_Update",
-     "GameTooltip",
-     "GetRealmName",
-     "GetZoneText",
-     "SlashCmdList",
-     "UIParent",
-     "UnitLevel",
-     "UnitName",
-     "date",
-     "time",
-  },
-}
-
-files["tests/test_minimap.lua"] = {
-  globals = {
-     "LibStub",
-  },
 }
 
 -- Writable addon-owned globals.
