@@ -72,6 +72,7 @@ local function Create()
             hardcoreDeathChatType = options and options.hardcoreDeathChatType or nil,
             hardcoreDeathsJoined = options and options.hardcoreDeathsJoined,
             formatLargeNumber = options and options.formatLargeNumber or nil,
+            version = options and options.version or nil,
         })
 
         return {

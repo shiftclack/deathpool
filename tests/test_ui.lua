@@ -991,6 +991,43 @@ describe("UI state and modes", function()
             assert.equals(false, Deathpool.helpFrame:IsShown(), "titlebar close should leave the help window closed")
         end)
 
+        it("renders the unreleased version and copyright year in help text", function()
+            local context = createUIContext(nil, { version = "0.0.0" })
+
+            assert.matches(
+                "Hardcore Death Pool unreleased version © 2026",
+                context.Deathpool.helpFrame.helpText:GetText(),
+                1,
+                false,
+                "help text should label the placeholder version as unreleased and include the copyright year"
+            )
+        end)
+
+        it("renders the release version and copyright year in help text", function()
+            local context = createUIContext(nil, { version = "1.2.3" })
+
+            assert.matches(
+                "Hardcore Death Pool version 1%.2%.3 © 2026",
+                context.Deathpool.helpFrame.helpText:GetText(),
+                1,
+                false,
+                "help text should include the release version and copyright year"
+            )
+        end)
+
+        it("attributes the software to its author", function()
+            local context = createUIContext(nil, { version = "1.2.3" })
+            local author = "\083\104\105\102\116\099\108\097\099\107"
+
+            assert.matches(
+                author,
+                context.Deathpool.helpFrame.helpText:GetText(),
+                1,
+                false,
+                "addon should be attributed to the author"
+            )
+        end)
+
         it("handles help modal behavior", function()
             local context = createUIContext(Fixtures.uiDatabase({
                 hasSeenFirstRun = true,

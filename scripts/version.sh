@@ -1,17 +1,31 @@
 #!/bin/bash
-VERSION="${1#v}"
-TOC_FILENAME="${2}"
+version="${1#v}"
+toc_filename="${2}"
+constants_filename="${3}"
 
-echo "Checking source for version '${VERSION}'..."
-
-if [[ -z ${VERSION} ]]; then
-  echo "Error: Version is empty"
-  exit 1
+if [[ -z $version || -z $toc_filename || -z $constants_filename  ]]; then
+    echo "syntax: $0 <version> <toc_filename> <constants_filename>"
+    exit 1
 fi
 
-grep -q "## Version: ${VERSION}" "${TOC_FILENAME}" || {
-  echo "Error: Version '${VERSION}' not found in '${TOC_FILENAME}'"
-  exit 1
+grep -Fxq "## Version: ${version}" "${toc_filename}" || {
+    echo "precondition failure: version ${version} not found in ${toc_filename}"
+    exit 1
 }
 
-echo "All version checks passed successfully."
+grep -q "VERSION = \"0\\.0\\.0\",$" "${constants_filename}" || {
+    echo "precondition failure: version is not set to 0.0.0 in ${constants_filename}"
+    exit 1
+}
+
+sed -i.bak "s/VERSION = \"0\\.0\\.0\",$/VERSION = \"${version}\",/" "${constants_filename}" || {
+    echo "error: version ${version} could not be set in ${constants_filename}"
+    exit 1
+}
+
+grep -q "VERSION = \"${version}\",$" "${constants_filename}" || {
+    echo "error: version ${version} not substituted successfully in ${constants_filename}"
+    exit 1
+}
+
+rm -f "${constants_filename}.bak"

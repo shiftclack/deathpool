@@ -2,6 +2,8 @@ local _, ns = ...
 ---@cast ns DeathpoolNamespace
 
 local DeathpoolConstants = {
+    -- CI replaces 0.0.0 with the version git tag when published
+    VERSION = "0.0.0",
     HELP = {
         -- url displayed in help
         downloadUrl = "https://github.com/shiftclack/deathpool/releases",

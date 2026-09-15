@@ -695,6 +695,9 @@ local function initializeGlobals(env, options)
         if formatString == "%B %d, %Y" then
             return "January 01, 1970"
         end
+        if formatString == "%Y" then
+            return "1970"
+        end
         return "10:05"
     end
 
@@ -761,6 +764,10 @@ function UIHarness.Create(options)
     options = options or {}
     local loader = AddonLoader.Create()
     local environment = initializeGlobals(loader.env, options)
+
+    if options.version then
+        loader:Load("DeathpoolConstants").VERSION = options.version
+    end
 
     local printedMessages = {}
     local _, DeathpoolUI, DeathpoolUIMain, DeathpoolUIMinimap = loadUiModules(loader)

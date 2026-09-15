@@ -5,19 +5,18 @@ Hardcore Death Pool (or "Deathpool" for short) is an addon for _World of Warcraf
 ## Additional Documentation
 
 * [game.md](docs/game.md) documents game rules. Refer here when you need more information about game rules or scoring
-* [ui.md](`docs/ui.md`) documents the UI. Refer here for information on how the UI should look and behave
+* [ui.md](docs/ui.md) documents the UI. Refer here for information on how the UI should look and behave
 
 ## Common commands
 
 The `Makefile` should wrap all common commands used by the human developer and coding agent.
 
-- `make check` run all checks
-- `make coverage-summary` print out the `luacov` code coverage summary
-- `make install` will install the addon files to a local Windows WoW installation
-- `make dist` to build a .zip file for distribution
-- `make deps` to install required build dependencies in Windows
+- `make check` runs all checks
+- `make coverage-summary` prints out the `luacov` code coverage summary
+- `make install` installs the addon files to a local Windows WoW installation.
+- `make dist`, `make dist-ci`, and `make dist-docker` build a zipfile for distribution
 
-Note: `make build-ci`, `dist-ci`, `deps-ci`, and `clean-ci` are UNIX compatible equivalents to the Windows commands.
+Note: The `*-ci` targets are used for building in CI/UNIX.
 
 ## Repo layout
 
@@ -27,7 +26,7 @@ Note: `make build-ci`, `dist-ci`, `deps-ci`, and `clean-ci` are UNIX compatible 
 - `tests/` test harness and suites
 - `docs/` addon documentation
 - `libs/` vendored third-party code (do not test, lint, or modify)
-- `dist/` build output (do not test or lint)
+- `dist/` build output
 - `types/` LuaLS type stubs
 - `scripts/` helper scripts
 - `data/` is reserved for local data processing
@@ -44,6 +43,12 @@ Note: `make build-ci`, `dist-ci`, `deps-ci`, and `clean-ci` are UNIX compatible 
 - `.luacheckrc` should contain our `luacheck` configuration. Keep changes focused and only update it when project lint rules or recognized WoW globals genuinely need to change
 - `.luarc.json` should contain the LuaLS configuration. Both `.luacheckrc` and `.luarc.json` will need to be configured when referencing new globals or WoW specific functions
 - `src/Deathpool_Vanilla.toc` when adding new addon files, they must be added here in order for the game to load them. Order is important.
+
+## Development
+
+Small single-author project: work happens on feature branches off `main`,
+squash-merged by the maintainer. Agents do not open pull requests, and do not merge or
+push to `main`. Commit messages are short and lowercase (see `git log`).
 
 ## Lua
 

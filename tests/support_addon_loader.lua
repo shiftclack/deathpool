@@ -152,7 +152,7 @@ end
 function AddonLoader.Create(options)
     options = options or {}
 
-    local sourceDir = options.sourceDir or DEFAULT_SOURCE_DIR
+    local sourceDir = options.sourceDir or os.getenv("DEATHPOOL_TEST_SOURCE_DIR") or DEFAULT_SOURCE_DIR
 
     return {
         addonName = options.addonName or DEFAULT_ADDON_NAME,

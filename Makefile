@@ -10,11 +10,37 @@ LUA_LANGUAGE_SERVER ?= lua-language-server
 LUAC ?= luac
 LUACHECK ?= luacheck
 
-.PHONY: all build build-ci check check-ci check-docker clean clean-ci coverage coverage-report \
-	coverage-summary deps deps-ci dist dist-ci dist-docker install install-macos lint luals luals-ci \
-	minify-ci syntax test
+.NOTPARALLEL:
 
-all: syntax lint test build
+.PHONY: \
+	all \
+	build \
+	build-ci \
+	check \
+	check-ci \
+	check-docker \
+	clean \
+	clean-ci \
+	coverage \
+	coverage-report \
+	coverage-summary \
+	deps \
+	deps-ci \
+	dist \
+	dist-ci \
+	dist-docker \
+	install \
+	install-macos \
+	lint \
+	luals \
+	luals-ci \
+	minify-ci \
+	syntax \
+	test \
+	test-dist-ci \
+	version-ci
+
+all: check build
 
 check: syntax lint luals test
 
@@ -38,6 +64,9 @@ luals-ci:
 test:
 	"$(BUSTED)" --lua="$(LUA)" $(TEST_ARGS)
 
+test-dist-ci:
+	DEATHPOOL_TEST_SOURCE_DIR=dist/Deathpool "$(BUSTED)" --lua="$(LUA)" $(TEST_ARGS)
+
 coverage:
 	$(LUA) -e "os.remove('luacov.stats.out'); os.remove('luacov.report.out')"
 	"$(BUSTED)" --lua="$(LUA)" --coverage $(TEST_ARGS)
@@ -48,18 +77,21 @@ coverage-report: coverage
 coverage-summary: coverage-report
 	$(LUA) -e "local summary = false; for line in io.lines([[luacov.report.out]]) do if line == [[Summary]] then summary = true end; if summary then print(line) end end"
 
-# note: does not currently minify
+# note: use dist-ci to build a real package
 dist: test clean build
 	cd /D dist && zip -r Deathpool.zip Deathpool
 
-dist-ci: version-check test clean-ci build-ci minify-ci
+dist-ci: clean-ci build-ci minify-ci version-ci test-dist-ci
 	cd dist && zip -r Deathpool.zip Deathpool
 
 dist-docker:
-	docker run -v $(CURDIR):$(DOCKER_SRC_DIR) -e SRC_DIR=$(DOCKER_SRC_DIR) $(DOCKER_TEST_IMAGE) make dist-ci
+	docker run -v "$(CURDIR):$(DOCKER_SRC_DIR)" \
+		-e "SRC_DIR=$(DOCKER_SRC_DIR)" \
+		-e "TAG=${TAG}" \
+		"$(DOCKER_TEST_IMAGE)" make dist-ci
 
-version-check:
-	bash ./scripts/version.sh "$(TAG)" "src/Deathpool_Vanilla.toc"
+version-ci:
+	bash ./scripts/version.sh "$(TAG)" "dist/Deathpool/Deathpool_Vanilla.toc" "dist/Deathpool/DeathpoolConstants.lua"
 
 build:
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path dist,dist\Deathpool,dist\Deathpool\libs | Out-Null"

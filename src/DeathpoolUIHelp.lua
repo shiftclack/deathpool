@@ -6,6 +6,7 @@ local DeathpoolUIHelp = ns.DeathpoolUIHelp or {}
 local DeathpoolConstants = ns.DeathpoolConstants
 ns.DeathpoolUIHelp = DeathpoolUIHelp
 local HELP_RULES = DeathpoolConstants.HELP
+local VERSION = DeathpoolConstants.VERSION
 local DOWNLOAD_AREA_WIDTH = 204
 local GITHUB_LINK_DIALOG_WIDTH = 430
 local GITHUB_LINK_DIALOG_HEIGHT = 112
@@ -38,6 +39,14 @@ local GITHUB_LINK_DIALOG_HEIGHT = 112
 local function BuildHelpWindowText()
     local skull = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:12:12:0:0|t"
     local diamond = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_3:12:12|t"
+    local version
+
+    if VERSION == "0.0.0" then
+        version = "unreleased version"
+    else
+        version = "version " .. VERSION
+    end
+
     return table.concat({"",
         diamond .. " Game Overview " .. diamond,
         "",
@@ -57,6 +66,10 @@ local function BuildHelpWindowText()
             .. "Set |cFFFFFF00Hardcore death announcements|r to |cFFFFFF00All Deaths|r. "
             .. "Then type |cFFFFFF00/join hardcoredeaths|r to join the chat channel.",
         "",
+        "",
+        diamond .. " About " .. diamond,
+        "",
+        "Hardcore Death Pool " .. version .. " © 2026 Shiftclack.",
     }, "\n")
 end
 
