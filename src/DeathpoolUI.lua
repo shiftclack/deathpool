@@ -860,6 +860,15 @@ function DeathpoolUI.SetWindowCollapsed(frame, database, collapsed)
     RefreshWindowAfterCollapseStateChange(frame)
 end
 
+---@param frame table
+---@param database DeathpoolCharacterState
+function DeathpoolUI.ResetMainWindow(frame, database)
+    DeathpoolUI.SetWindowCollapsed(frame, database, false)
+    DeathpoolDatabase.SetWindowPosition(database, false, nil)
+    frame:ClearAllPoints()
+    frame:SetPoint("CENTER")
+end
+
 ---@param database DeathpoolCharacterState
 ---@return boolean
 function DeathpoolUI.ShouldLogWindowBeShown(database)

@@ -595,6 +595,34 @@ describe("Addon controller", function()
                 assert.matches("Minimap icon enabled", chatMessages[#chatMessages], 1, true, "minimap command should announce enablement")
             end)
 
+            it("resets the main window and disables the mini log", function()
+                local context = createLoadedAddonContext({
+                    state = Fixtures.addonDatabase({
+                        hidden = false,
+                        hasSeenIntroDemo = true,
+                        collapsed = true,
+                        windowPosition = {
+                            point = "BOTTOMRIGHT",
+                            relativePoint = "BOTTOMRIGHT",
+                            x = -75,
+                            y = 125,
+                        },
+                    }),
+                    login = true,
+                })
+                local Deathpool = context.Deathpool
+                local chatMessages = context.chatMessages
+
+                context.runSlash("resetui")
+
+                assert.equals(false, Deathpool.isCollapsed, "resetui command should disable the mini log")
+                assert.equals(false, env.DeathpoolCharacterState.collapsed, "resetui command should persist the expanded state")
+                assert.equals(nil, env.DeathpoolCharacterState.windowPosition, "resetui command should clear the saved main window position")
+                assert.same({ "CENTER" }, Deathpool.points[1], "resetui command should center the main window")
+                assert.is_string(chatMessages[#chatMessages], "resetui command should announce completion")
+                assert.matches("Main window position reset", chatMessages[#chatMessages], 1, true, "resetui command should announce completion")
+            end)
+
             it("prints the compact summary", function()
                 local context = createLoadedAddonContext({
                     state = Fixtures.addonDatabase({
@@ -661,6 +689,7 @@ describe("Addon controller", function()
                 local sawIntroHelp = false
                 local sawSetupHelp = false
                 local sawSummaryHelp = false
+                local sawResetUIHelp = false
                 for messageIndex = messageCountBeforeHelp + 1, #chatMessages do
                     if string.find(chatMessages[messageIndex], "/deathpool resetintro", 1, true) then
                         sawIntroHelp = true
@@ -671,10 +700,14 @@ describe("Addon controller", function()
                     if string.find(chatMessages[messageIndex], "/deathpool summary", 1, true) then
                         sawSummaryHelp = true
                     end
+                    if string.find(chatMessages[messageIndex], "/deathpool resetui", 1, true) then
+                        sawResetUIHelp = true
+                    end
                 end
                 assert.equals(true, sawIntroHelp, "help command should list the resetintro command")
                 assert.equals(true, sawSetupHelp, "help command should list the setup command")
                 assert.equals(true, sawSummaryHelp, "help command should list the summary command")
+                assert.equals(true, sawResetUIHelp, "help command should list the resetui command")
             end)
 
             it("handles debugdeath and testdeath developer commands", function()

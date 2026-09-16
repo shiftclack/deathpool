@@ -53,7 +53,7 @@ end
 
 local function PrintSlashHelp()
     Print("Commands: /deathpool show, /deathpool hide, /deathpool toggle, /deathpool summary, /deathpool minimap")
-    Print("Windows: /deathpool log, /deathpool demo, /deathpool setup, /deathpool showincombat")
+    Print("Windows: /deathpool log, /deathpool demo, /deathpool setup, /deathpool showincombat, /deathpool resetui")
     Print("Debug: /deathpool debug, /deathpool testdeath, /deathpool debugdeath <deathstring>")
     Print("Dangerous: /deathpool resetintro, /deathpool reset")
 end
@@ -252,6 +252,18 @@ local function ResetCommand()
     Print("Database reset complete")
 end
 
+local function ResetUICommand()
+    local addonFrame = GetAddonFrame()
+    local state = GetState()
+    local mainFrame = addonFrame and addonFrame.mainFrame or nil
+    if not mainFrame or not state then
+        return
+    end
+
+    DeathpoolUI.ResetMainWindow(mainFrame, state)
+    Print("Main window position reset.")
+end
+
 local function ToggleWindowCommand()
     local state = GetState()
     local addonFrame = GetAddonFrame()
@@ -271,6 +283,7 @@ local SLASH_COMMAND_HANDLERS = {
     log = ToggleLogCommand,
     demo = DemoCommand,
     setup = SetupCommand,
+    resetui = ResetUICommand,
     resetintro = IntroCommand,
     reset = ResetCommand,
     showincombat = ToggleShowInCombatCommand,
